@@ -1,0 +1,17 @@
+*~
+*.stamp
+src/*.c
+autom4te.cache/
+Debug/
+.anjuta/
+.anjuta_sym_db.db
+aclocal.m4
+config.h.in
+compile
+configure
+depcomp
+install-sh
+missing
+Makefile.in
+Release/
+Optimized/
