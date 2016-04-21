@@ -20,33 +20,68 @@
 using GLib;
 using Gtk;
 
-public class Main : Object 
+public class Filefinder : Gtk.Application 
 {
+	public static bool debugging;
+	public static Gtk.ApplicationWindow window;
 
+	private const GLib.ActionEntry[] action_entries = {
+        {"about", about_cb},
+        {"quit", quit_cb}
+    };
 
-	public Main ()
+	public Filefinder ()
 	{
+		Object (application_id: "org.konkor.filefinder",
+		        flags: ApplicationFlags.HANDLES_OPEN);
+	}
 
-		Window window = new Window();
+	protected override void startup () {
+        base.startup ();
+        add_action_entries (action_entries, this);
+        GLib.Menu section = new GLib.Menu ();
+        section.append_item (new GLib.MenuItem ("About", "app.about"));
+        section.append_item (new GLib.MenuItem ("Quit", "app.quit"));
+        GLib.Menu menu = new GLib.Menu ();
+        menu.append_section (null, section);
+        this.set_app_menu ((GLib.MenuModel) menu);
+        set_accels_for_action ("app.quit", {"<Primary>q"});
+
+        Environment.set_application_name (Text.app_name);
+
+        window = new Gtk.ApplicationWindow (this);
 		window.set_title ("Hello World");
-		window.show_all();
-		window.destroy.connect(on_destroy);
+        window.show_all ();
+    }
 
-	}
+    protected override void activate () {
+        window.present ();
+    }
 
-	public void on_destroy (Widget window) 
-	{
-		Gtk.main_quit();
-	}
+    private void quit_cb () {
+        window.destroy ();
+    }
 
-	static int main (string[] args) 
-	{
-		Gtk.init (ref args);
-		var app = new Main ();
+    protected override void shutdown() {
+        base.shutdown();
+    }
 
-		Gtk.main ();
-		
-		return 0;
-	}
+    private void about_cb () {
+        string[] authors = {
+          "Kostiantyn Korienkov",
+          null
+        };
+        Gtk.show_about_dialog (window,
+                               "name", Text.app_name,
+                               "copyright", Text.app_copyright,
+                               "license-type", Gtk.License.GPL_3_0,
+                               "authors", authors,
+                               "website", Text.app_website,
+		                       "website-label", Text.app_name,
+                               "version", Text.app_version,
+                               "logo_icon_name", "system-search",
+                                null);
+    }
+
 }
 
