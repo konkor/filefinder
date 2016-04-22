@@ -23,7 +23,7 @@ using Gtk;
 public class Filefinder : Gtk.Application 
 {
 	public static bool debugging;
-	public static Gtk.ApplicationWindow window;
+	public static FileFinderWindow window;
 
 	private const GLib.ActionEntry[] action_entries = {
         {"about", about_cb},
@@ -49,9 +49,8 @@ public class Filefinder : Gtk.Application
 
         Environment.set_application_name (Text.app_name);
 
-        window = new Gtk.ApplicationWindow (this);
-		window.set_title ("Hello World");
-        window.show_all ();
+        window = new FileFinderWindow (this);
+		window.show_all ();
     }
 
     protected override void activate () {

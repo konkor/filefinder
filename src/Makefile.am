@@ -17,7 +17,7 @@ AM_CFLAGS =\
 bin_PROGRAMS = filefinder
 
 filefinder_SOURCES = \
-	main.vala filefinder.vala config.vapi text.vala
+	main.vala filefinder.vala config.vapi text.vala file-finder-window.vala debug.vala
 
 filefinder_VALAFLAGS =  \
 	--pkg gtk+-3.0
@@ -54,11 +54,11 @@ libnautilus_filefinder_la_CFLAGS = \
 	$(WARN_CFLAGS) \
 	$(AM_CFLAGS)
 
-if DEBUG
-libnautilus_filefinder_la_CFLAGS += -DND_DEBUG
-else
-libnautilus_filefinder_la_CFLAGS += -DG_DISABLE_ASSERT -DG_DISABLE_CHECKS
-endif
+##if DEBUG
+##libnautilus_filefinder_la_CFLAGS += -DND_DEBUG
+##else
+##libnautilus_filefinder_la_CFLAGS += -DG_DISABLE_ASSERT -DG_DISABLE_CHECKS
+##endif
 
 libnautilus_filefinder_la_LDFLAGS = \
 	-module -avoid-version \
@@ -70,8 +70,7 @@ libnautilus_filefinder_la_LIBADD = \
 
 CLEANFILES = \
 	$(filefinder_SOURCES:%.vala=%.c) \
-	*.stamp \
-	$(nautilus-extension.vala=nautilus-extension.c)
+	*.stamp
 
 EXTRA_DIST = \
 	src/nautilus.symbols
