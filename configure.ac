@@ -28,6 +28,12 @@ PKG_CHECK_MODULES([NAUTILUS],[
   gio-2.0
   gio-unix-2.0])
 
+# Make dependency CFLAGS and LIBS available
+AC_SUBST(NAUTILUS_CFLAGS)
+AC_SUBST(NAUTILUS_LIBS)
+AC_SUBST(GLIB_CFLAGS)
+AC_SUBST(GLIB_LIBS)
+
 nautilusextensiondir='${libdir}/nautilus/extensions-3.0'
 #nautilusextensiondir=`$PKG_CONFIG --variable=extensiondir libnautilus-extension`
 AC_ARG_WITH([nautilus-dir],

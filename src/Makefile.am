@@ -50,8 +50,15 @@ libnautilus_filefinder_la_CPPFLAGS = \
 
 libnautilus_filefinder_la_CFLAGS = \
 	$(NAUTILUS_CFLAGS) \
+	$(GLIB_CFLAGS) \
 	$(WARN_CFLAGS) \
 	$(AM_CFLAGS)
+
+if DEBUG
+libnautilus_filefinder_la_CFLAGS += -DND_DEBUG
+else
+libnautilus_filefinder_la_CFLAGS += -DG_DISABLE_ASSERT -DG_DISABLE_CHECKS
+endif
 
 libnautilus_filefinder_la_LDFLAGS = \
 	-module -avoid-version \
@@ -59,4 +66,4 @@ libnautilus_filefinder_la_LDFLAGS = \
 	$(AM_LDFLAGS)
 
 libnautilus_filefinder_la_LIBADD = \
-	$(NAUTILUS_LIBS)
+	$(NAUTILUS_LIBS) $(GLIB_LIBS)

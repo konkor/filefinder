@@ -9,7 +9,7 @@ class FilefinderMenuProvider : Nautilus.MenuProvider, Object {
         }
 
         var list = new List<Nautilus.MenuItem>();
-        var item = new Nautilus.MenuItem("filefinder", "Search with Filefinder",
+        var item = new Nautilus.MenuItem("filefinder", "Search with Filefinder...",
             "");
         item.activate.connect(() => {
             GLib.DesktopAppInfo info = new GLib.DesktopAppInfo("srtmerge.desktop");
