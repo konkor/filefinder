@@ -28,9 +28,11 @@ ltmain.sh
 config.guess
 config.sub
 src/.deps/
+src/.libs/
 src/Makefile
 src/filefinder
 src/*.c
 src/*.o
 src/*.stamp
-
+src/*.la
+src/*lo

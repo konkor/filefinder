@@ -30,4 +30,33 @@ filefinder_LDADD = $(FILEFINDER_LIBS)
 
 
 
+nautilus_extensiondir = $(NAUTILUS_EXTENSION_DIR)
+nautilus_extension_LTLIBRARIES = libnautilus-filefinder.la
 
+libnautilus_filefinder_la_SOURCES = nautilus-extension.c
+libnautilus_filefinder_la_VALAFLAGS = \
+	--pkg gio-2.0 \
+	--pkg gio-unix-2.0 \
+	--pkg gtk+-3.0 \
+	--pkg nautilus \
+	--vapidir=\$(top_srcdir)/vapi
+nautilus-extension.c:
+	$(AM_V_VALAC) $(VALAC) $(libnautilus_filefinder_la_VALAFLAGS) -C nautilus-extension.vala && \
+	$(SED) -i "s/(GType\*\* types/(const GType\*\* types/" nautilus-extension.c
+
+libnautilus_filefinder_la_CPPFLAGS = \
+	-DTERM_LOCALEDIR="\"$(datadir)/locale\"" \
+	$(AM_CPPFLAGS)
+
+libnautilus_filefinder_la_CFLAGS = \
+	$(NAUTILUS_CFLAGS) \
+	$(WARN_CFLAGS) \
+	$(AM_CFLAGS)
+
+libnautilus_filefinder_la_LDFLAGS = \
+	-module -avoid-version \
+	-export-symbols $(srcdir)/nautilus.symbols \
+	$(AM_LDFLAGS)
+
+libnautilus_filefinder_la_LIBADD = \
+	$(NAUTILUS_LIBS)
