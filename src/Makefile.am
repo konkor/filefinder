@@ -67,3 +67,15 @@ libnautilus_filefinder_la_LDFLAGS = \
 
 libnautilus_filefinder_la_LIBADD = \
 	$(NAUTILUS_LIBS) $(GLIB_LIBS)
+
+CLEANFILES = \
+	$(filefinder_SOURCES:%.vala=%.c) \
+	*.stamp \
+	$(nautilus-extension.vala=nautilus-extension.c)
+
+EXTRA_DIST = \
+	src/nautilus.symbols
+
+dist-hook:
+	cd $(srcdir); rm -f $(CLEANFILES)
+

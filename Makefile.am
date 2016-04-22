@@ -11,7 +11,9 @@ dist_doc_DATA = \
 	INSTALL \
 	NEWS
 
-
+EXTRA_DIST = \
+	vapi/nautilus.vapi \
+	src/nautilus.symbols 
 
 # Remove doc directory on uninstall
 uninstall-local:
