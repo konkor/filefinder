@@ -31,7 +31,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	private Gtk.Box infoBox;
     private Gtk.HeaderBar hb;
     private Gtk.Button button_go;
+	private Gtk.Button button_plus;
 	private Gtk.Entry search_entry;
+
+	 private QueryEditor editor;
     
     protected void build () {
         set_position (Gtk.WindowPosition.CENTER);
@@ -45,7 +48,12 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		search_entry.halign = Gtk.Align.FILL;
 		search_entry.expand = true;
 		hb.set_custom_title (search_entry);
-		
+
+		button_plus = new Button.from_icon_name ("list-add", IconSize.BUTTON);
+		button_plus.use_underline = true;
+		button_plus.tooltip_text = "Add Query";
+		hb.pack_end (button_plus);
+
         button_go = new Gtk.Button ( );
         button_go.use_underline = true;
         button_go.can_default = true;
@@ -64,7 +72,16 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
         //vbox1.add (new Gtk.Separator (Gtk.Orientation.HORIZONTAL));
 
-        set_default_size (550, 480);
+		editor = new QueryEditor ();
+		vbox1.pack_start (editor, false, true, 0);
+		button_plus.clicked.connect ( ()=>{
+			editor.add_row (new QueryRow ());
+			Debug.log (this.name, "clicked add row");
+			show_info ("added new query");
+		});
+		
+		//editor.add_row (new QueryRow ());
+        set_default_size (640, 480);
     }
 
     private void initialize () {
