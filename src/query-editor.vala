@@ -28,7 +28,7 @@ public class QueryEditor : Gtk.Box {
 		pack_start (row, false, true, 2);
 		row.closed.connect (on_row_close);
 		rows.append (row);
-		row.label.label = "Query " + rows.length().to_string ();
+		//row.label.label = "Query " + rows.length().to_string ();
 		Debug.log (this.name, "added row"); 
 	}
 

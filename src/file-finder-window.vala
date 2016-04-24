@@ -73,11 +73,11 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
         //vbox1.add (new Gtk.Separator (Gtk.Orientation.HORIZONTAL));
 
 		editor = new QueryEditor ();
-		vbox1.pack_start (editor, false, true, 0);
+		editor.expand = true;
+		vbox1.add (editor);
 		button_plus.clicked.connect ( ()=>{
 			editor.add_row (new QueryRow ());
-			Debug.log (this.name, "clicked add row");
-			show_info ("added new query");
+			//show_info ("added new query");
 		});
 		
 		//editor.add_row (new QueryRow ());
