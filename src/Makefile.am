@@ -17,7 +17,7 @@ AM_CFLAGS =\
 bin_PROGRAMS = filefinder
 
 filefinder_SOURCES = \
-	main.vala filefinder.vala config.vapi text.vala file-finder-window.vala debug.vala query-row.vala query-editor.vala
+	main.vala filefinder.vala config.vapi text.vala file-finder-window.vala debug.vala query-row.vala query-editor.vala query.vala filter-date.vala filter.vala filter-location.vala filter-none.vala
 
 filefinder_VALAFLAGS =  \
 	--pkg gtk+-3.0

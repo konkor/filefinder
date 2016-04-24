@@ -1,6 +1,7 @@
 /* -*- Mode: vala; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
- * query-editor.vala
+ * query.vala
+ * Copyright (C) 2016 Kostiantyn Korienkov <kkorienkov <at> gmail.com>
  *
  * filefinder is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,31 +17,14 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class QueryEditor : Gtk.Box {
-	public GLib.List<QueryRow> rows;
-	
-	public QueryEditor () {
-		GLib.Object (orientation:Gtk.Orientation.VERTICAL, spacing:0);
-		this.homogeneous = false;
-		this.get_style_context ().add_class ("search-bar");
-		this.margin = 0;
-		rows = new GLib.List<QueryRow> ();
+public class Query : GLib.Object {
+
+	private List<string> locations;
+	private List<string> masks;
+	private List<FilterDate> modifieds;
+	public Query () {
+
 	}
 
-	public void add_row (QueryRow row) {
-		//pack_start (row, false, true, 0);
-		add (row);
-		row.closed.connect (on_row_close);
-		rows.append (row);
-		//row.label.label = "Query " + rows.length().to_string ();
-		//Debug.log (this.name, "added row"); 
-	}
-
-	 private void on_row_close (QueryRow row) {
-		rows.remove (row);
-		row.dispose ();
-	}
-
-	
 }
 

@@ -22,7 +22,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	public FileFinderWindow (Gtk.Application app) {
         GLib.Object (application: app);
-        build ();
+		build ();
         initialize ();
 	}
 
@@ -32,27 +32,30 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
     private Gtk.HeaderBar hb;
     private Gtk.Button button_go;
 	private Gtk.Button button_plus;
-	private Gtk.Entry search_entry;
+	//private Gtk.Entry search_entry;
+	private Gtk.Paned paned;
 
 	 private QueryEditor editor;
     
     protected void build () {
         set_position (Gtk.WindowPosition.CENTER);
-        set_border_width (10);
+        //set_border_width (4);
         hb = new Gtk.HeaderBar ();
 		hb.has_subtitle = false;
+		hb.title = Environment.get_home_dir ();
         hb.set_show_close_button (true);
         set_titlebar (hb);
 
-		search_entry = new Gtk.Entry ();
+		/*Gtk.FileChooserButton chooser = new Gtk.FileChooserButton ("Select folder",
+		                                                           Gtk.FileChooserAction.SELECT_FOLDER);
+		chooser.set_current_folder (Environment.get_home_dir ());
+		hb.pack_start (chooser);
+		chooser.file_set.connect (()=>{ hb.title = chooser.get_filename ();});
+		*/
+		/*search_entry = new Gtk.Entry ();
 		search_entry.halign = Gtk.Align.FILL;
 		search_entry.expand = true;
-		hb.set_custom_title (search_entry);
-
-		button_plus = new Button.from_icon_name ("list-add", IconSize.BUTTON);
-		button_plus.use_underline = true;
-		button_plus.tooltip_text = "Add Query";
-		hb.pack_end (button_plus);
+		hb.set_custom_title (search_entry);*/
 
         button_go = new Gtk.Button ( );
         button_go.use_underline = true;
@@ -62,25 +65,49 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
         button_go.tooltip_text = "Start Search";
         //Gtk.Image image = new Gtk.Image.from_stock (Gtk.Stock.EXECUTE, Gtk.IconSize.BUTTON);
         //button_go.add (image);
+		button_go.get_style_context ().add_class ("suggested-action");
         hb.pack_end (button_go);
-        
-        vbox1 = new Gtk.Box (Gtk.Orientation.VERTICAL, 6);
+
+		button_plus = new Button.from_icon_name ("list-add-symbolic", IconSize.BUTTON);
+		button_plus.use_underline = true;
+		button_plus.tooltip_text = "Add Query";
+		hb.pack_start (button_plus);
+
+        vbox1 = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
         add (vbox1);
 
-        infoBox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 6);
+        infoBox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
 		vbox1.pack_start (infoBox,false,true,0);
 
-        //vbox1.add (new Gtk.Separator (Gtk.Orientation.HORIZONTAL));
+        paned = new Gtk.Paned (Gtk.Orientation.VERTICAL);
+		paned.can_focus = true;
+		paned.position = 32;
+		vbox1.add (paned);
+
+		Gtk.ScrolledWindow scrolledwindow = new Gtk.ScrolledWindow (null, null);
+		//scrolledwindow.can_focus = true;
+		scrolledwindow.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
+		scrolledwindow.shadow_type = Gtk.ShadowType.OUT;
+		paned.pack1 (scrolledwindow, false, false);
 
 		editor = new QueryEditor ();
 		editor.expand = true;
-		vbox1.add (editor);
+		scrolledwindow.add (editor);
 		button_plus.clicked.connect ( ()=>{
+			paned.
+				visible = true;
+			if (paned.position < 200) {
+				paned.position += 24;
+			}
 			editor.add_row (new QueryRow ());
-			//show_info ("added new query");
 		});
+
+		scrolledwindow = new Gtk.ScrolledWindow (null, null);
+		//scrolledwindow.can_focus = true;
+		scrolledwindow.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
+		scrolledwindow.shadow_type = Gtk.ShadowType.OUT;
+		paned.pack2 (scrolledwindow, false, false);
 		
-		//editor.add_row (new QueryRow ());
         set_default_size (640, 480);
     }
 
@@ -89,6 +116,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
         
 	}
 
+	public void post_init () {
+		paned.visible = false;
+	}
+	 
     private void on_go_clicked () {
         
     }

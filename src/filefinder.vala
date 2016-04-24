@@ -51,6 +51,7 @@ public class Filefinder : Gtk.Application
 
         window = new FileFinderWindow (this);
 		window.show_all ();
+		window.post_init ();
     }
 
     protected override void activate () {
@@ -82,5 +83,6 @@ public class Filefinder : Gtk.Application
                                 null);
     }
 
+	
 }
 

@@ -24,11 +24,12 @@ public class QueryRow : Gtk.Box {
 	private Gtk.Box hbox;
 
 	public QueryRow () {
-		GLib.Object (orientation:Gtk.Orientation.HORIZONTAL, spacing:4);
+		GLib.Object (orientation:Gtk.Orientation.HORIZONTAL, spacing:6);
+		this.margin = 2;
 		this.get_style_context ().add_class ("search-bar");
-
+		
 		combo_type = new Gtk.ComboBoxText ();
-		foreach (string s in types) {
+		foreach (string s in type_names) {
 			combo_type.append_text (s.up ());
 		}
 		combo_type.active = 0;
@@ -40,12 +41,9 @@ public class QueryRow : Gtk.Box {
 
 		create_type_widgets ();
 
-		//hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 4);
-		//add (hbox);
-
 		Gtk.Button btn  = new Gtk.Button.from_icon_name ("window-close-symbolic",
-		                                                 Gtk.IconSize.MENU);
-		btn.get_style_context ().add_class (Gtk.STYLE_CLASS_RAISED);
+		                                                 Gtk.IconSize.BUTTON);
+		btn.get_style_context ().add_class (Gtk.STYLE_CLASS_ACCELERATOR);
 		btn.tooltip_text = "Remove this criterion from the search";
 		pack_end (btn, false, false, 0);
 		btn.clicked.connect ( () => {
@@ -62,10 +60,18 @@ public class QueryRow : Gtk.Box {
 		pack_start (hbox, true, true, 0);
 
 		switch (combo_type.active) {
-			case 0:
-				Gtk.Entry _entry = new Gtk.Entry ();
-				hbox.pack_start (_entry, true, true, 0);
-				//Location
+			case types.LOCATION:
+				Gtk.FileChooserButton chooser;
+				chooser = new Gtk.FileChooserButton ("Select folder",
+		    	                                     Gtk.FileChooserAction.SELECT_FOLDER);
+				chooser.set_current_folder (Environment.get_home_dir ());
+				hbox.pack_start (chooser, true, true, 0);
+				chooser.file_set.connect (()=>{ chooser.tooltip_text = chooser.get_filename ();});
+
+				Gtk.CheckButton chk = new Gtk.CheckButton ();
+				chk.tooltip_text = "Recursively";
+				chk.active = true;
+				hbox.add (chk);
 				break;
 			default:
 				Gtk.Label label = new Gtk.Label ("test");
@@ -77,14 +83,16 @@ public class QueryRow : Gtk.Box {
 		hbox.show_all ();
 	 }
 
-	private const string[] types = {
-		"Location",
-		"Type",
-		"Extention",
-		"Modified",
-		"Text",
-		"Binary"
-	};
+	
 
 }
+
+public static const string[] type_names = {
+	"Location",
+	"File Mask",
+	"Mimetype",
+	"Text",
+	"Binary",
+	"Modified"
+};
 

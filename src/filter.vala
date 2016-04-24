@@ -1,6 +1,7 @@
 /* -*- Mode: vala; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
- * query-editor.vala
+ * token.vala
+ * Copyright (C) 2016 Kostiantyn Korienkov <kkorienkov <at> gmail.com>
  *
  * filefinder is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,31 +17,42 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class QueryEditor : Gtk.Box {
-	public GLib.List<QueryRow> rows;
+public class Filter {
+	private FilterNone none;
+	private FilterLocation location;
 	
-	public QueryEditor () {
-		GLib.Object (orientation:Gtk.Orientation.VERTICAL, spacing:0);
-		this.homogeneous = false;
-		this.get_style_context ().add_class ("search-bar");
-		this.margin = 0;
-		rows = new GLib.List<QueryRow> ();
+	public Filter () {
+		none = new FilterNone ();
+		location = new FilterLocation ();
 	}
 
-	public void add_row (QueryRow row) {
-		//pack_start (row, false, true, 0);
-		add (row);
-		row.closed.connect (on_row_close);
-		rows.append (row);
-		//row.label.label = "Query " + rows.length().to_string ();
-		//Debug.log (this.name, "added row"); 
+	private types _type = types.LOCATION;
+	public types filter_type {
+		get {
+			return _type;
+		}
+		set {
+			_type = value;
+		}
 	}
 
-	 private void on_row_close (QueryRow row) {
-		rows.remove (row);
-		row.dispose ();
+	public Object get_value () {
+		switch (filter_type) {
+			case types.LOCATION:
+				return location;
+			default:
+				return none;
+		}
 	}
 
-	
 }
 
+public enum types {
+	LOCATION,
+	FILEMASK,
+	MIMETYPE,
+	TEXT,
+	BINARY,
+	MODIFIED,
+	NONE
+}
