@@ -5,7 +5,7 @@ AC_INIT(filefinder, 0.1)
 
 AC_CONFIG_HEADERS([config.h])
 
-AM_INIT_AUTOMAKE([1.11])
+AM_INIT_AUTOMAKE([subdir-objects])
 
 AM_SILENT_RULES([yes])
 
@@ -48,5 +48,6 @@ AC_SUBST([NAUTILUS_EXTENSION_DIR],[${nautilusextensiondir}])
 AC_OUTPUT([
 Makefile
 src/Makefile
+src/nautilus/Makefile
 
 ])

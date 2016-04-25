@@ -2,6 +2,9 @@
 /*.lo
 /*.o
 /*.stamp
+*.dirstamp
+/*.tar.gz
+.deps/
 autom4te.cache/
 Debug/
 .anjuta/
@@ -16,7 +19,7 @@ Makefile.in
 Release/
 Optimized/
 INSTALL
-/Makefile
+*Makefile
 libtool
 ltmain.sh
 /stamp-h1
