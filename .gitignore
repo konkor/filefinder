@@ -1,9 +1,9 @@
 *~
-/*.lo
-/*.o
-/*.stamp
+*.lo
+*.o
+*.stamp
 *.dirstamp
-/*.tar.gz
+*.tar.gz
 .deps/
 autom4te.cache/
 Debug/

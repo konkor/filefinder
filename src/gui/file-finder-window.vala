@@ -19,6 +19,7 @@
 using Gtk;
 
 public class FileFinderWindow : Gtk.ApplicationWindow {
+	public signal void go_clicked (Query q);
 
 	public FileFinderWindow (Gtk.Application app) {
         GLib.Object (application: app);
@@ -121,7 +122,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 	 
     private void on_go_clicked () {
-        
+        go_clicked (query);
     }
 
     public int show_message (string text, MessageType type = MessageType.INFO) {
