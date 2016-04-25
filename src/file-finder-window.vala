@@ -35,7 +35,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	//private Gtk.Entry search_entry;
 	private Gtk.Paned paned;
 
-	 private QueryEditor editor;
+	private QueryEditor editor;
     
     protected void build () {
         set_position (Gtk.WindowPosition.CENTER);
@@ -178,5 +178,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
         return show_message (text, MessageType.ERROR);
     }
 
+	public Query query {
+		get {
+			return editor.query;
+		}
+	}
 }
 

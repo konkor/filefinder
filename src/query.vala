@@ -19,11 +19,44 @@
 
 public class Query : GLib.Object {
 
-	private List<string> locations;
-	private List<string> masks;
-	private List<FilterDate> modifieds;
-	public Query () {
+	private List<FilterLocation> locations;
+	private List<FilterMask> masks;
+	private List<FilterModified> modifieds;
+	private List<FilterMime> mimes;
+	private List<FilterText> texts;
+	private List<FilterBin> bins;
 
+	public Query () {
+		locations = new List<FilterLocation> ();
+		masks = new List<FilterMask> ();
+		modifieds = new List<FilterModified> ();
+		mimes = new List<FilterMime> ();
+		texts = new List<FilterText> ();
+		bins = new List<FilterBin> ();
+	}
+
+	public void add_filter (Filter filter) {
+		if (filter == null) return;
+		switch (filter.filter_type) {
+			case types.LOCATION:
+				locations.append ((FilterLocation)filter.filter_value);
+				break;
+			case types.FILEMASK:
+				masks.append ((FilterMask)filter.filter_value);
+				break;
+			case types.TEXT:
+				texts.append ((FilterText)filter.filter_value);
+				break;
+			case types.MODIFIED:
+				modifieds.append ((FilterModified)filter.filter_value);
+				break;
+			case types.BINARY:
+				bins.append ((FilterBin)filter.filter_value);
+				break;
+			case types.MIMETYPE:
+				mimes.append ((FilterMime)filter.filter_value);
+				break;
+		}
 	}
 
 }

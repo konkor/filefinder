@@ -1,6 +1,6 @@
 /* -*- Mode: vala; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
- * filter.vala
+ * filter-text.vala
  * Copyright (C) 2016 Kostiantyn Korienkov <kkorienkov <at> gmail.com>
  *
  * filefinder is free software: you can redistribute it and/or modify it
@@ -17,59 +17,20 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class Filter {
-	private FilterNone none;
-	private FilterLocation location;
-	
-	public Filter () {
-		none = new FilterNone ();
-		_type = types.NONE;
+public class FilterText : GLib.Object {
+
+	public FilterText () {
 	}
 
-	private types _type;
-	public types filter_type {
+	private string _text = "";
+	public string text {
 		get {
-			return _type;
+			return _text;
 		}
 		set {
-			_type = value;
-		}
-	}
-
-	public Object filter_value {
-		get {
-		switch (filter_type) {
-			case types.LOCATION:
-				return location;
-			default:
-				return none;
-		}
-		}
-		set {
-		if (value == null) {
-			filter_type = types.NONE;
-			return;
-		}
-		switch (value.get_type ().name ()) {
-			case "FilterLocation":
-				filter_type = types.LOCATION;
-				location =(FilterLocation) value;
-				break;
-			default:
-				filter_type = types.NONE;
-				break;
-		}
+			_text = value;
 		}
 	}
 
 }
 
-public enum types {
-	LOCATION,
-	FILEMASK,
-	MIMETYPE,
-	TEXT,
-	BINARY,
-	MODIFIED,
-	NONE
-}

@@ -34,7 +34,8 @@ public class QueryRow : Gtk.Box {
 		GLib.Object (orientation:Gtk.Orientation.HORIZONTAL, spacing:6);
 		this.margin = 2;
 		this.get_style_context ().add_class ("search-bar");
-		
+		_filter = new Filter ();
+
 		combo_type = new Gtk.ComboBoxText ();
 		foreach (string s in type_names) {
 			combo_type.append_text (s.up ());
@@ -72,6 +73,7 @@ public class QueryRow : Gtk.Box {
 		switch (combo_type.active) {
 			case types.LOCATION:
 				location = new FilterLocation ();
+				_filter.filter_value = location;
 				location.folder = Environment.get_home_dir ();
 				chooser = new Gtk.FileChooserButton ("Select folder",
 		    	                                     Gtk.FileChooserAction.SELECT_FOLDER);
@@ -90,7 +92,8 @@ public class QueryRow : Gtk.Box {
 				});
 				break;
 			default:
-				Gtk.Label label = new Gtk.Label ("test");
+				_filter.filter_type = types.NONE;
+				Gtk.Label label = new Gtk.Label ("none");
 				hbox.add (label);
 				break;
 		}

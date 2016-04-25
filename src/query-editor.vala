@@ -41,6 +41,15 @@ public class QueryEditor : Gtk.Box {
 		row.dispose ();
 	}
 
-	
+	private Query _q;
+	public Query query {
+		get {
+			_q = new Query ();
+			foreach (QueryRow p in rows) {
+				_q.add_filter (p.filter);
+			}
+			return _q;
+		}
+	}
 }
 
