@@ -23,10 +23,9 @@ public class Filter {
 	
 	public Filter () {
 		none = new FilterNone ();
-		location = new FilterLocation ();
 	}
 
-	private types _type = types.LOCATION;
+	private types _type = types.NONE;
 	public types filter_type {
 		get {
 			return _type;
@@ -36,12 +35,29 @@ public class Filter {
 		}
 	}
 
-	public Object get_value () {
+	public Object filter_value {
+		get {
 		switch (filter_type) {
 			case types.LOCATION:
 				return location;
 			default:
 				return none;
+		}
+		}
+		set {
+		if (value == null) {
+			filter_type = types.NONE;
+			return;
+		}
+		switch (value.get_type ().name ()) {
+			case "FilterLocation":
+				filter_type = types.LOCATION;
+				location =(FilterLocation) value;
+				break;
+			default:
+				filter_type = types.NONE;
+				break;
+		}
 		}
 	}
 

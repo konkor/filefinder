@@ -23,6 +23,13 @@ public class QueryRow : Gtk.Box {
 	private Gtk.ComboBoxText combo_type;
 	private Gtk.Box hbox;
 
+	private Filter _filter;
+	public Filter filter {
+		get {
+			return _filter;
+		}
+	}
+
 	public QueryRow () {
 		GLib.Object (orientation:Gtk.Orientation.HORIZONTAL, spacing:6);
 		this.margin = 2;
@@ -53,7 +60,10 @@ public class QueryRow : Gtk.Box {
 		show_all ();
 	}
 
-	 private void create_type_widgets () {
+	private FilterLocation location;
+	private Gtk.FileChooserButton chooser;
+	private Gtk.CheckButton chk_rec;
+	private void create_type_widgets () {
 		//TODO additional widgets by type
 		if (hbox != null) hbox.destroy ();
 		hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 4);
@@ -61,22 +71,27 @@ public class QueryRow : Gtk.Box {
 
 		switch (combo_type.active) {
 			case types.LOCATION:
-				Gtk.FileChooserButton chooser;
+				location = new FilterLocation ();
+				location.folder = Environment.get_home_dir ();
 				chooser = new Gtk.FileChooserButton ("Select folder",
 		    	                                     Gtk.FileChooserAction.SELECT_FOLDER);
-				chooser.set_current_folder (Environment.get_home_dir ());
+				chooser.set_current_folder (location.folder);
 				hbox.pack_start (chooser, true, true, 0);
-				chooser.file_set.connect (()=>{ chooser.tooltip_text = chooser.get_filename ();});
+				chooser.file_set.connect (()=>{ 
+					location.folder = chooser.tooltip_text = chooser.get_filename ();
+				});
 
-				Gtk.CheckButton chk = new Gtk.CheckButton ();
-				chk.tooltip_text = "Recursively";
-				chk.active = true;
-				hbox.add (chk);
+				chk_rec = new Gtk.CheckButton ();
+				chk_rec.tooltip_text = "Recursively";
+				chk_rec.active = true;
+				hbox.add (chk_rec);
+				chk_rec.toggled.connect (()=>{
+					location.recursive = chk_rec.active;
+				});
 				break;
 			default:
 				Gtk.Label label = new Gtk.Label ("test");
 				hbox.add (label);
-
 				break;
 		}
 
