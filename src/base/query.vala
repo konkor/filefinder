@@ -19,12 +19,12 @@
 
 public class Query : GLib.Object {
 
-	private List<FilterLocation> locations;
-	private List<FilterMask> masks;
-	private List<FilterModified> modifieds;
-	private List<FilterMime> mimes;
-	private List<FilterText> texts;
-	private List<FilterBin> bins;
+	public List<FilterLocation> locations;
+	public List<FilterMask> masks;
+	public List<FilterModified> modifieds;
+	public List<FilterMime> mimes;
+	public List<FilterText> texts;
+	public List<FilterBin> bins;
 
 	public Query () {
 		locations = new List<FilterLocation> ();

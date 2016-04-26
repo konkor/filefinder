@@ -32,7 +32,8 @@ filefinder_SOURCES = \
 	base/filter-text.vala \
 	base/filter-bin.vala \
 	base/filter-modified.vala \
-	service.vala
+	service.vala \
+	result.vala
 
 #config.vapi 
 

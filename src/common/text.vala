@@ -47,14 +47,15 @@ Copyright © 2016–2016 Kostiantyn Korienkov <kkorienkov@gmail.com>";
             
     public const  string app_help                  =
 @"Usage:
-  filefinder [FOLDER ...]
+  filefinder [OPTIONS] [PATH] ...]
 
 Options:
-  -h, --help       Show this help and exit
-  -v, --version    Show version number and exit
+  --help       Show this help and exit
+  --version    Show version number and exit
   --license        Show license and exit
   --debug          Print debug messages
-  -FOLDER        Path file to search
+
+  PATH         Path file to search
 
 Examples:
   * Find in /home/user folder:

@@ -1,6 +1,8 @@
 *~
 *.lo
+*.la
 *.o
+*.c
 *.stamp
 *.dirstamp
 *.tar.gz
@@ -32,6 +34,7 @@ config.guess
 config.sub
 src/.deps/
 src/.libs/
+src/nautilus/.libs/
 src/Makefile
 src/filefinder
 src/*.c

@@ -62,7 +62,7 @@ public class QueryRow : Gtk.Box {
 	}
 
 	private FilterLocation location;
-	private Gtk.FileChooserButton chooser;
+	public Gtk.FileChooserButton chooser;
 	private Gtk.CheckButton chk_rec;
 	private void create_type_widgets () {
 		//TODO additional widgets by type

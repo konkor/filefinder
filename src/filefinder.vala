@@ -24,16 +24,34 @@ public class Filefinder : Gtk.Application
 {
 	public static bool debugging;
 	public static FileFinderWindow window;
+	public static Service service;
+	private List<string> uris;
 
 	private const GLib.ActionEntry[] action_entries = {
         {"about", about_cb},
         {"quit", quit_cb}
     };
 
-	public Filefinder ()
+	public Filefinder (string[] args)
 	{
 		Object (application_id: "org.konkor.filefinder",
 		        flags: ApplicationFlags.HANDLES_OPEN);
+		uris = new List<string>();
+		int i, count = args.length;
+		for (i = 1; i < count; i++) {
+			switch (args[i]) {
+				case "--help":
+				case "--version":
+				case "--license":
+				case "--debug":
+					break;
+				default:
+					if (exist (args[i]))
+						uris.append (args[i]);
+					break;
+			}
+		}
+		
 	}
 
 	protected override void startup () {
@@ -49,9 +67,19 @@ public class Filefinder : Gtk.Application
 
         Environment.set_application_name (Text.app_name);
 
-        window = new FileFinderWindow (this);
+		service = new Service ();
+
+		window = new FileFinderWindow (this);
 		window.show_all ();
 		window.post_init ();
+		window.go_clicked.connect ((q)=>{
+			service.start (q);
+		});
+		service.finished_search.connect (()=>{
+			window.show_results (service.results);
+		});
+        //window.add_locations (uris);
+		open.connect (()=>{window.add_locations (uris);});
     }
 
     protected override void activate () {
@@ -83,6 +111,9 @@ public class Filefinder : Gtk.Application
                                 null);
     }
 
-	
+	public static bool exist (string filepath) {
+        GLib.File file = File.new_for_path (filepath.strip ());
+        return file.query_exists ();
+    }
 }
 

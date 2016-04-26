@@ -35,12 +35,17 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	private Gtk.Button button_plus;
 	//private Gtk.Entry search_entry;
 	private Gtk.Paned paned;
+	private Gtk.AccelGroup accel_group;
 
 	private QueryEditor editor;
     
     protected void build () {
         set_position (Gtk.WindowPosition.CENTER);
         //set_border_width (4);
+
+		accel_group = new AccelGroup ();
+		this.add_accel_group (accel_group);
+		
         hb = new Gtk.HeaderBar ();
 		hb.has_subtitle = false;
 		hb.title = Environment.get_home_dir ();
@@ -72,6 +77,9 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		button_plus = new Button.from_icon_name ("list-add-symbolic", IconSize.BUTTON);
 		button_plus.use_underline = true;
 		button_plus.tooltip_text = "Add Query";
+		button_plus.add_accelerator ("clicked", accel_group,
+		                               Gdk.keyval_from_name("Insert"), 0,
+		                               AccelFlags.VISIBLE);
 		hb.pack_start (button_plus);
 
         vbox1 = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
@@ -95,8 +103,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		editor.expand = true;
 		scrolledwindow.add (editor);
 		button_plus.clicked.connect ( ()=>{
-			paned.
-				visible = true;
+			paned.visible = true;
 			if (paned.position < 200) {
 				paned.position += 24;
 			}
@@ -120,7 +127,15 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	public void post_init () {
 		paned.visible = false;
 	}
-	 
+
+	public void add_locations (List<string> uris) {
+		foreach (string s in uris) {
+			paned.visible = true;
+			editor.add_row (new QueryRow ());
+			((QueryRow) editor.rows.last().data).chooser.select_filename (s); 
+		}
+	}
+
     private void on_go_clicked () {
         go_clicked (query);
     }
@@ -183,6 +198,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		get {
 			return editor.query;
 		}
+	}
+
+	public void show_results (List<Result> results) {
+		//show
 	}
 }
 

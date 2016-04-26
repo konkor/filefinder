@@ -23,7 +23,29 @@ static int main (string[] args) {
 
 	Filefinder.debugging = true;
 
-	var app = new Filefinder ();
+    foreach (string s in args) {
+		if ((s == "-h") || (s == "--help"))
+		{
+			stdout.printf ("%s\n", Text.app_help);
+			return 0;
+		}
+		if ((s == "-v") || (s == "--version"))
+		{
+			stdout.printf ("%s\n", Text.app_name + " " + Text.app_version);
+			return 0;
+		}
+		if (s == "--license")
+		{
+			stdout.printf ("%s\n", "\n" + Text.app_info + "\n\n" + Text.app_license + "\n");
+			return 0;
+		}
+		else if (s == "--debug")
+		{
+			Filefinder.debugging = true;
+		}
+	}
+
+	var app = new Filefinder (args);
 
 	return app.run (args);
 }
