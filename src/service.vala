@@ -80,7 +80,7 @@ public class Service : GLib.Object {
 							list_dir (path + Path.DIR_SEPARATOR_S + info.get_name (), recursive);
 						}
 					}
-            		print("%s\n", info.get_name ());
+            		//print("%s\n", info.get_name ());
         		}
     		}
 		} catch (Error err) {
