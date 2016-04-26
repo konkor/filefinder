@@ -48,7 +48,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		
         hb = new Gtk.HeaderBar ();
 		hb.has_subtitle = false;
-		hb.title = Environment.get_home_dir ();
+		hb.title = Text.app_name;
         hb.set_show_close_button (true);
         set_titlebar (hb);
 
@@ -116,7 +116,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		scrolledwindow.shadow_type = Gtk.ShadowType.OUT;
 		paned.pack2 (scrolledwindow, false, false);
 		
-        set_default_size (640, 480);
+        set_default_size (800, 512);
     }
 
     private void initialize () {
@@ -143,8 +143,8 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
     public int show_message (string text, MessageType type = MessageType.INFO) {
         if (infoBar != null) infoBar.destroy ();
         if (type == Gtk.MessageType.QUESTION) {
-            infoBar = new InfoBar.with_buttons (Gtk.Stock.YES, Gtk.ResponseType.YES,
-                                                Gtk.Stock.CANCEL, Gtk.ResponseType.CANCEL);
+            infoBar = new InfoBar.with_buttons (Gtk.STOCK_YES, Gtk.ResponseType.YES,
+                                                Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL);
         } else {
             infoBar = new InfoBar.with_buttons ("gtk-close", Gtk.ResponseType.CLOSE);
             infoBar.set_default_response (Gtk.ResponseType.OK);

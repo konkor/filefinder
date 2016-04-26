@@ -64,6 +64,15 @@ public class QueryRow : Gtk.Box {
 	private FilterLocation location;
 	public Gtk.FileChooserButton chooser;
 	private Gtk.CheckButton chk_rec;
+
+	private FilterMime mime;
+	private Gtk.ComboBoxText mime_group;
+	private Gtk.ComboBoxText mime_type;
+
+	private FilterMask mask;
+	private Gtk.Entry mask_entry;
+	private Gtk.CheckButton mask_case;
+
 	private void create_type_widgets () {
 		//TODO additional widgets by type
 		if (hbox != null) hbox.destroy ();
@@ -91,6 +100,58 @@ public class QueryRow : Gtk.Box {
 					location.recursive = chk_rec.active;
 				});
 				break;
+			case types.MIMETYPE:
+				mime = new FilterMime ();
+				_filter.filter_value = mime;
+				mime_group = new Gtk.ComboBoxText ();
+				foreach (MimeGroup s in mime_type_groups) {
+					mime_group.append_text (s.name);
+				}
+				mime_group.active = 0;
+				hbox.add (mime_group);
+				mime_group.changed.connect (() => {
+					mime.clear ();
+					mime_type.remove_all ();
+					mime_type.append_text ("Any");
+					foreach (string s in mime_type_groups[mime_group.active].mimes) {
+						mime_type.append_text (s);
+						mime.add_mime (s);
+					}
+					mime_type.active = 0;
+				});
+
+				mime_type = new Gtk.ComboBoxText ();
+				mime_type.append_text ("Any");
+				foreach (string s in mime_type_groups[0].mimes) {
+					mime_type.append_text (s);
+				}
+				mime_type.active = 0;
+				mime_type.changed.connect (() => {
+					mime.clear ();
+					if (mime_type.active == 0) {
+						foreach (string s in mime_type_groups[mime_group.active].mimes) {
+							mime.add_mime (s);
+						}
+					} else {
+						mime.add_mime (mime_type.get_active_text ());
+					}
+				});
+				hbox.pack_start (mime_type, true, true, 0);
+				mime_type.expand = false;
+				break;
+			case types.FILEMASK:
+				mask = new FilterMask ();
+				_filter.filter_value = mask;
+				mask_entry = new Gtk.Entry ();
+				hbox.pack_start (mask_entry, true, true, 0);
+				
+				mask_case = new Gtk.CheckButton ();
+				mask_case.tooltip_text = "Case sensitive";
+				hbox.add (mask_case);
+				mask_case.toggled.connect (()=>{
+					//mask.case = mask_case.active;
+				});
+				break;
 			default:
 				_filter.filter_type = types.NONE;
 				Gtk.Label label = new Gtk.Label ("none");
@@ -101,7 +162,121 @@ public class QueryRow : Gtk.Box {
 		hbox.show_all ();
 	 }
 
-	
+
+	 public MimeGroup[] mime_type_groups = {
+	MimeGroup (){ name = "Text File",
+	  mimes = { "text/plain"
+	  }
+	},
+	MimeGroup (){ name = "Documents",
+	  mimes = { "application/rtf",
+	    "application/msword",
+	    "application/vnd.sun.xml.writer",
+	    "application/vnd.sun.xml.writer.global",
+	    "application/vnd.sun.xml.writer.template",
+	    "application/vnd.oasis.opendocument.text",
+	    "application/vnd.oasis.opendocument.text-template",
+	    "application/x-abiword",
+	    "application/x-applix-word",
+	    "application/x-mswrite",
+	    "application/docbook+xml",
+	    "application/x-kword",
+	    "application/x-kword-crypt",
+	    "application/x-lyx"
+	  }
+	},
+	MimeGroup (){ name = "Music",
+	  mimes = { "application/ogg",
+	    "audio/x-vorbis+ogg",
+	    "audio/ac3",
+	    "audio/basic",
+	    "audio/midi",
+	    "audio/x-flac",
+	    "audio/mp4",
+	    "audio/mpeg",
+	    "audio/x-mpeg",
+	    "audio/x-ms-asx",
+	    "audio/x-pn-realaudio"
+	  }
+	},
+	MimeGroup (){ name = "Video",
+	  mimes = { "video/mp4",
+	    "video/3gpp",
+	    "video/mpeg",
+	    "video/quicktime",
+	    "video/vivo",
+	    "video/x-avi",
+	    "video/x-mng",
+	    "video/x-ms-asf",
+	    "video/x-ms-wmv",
+	    "video/x-msvideo",
+	    "video/x-nsv",
+	    "video/x-real-video"
+	  }
+	},
+	MimeGroup (){ name = "Picture",
+	  mimes = { "application/vnd.oasis.opendocument.image",
+	    "application/x-krita",
+	    "image/bmp",
+	    "image/cgm",
+	    "image/gif",
+	    "image/jpeg",
+	    "image/jpeg2000",
+	    "image/png",
+	    "image/svg+xml",
+	    "image/tiff",
+	    "image/x-compressed-xcf",
+	    "image/x-pcx",
+	    "image/x-photo-cd",
+	    "image/x-psd",
+	    "image/x-tga",
+	    "image/x-xcf"
+	  }
+	},
+	MimeGroup (){ name = "Illustration",
+	  mimes = { "application/illustrator",
+	    "application/vnd.corel-draw",
+	    "application/vnd.stardivision.draw",
+	    "application/vnd.oasis.opendocument.graphics",
+	    "application/x-dia-diagram",
+	    "application/x-karbon",
+	    "application/x-killustrator",
+	    "application/x-kivio",
+	    "application/x-kontour",
+	    "application/x-wpg"
+	  }
+	},
+	MimeGroup (){ name = "Spreadsheet",
+	  mimes = { "application/vnd.lotus-1-2-3",
+	    "application/vnd.ms-excel",
+	    "application/vnd.stardivision.calc",
+	    "application/vnd.sun.xml.calc",
+	    "application/vnd.oasis.opendocument.spreadsheet",
+	    "application/x-applix-spreadsheet",
+	    "application/x-gnumeric",
+	    "application/x-kspread",
+	    "application/x-kspread-crypt",
+	    "application/x-quattropro",
+	    "application/x-sc",
+	    "application/x-siag"
+	  }
+	},
+	MimeGroup (){ name = "Presentation",
+	  mimes = { "application/vnd.ms-powerpoint",
+	    "application/vnd.sun.xml.impress",
+	    "application/vnd.oasis.opendocument.presentation",
+	    "application/x-magicpoint",
+	    "application/x-kpresenter"
+	  }
+	},
+	MimeGroup (){ name = "PDF / PostScript",
+	  mimes = { "application/pdf",
+	    "application/postscript",
+	    "application/x-dvi",
+	    "image/x-eps"
+	  }
+	}
+};
 
 }
 
@@ -113,4 +288,35 @@ public static const string[] type_names = {
 	"Binary",
 	"Modified"
 };
+
+public static const string[] mime_groups = {
+	"Documents",
+	"Music",
+	"Video",
+	"Picture",
+	"Illustration",
+	"Spreadsheet",
+	"Presentation",
+	"PDF / PostScript",
+	"Text File"
+};
+
+public static const string[] mime_types = {
+	"Documents",
+	"Music",
+	"Video",
+	"Picture",
+	"Illustration",
+	"Spreadsheet",
+	"Presentation",
+	"PDF / PostScript",
+	"Text File"
+};
+
+public struct MimeGroup {
+	public string name;
+	public string[] mimes;
+} 
+
+
 

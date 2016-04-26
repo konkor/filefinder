@@ -20,17 +20,23 @@
 public class FilterMime : GLib.Object {
 
 	public FilterMime () {
+		_mime = new GLib.List<string>();
 	}
 
-	private string _mime = "";
-	public string mime {
+	private List<string> _mime;
+	public List<string> mime {
 		get {
 			return _mime;
 		}
-		set {
-			_mime = value;
-		}
 	}
 
+	public void add_mime (string? mimetype) {
+		if (mimetype == null) return;
+		_mime.append (mimetype);
+	}
+
+	public void clear () {
+		_mime = new GLib.List<string>();
+	}
 }
 

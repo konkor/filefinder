@@ -38,8 +38,8 @@ filefinder_SOURCES = \
 #config.vapi 
 
 filefinder_VALAFLAGS =  \
-	--pkg gtk+-3.0
-
+	--pkg gtk+-3.0 \
+	-g --save-temps
 
 filefinder_LDFLAGS = \
 	-Wl,--export-dynamic

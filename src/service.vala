@@ -66,6 +66,12 @@ public class Service : GLib.Object {
 		var dir = File.new_for_path (path);
 		if (!dir.query_exists ()) return;
 	    try {
+			if (dir.query_file_type (FileQueryInfoFlags.NONE) != FileType.DIRECTORY) {
+				if (apply_masks (dir.query_info ("*", 0))) {
+					on_found_file (dir.query_info ("*", 0));
+				}
+				return;
+			}
 		    var e = yield dir.enumerate_children_async(
     		    FileAttribute.STANDARD_NAME, 0, Priority.DEFAULT, null);
     		while (true) {
@@ -80,12 +86,19 @@ public class Service : GLib.Object {
 							list_dir (path + Path.DIR_SEPARATOR_S + info.get_name (), recursive);
 						}
 					}
-            		//print("%s\n", info.get_name ());
+            		if (apply_masks (info)) {
+						on_found_file (info);
+					}
         		}
     		}
 		} catch (Error err) {
     		Debug.error (this.get_type().to_string(), err.message);
 		}
+	}
+
+	private bool apply_masks (FileInfo info) {
+		
+		return false;
 	}
 
 	private void get_files_thread () {
@@ -94,8 +107,8 @@ public class Service : GLib.Object {
 		}
 	}
 
-	private void on_found_file (string filename) {
-		//add file
+	private void on_found_file (FileInfo info) {
+		Debug.info ("on_found_file", "Found '%s'".printf (info.get_name ()));
 	}
 
 	private void on_found_result (Result result) {
