@@ -85,7 +85,8 @@ public class QueryRow : Gtk.Box {
 	private Gtk.CheckButton mask_case;
 
 	private FilterModified modified;
-	
+	private Gtk.Button mod_btn;
+
 	private void create_type_widgets () {
 		//TODO additional widgets by type
 		if (hbox != null) hbox.destroy ();
@@ -137,7 +138,8 @@ public class QueryRow : Gtk.Box {
 							files.add (uri);
 						}
 						files_btn.label = uris.nth(0).data;
-						if (uris.length() > 1) files_btn.label += ",...";
+						if (uris.length() > 1)
+							files_btn.label += " ... (%u selected items)".printf (uris.length());
 					}
 					c.close ();
 				});				
@@ -178,7 +180,7 @@ public class QueryRow : Gtk.Box {
 						mime.add (mime_type.get_active_text ());
 					}
 				});
-				hbox.pack_start (mime_type, true, true, 0);
+				hbox.pack_start (mime_type, true, true, 6);
 				mime_type.expand = false;
 				break;
 			case types.FILEMASK:
@@ -207,6 +209,26 @@ public class QueryRow : Gtk.Box {
 				mod_combo.active = modified.operator;
 				mod_combo.changed.connect (() => {
 					modified.operator =(date_operator) mod_combo.active;
+				});
+				hbox.pack_start (mod_combo, false, false, 0);
+
+				mod_btn = new Gtk.Button ();
+				mod_btn.label = "%04d-%02d-%02d".printf (modified.date.get_year(),
+				                                         modified.date.get_month(),
+				                                         modified.date.get_day_of_month());
+				hbox.pack_start (mod_btn, false, true, 6);
+				mod_btn.clicked.connect (()=>{
+					Gtk.Popover pop = new Gtk.Popover (mod_btn);
+					Gtk.Calendar cal = new Gtk.Calendar ();
+					cal.year = modified.date.get_year ();
+					cal.month = modified.date.get_month ();
+					cal.day = modified.date.get_day_of_month ();
+					cal.day_selected.connect (()=>{
+						modified.date = new DateTime.local (cal.year, cal.month, cal.day, 0, 0, 0);
+						mod_btn.label = "%04d-%02d-%02d".printf (cal.year, cal.month, cal.day);
+					});
+					pop.add (cal);
+					pop.show_all ();
 				});
 
 				break;
@@ -337,16 +359,6 @@ public class QueryRow : Gtk.Box {
 };
 
 }
-
-public static const string[] type_names = {
-	"Location",
-	"Files",
-	"File Mask",
-	"Mimetype",
-	"Text",
-	"Binary",
-	"Modified"
-};
 
 public struct MimeGroup {
 	public string name;

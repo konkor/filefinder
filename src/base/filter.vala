@@ -74,3 +74,13 @@ public enum types {
 	MODIFIED,
 	NONE
 }
+
+public static const string[] type_names = {
+	"Location",
+	"Files",
+	"File Mask",
+	"Mimetype",
+	"Text",
+	"Binary",
+	"Modified"
+};

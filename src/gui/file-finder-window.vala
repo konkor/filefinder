@@ -37,6 +37,8 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	private Gtk.Paned paned;
 	private Gtk.AccelGroup accel_group;
 
+	private Gtk.Box empty_box;
+
 	private QueryEditor editor;
     
     protected void build () {
@@ -52,25 +54,12 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
         hb.set_show_close_button (true);
         set_titlebar (hb);
 
-		/*Gtk.FileChooserButton chooser = new Gtk.FileChooserButton ("Select folder",
-		                                                           Gtk.FileChooserAction.SELECT_FOLDER);
-		chooser.set_current_folder (Environment.get_home_dir ());
-		hb.pack_start (chooser);
-		chooser.file_set.connect (()=>{ hb.title = chooser.get_filename ();});
-		*/
-		/*search_entry = new Gtk.Entry ();
-		search_entry.halign = Gtk.Align.FILL;
-		search_entry.expand = true;
-		hb.set_custom_title (search_entry);*/
-
-        button_go = new Gtk.Button ( );
+		button_go = new Gtk.Button ( );
         button_go.use_underline = true;
         button_go.can_default = true;
         this.set_default (button_go);
         button_go.label = "Search";
         button_go.tooltip_text = "Start Search";
-        //Gtk.Image image = new Gtk.Image.from_stock (Gtk.Stock.EXECUTE, Gtk.IconSize.BUTTON);
-        //button_go.add (image);
 		button_go.get_style_context ().add_class ("suggested-action");
         hb.pack_end (button_go);
 
@@ -86,15 +75,23 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
         add (vbox1);
 
         infoBox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
-		vbox1.pack_start (infoBox,false,true,0);
+		vbox1.pack_start (infoBox, false, true, 0);
+
+		empty_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 40);
+		empty_box.margin = 80;
+		vbox1.pack_start (empty_box, true, true, 0);
+
+		Gtk.Image image = new Gtk.Image.from_icon_name ("folder-documents-symbolic", Gtk.IconSize.DIALOG);
+        empty_box.add (image);
+		empty_box.add (new Label("No search results."));
 
         paned = new Gtk.Paned (Gtk.Orientation.VERTICAL);
+		paned.events |= Gdk.EventMask.VISIBILITY_NOTIFY_MASK;
 		paned.can_focus = true;
 		paned.position = 32;
 		vbox1.add (paned);
 
 		Gtk.ScrolledWindow scrolledwindow = new Gtk.ScrolledWindow (null, null);
-		//scrolledwindow.can_focus = true;
 		scrolledwindow.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
 		scrolledwindow.shadow_type = Gtk.ShadowType.OUT;
 		paned.pack1 (scrolledwindow, false, false);
@@ -111,7 +108,6 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		});
 
 		scrolledwindow = new Gtk.ScrolledWindow (null, null);
-		//scrolledwindow.can_focus = true;
 		scrolledwindow.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
 		scrolledwindow.shadow_type = Gtk.ShadowType.OUT;
 		paned.pack2 (scrolledwindow, false, false);
@@ -121,7 +117,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
     private void initialize () {
         button_go.clicked.connect (on_go_clicked);
-        
+        paned.visibility_notify_event.connect (()=>{
+			empty_box.visible = !paned.visible;
+			return false;
+		});
 	}
 
 	public void post_init () {

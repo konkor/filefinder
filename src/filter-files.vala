@@ -1,6 +1,6 @@
 /* -*- Mode: vala; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
- * filter-modified.vala
+ * filter-files.vala
  * Copyright (C) 2016 Kostiantyn Korienkov <kkorienkov <at> gmail.com>
  *
  * filefinder is free software: you can redistribute it and/or modify it
@@ -17,47 +17,26 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class FilterModified : GLib.Object {
+public class FilterFiles : GLib.Object {
 
-	public FilterModified () {
+	public FilterFiles () {
+		_files = new GLib.List<string>();
 	}
 
-	private date_operator _op = date_operator.EQUAL;
-	public date_operator operator {
+	private List<string> _files;
+	public List<string> files {
 		get {
-			return _op;
-		}
-		set {
-			_op = value;
+			return _files;
 		}
 	}
 
-	private DateTime _date = new DateTime.now_local();
-	public DateTime date {
-		get {
-			return _date;
-		}
-		set {
-			_date = value;
-		}
+	public void add (string? path) {
+		if (path == null) return;
+		_files.append (path);
 	}
 
+	public void clear () {
+		_files = new GLib.List<string>();
+	}
 }
 
-public enum date_operator {
-	NOT_EQUAL,
-	LESS,
-	LESS_EQUAL,
-	EQUAL,
-	MORE_EQUAL,
-	MORE
-}
-
-public static const string[] date_operators = {
-	"not equal",
-	"less",
-	"less or equal",
-	"equal",
-	"more or equal",
-	"more"
-};
