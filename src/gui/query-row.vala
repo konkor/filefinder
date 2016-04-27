@@ -87,6 +87,13 @@ public class QueryRow : Gtk.Box {
 	private FilterModified modified;
 	private Gtk.Button mod_btn;
 
+	private FilterText text;
+	private Gtk.Entry text_entry;
+	private Gtk.CheckButton text_case;
+
+	private FilterBin bin;
+	private Gtk.Entry bin_entry;
+
 	private void create_type_widgets () {
 		//TODO additional widgets by type
 		if (hbox != null) hbox.destroy ();
@@ -231,6 +238,33 @@ public class QueryRow : Gtk.Box {
 					pop.show_all ();
 				});
 
+				break;
+			case types.TEXT:
+				text = new FilterText ();
+				_filter.filter_value = text;
+				text_entry = new Gtk.Entry ();
+				hbox.pack_start (text_entry, true, true, 0);
+				text_entry.changed.connect (()=>{
+					text.text = text_entry.text;
+				});
+
+				text_case = new Gtk.CheckButton ();
+				text_case.tooltip_text = "Case sensitive";
+				hbox.add (text_case);
+				text_case.toggled.connect (()=>{
+					text.case_sensetive = mask_case.active;
+				});
+				break;
+			case types.BINARY:
+				bin = new FilterBin ();
+				_filter.filter_value = bin;
+				hbox.pack_start (new Gtk.Label("0x"), false, false, 0);
+				bin_entry = new Gtk.Entry ();
+				hbox.pack_start (bin_entry, true, true, 0);
+				bin_entry.changed.connect (()=>{
+					//bin_entry.text = check_hex (bin_entry.text);
+					bin.bin = bin_entry.text;
+				});
 				break;
 			default:
 				_filter.filter_type = types.NONE;
