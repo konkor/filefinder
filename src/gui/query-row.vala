@@ -84,6 +84,8 @@ public class QueryRow : Gtk.Box {
 	private Gtk.Entry mask_entry;
 	private Gtk.CheckButton mask_case;
 
+	private FilterModified modified;
+	
 	private void create_type_widgets () {
 		//TODO additional widgets by type
 		if (hbox != null) hbox.destroy ();
@@ -187,13 +189,26 @@ public class QueryRow : Gtk.Box {
 				mask_entry.changed.connect (()=>{
 					mask.mask = mask_entry.text;
 				});
-				
+
 				mask_case = new Gtk.CheckButton ();
 				mask_case.tooltip_text = "Case sensitive";
 				hbox.add (mask_case);
 				mask_case.toggled.connect (()=>{
 					mask.case_sensetive = mask_case.active;
 				});
+				break;
+			case types.MODIFIED:
+				modified = new FilterModified ();
+				_filter.filter_value = modified;
+				Gtk.ComboBoxText mod_combo = new Gtk.ComboBoxText ();
+				foreach (string s in date_operators) {
+					mod_combo.append_text (s);
+				}
+				mod_combo.active = modified.operator;
+				mod_combo.changed.connect (() => {
+					modified.operator =(date_operator) mod_combo.active;
+				});
+
 				break;
 			default:
 				_filter.filter_type = types.NONE;
