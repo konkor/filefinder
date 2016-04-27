@@ -32,5 +32,14 @@ public class FilterMask : GLib.Object {
 		}
 	}
 
+	private bool _case = false;
+	public bool case_sensetive {
+		get {
+			return _case;
+		}
+		set {
+			_case = value;
+		}
+	}
 }
 

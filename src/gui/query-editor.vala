@@ -33,7 +33,7 @@ public class QueryEditor : Gtk.Box {
 		row.closed.connect (on_row_close);
 		rows.append (row);
 		//row.label.label = "Query " + rows.length().to_string ();
-		//Debug.log (this.name, "added row"); 
+		//Debug.log (this.name, "added row");
 	}
 
 	 private void on_row_close (QueryRow row) {
@@ -50,6 +50,20 @@ public class QueryEditor : Gtk.Box {
 			}
 			return _q;
 		}
+	}
+
+	public void add_folder (string path) {
+		QueryRow row = new QueryRow ();
+		row.chooser.select_filename (path);
+		add_row (row);
+	}
+
+	public void add_file (string path) {
+		QueryRow row = new QueryRow ();
+		row.row_type = types.FILES;
+		row.files.add (path);
+		row.files_btn.label = path;
+		add_row (row);
 	}
 }
 

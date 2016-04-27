@@ -30,7 +30,7 @@ public class FilterMime : GLib.Object {
 		}
 	}
 
-	public void add_mime (string? mimetype) {
+	public void add (string? mimetype) {
 		if (mimetype == null) return;
 		_mime.append (mimetype);
 	}

@@ -30,6 +30,14 @@ public class QueryRow : Gtk.Box {
 		}
 	}
 
+	public types row_type {
+		get {
+			return (types)combo_type.active;
+		}
+		set {
+			combo_type.active = value;
+		}
+	}
 	public QueryRow () {
 		GLib.Object (orientation:Gtk.Orientation.HORIZONTAL, spacing:6);
 		this.margin = 2;
@@ -64,6 +72,9 @@ public class QueryRow : Gtk.Box {
 	private FilterLocation location;
 	public Gtk.FileChooserButton chooser;
 	private Gtk.CheckButton chk_rec;
+
+	public FilterFiles files;
+	public Gtk.Button files_btn;
 
 	private FilterMime mime;
 	private Gtk.ComboBoxText mime_group;
@@ -100,6 +111,35 @@ public class QueryRow : Gtk.Box {
 					location.recursive = chk_rec.active;
 				});
 				break;
+			case types.FILES:
+				files = new FilterFiles ();
+				_filter.filter_value = files;
+				files_btn = new Gtk.Button.from_icon_name ("document-open-symbolic", Gtk.IconSize.BUTTON);
+				files_btn.label = "NONE";
+				files_btn.always_show_image = true;
+				files_btn.xalign = 0;
+				hbox.pack_start (files_btn, true, true, 0);
+				files_btn.clicked.connect (()=>{
+					Gtk.FileChooserDialog c = new Gtk.FileChooserDialog ("Select files",
+																		Filefinder.window,
+																		Gtk.FileChooserAction.OPEN,
+																		"_Cancel",
+																		Gtk.ResponseType.CANCEL,
+																		"_Open",
+																		Gtk.ResponseType.ACCEPT);
+					c.select_multiple = true;
+					if (c.run () == Gtk.ResponseType.ACCEPT) {
+						SList<string> uris = c.get_filenames ();
+						files.clear ();
+						foreach (unowned string uri in uris) {
+							files.add (uri);
+						}
+						files_btn.label = uris.nth(0).data;
+						if (uris.length() > 1) files_btn.label += ",...";
+					}
+					c.close ();
+				});				
+				break;
 			case types.MIMETYPE:
 				mime = new FilterMime ();
 				_filter.filter_value = mime;
@@ -115,7 +155,7 @@ public class QueryRow : Gtk.Box {
 					mime_type.append_text ("Any");
 					foreach (string s in mime_type_groups[mime_group.active].mimes) {
 						mime_type.append_text (s);
-						mime.add_mime (s);
+						mime.add (s);
 					}
 					mime_type.active = 0;
 				});
@@ -130,10 +170,10 @@ public class QueryRow : Gtk.Box {
 					mime.clear ();
 					if (mime_type.active == 0) {
 						foreach (string s in mime_type_groups[mime_group.active].mimes) {
-							mime.add_mime (s);
+							mime.add (s);
 						}
 					} else {
-						mime.add_mime (mime_type.get_active_text ());
+						mime.add (mime_type.get_active_text ());
 					}
 				});
 				hbox.pack_start (mime_type, true, true, 0);
@@ -144,12 +184,15 @@ public class QueryRow : Gtk.Box {
 				_filter.filter_value = mask;
 				mask_entry = new Gtk.Entry ();
 				hbox.pack_start (mask_entry, true, true, 0);
+				mask_entry.changed.connect (()=>{
+					mask.mask = mask_entry.text;
+				});
 				
 				mask_case = new Gtk.CheckButton ();
 				mask_case.tooltip_text = "Case sensitive";
 				hbox.add (mask_case);
 				mask_case.toggled.connect (()=>{
-					//mask.case = mask_case.active;
+					mask.case_sensetive = mask_case.active;
 				});
 				break;
 			default:
@@ -282,35 +325,12 @@ public class QueryRow : Gtk.Box {
 
 public static const string[] type_names = {
 	"Location",
+	"Files",
 	"File Mask",
 	"Mimetype",
 	"Text",
 	"Binary",
 	"Modified"
-};
-
-public static const string[] mime_groups = {
-	"Documents",
-	"Music",
-	"Video",
-	"Picture",
-	"Illustration",
-	"Spreadsheet",
-	"Presentation",
-	"PDF / PostScript",
-	"Text File"
-};
-
-public static const string[] mime_types = {
-	"Documents",
-	"Music",
-	"Video",
-	"Picture",
-	"Illustration",
-	"Spreadsheet",
-	"Presentation",
-	"PDF / PostScript",
-	"Text File"
 };
 
 public struct MimeGroup {

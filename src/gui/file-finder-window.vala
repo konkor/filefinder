@@ -129,10 +129,18 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
 	public void add_locations (List<string> uris) {
+		File file;
 		foreach (string s in uris) {
+			file = File.new_for_path (s);
 			paned.visible = true;
-			editor.add_row (new QueryRow ());
-			((QueryRow) editor.rows.last().data).chooser.select_filename (s); 
+			if (file.query_file_type (FileQueryInfoFlags.NONE) == FileType.DIRECTORY) {
+				editor.add_folder (s);
+			} else {
+				editor.add_file (s);
+			}
+			if (paned.position < 200) {
+				paned.position += 24;
+			}
 		}
 	}
 

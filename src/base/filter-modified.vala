@@ -22,15 +22,34 @@ public class FilterModified : GLib.Object {
 	public FilterModified () {
 	}
 
-	private string _modified = "";
-	public string modified {
+	private date_operator _op = date_operator.EQUAL;
+	public date_operator operator {
 		get {
-			return _modified;
+			return _op;
 		}
 		set {
-			_modified = value;
+			_op = value;
 		}
 	}
 
+	private DateTime _date = new DateTime.utc (1970,1,1,0,0,0);
+	public DateTime date {
+		get {
+			return _date;
+		}
+		set {
+			_date = value;
+		}
+	}
+
+}
+
+public enum date_operator {
+	NOT_EQUAL,
+	LESS,
+	LESS_EQUAL,
+	EQUAL,
+	MORE_EQUAL,
+	MORE
 }
 

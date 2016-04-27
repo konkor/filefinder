@@ -24,7 +24,6 @@ filefinder_SOURCES = \
 	gui/query-editor.vala \
 	base/query.vala \
 	base/filter.vala \
-	base/filter-date.vala \
 	base/filter-location.vala \
 	base/filter-none.vala \
 	base/filter-mask.vala \
@@ -33,7 +32,8 @@ filefinder_SOURCES = \
 	base/filter-bin.vala \
 	base/filter-modified.vala \
 	service.vala \
-	result.vala
+	result.vala \
+	filter-files.vala
 
 #config.vapi 
 
