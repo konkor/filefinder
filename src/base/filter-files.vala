@@ -17,10 +17,14 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class FilterFiles : GLib.Object {
+public class FilterFiles : GLib.Object, iFilter {
 
 	public FilterFiles () {
 		_files = new GLib.List<string>();
+	}
+
+	public types filter_type () {
+		return types.FILES;
 	}
 
 	private List<string> _files;

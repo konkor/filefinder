@@ -99,7 +99,6 @@ public class QueryRow : Gtk.Box {
 		if (hbox != null) hbox.destroy ();
 		hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 4);
 		pack_start (hbox, true, true, 0);
-
 		switch (combo_type.active) {
 			case types.LOCATION:
 				location = new FilterLocation ();
@@ -175,6 +174,7 @@ public class QueryRow : Gtk.Box {
 				mime_type.append_text ("Any");
 				foreach (string s in mime_type_groups[0].mimes) {
 					mime_type.append_text (s);
+					mime.add (s);
 				}
 				mime_type.active = 0;
 				mime_type.changed.connect (() => {

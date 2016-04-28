@@ -17,10 +17,12 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class FilterNone : GLib.Object {
+public class FilterNone : GLib.Object, iFilter {
 
 	public FilterNone () {
 	}
 
+	public types filter_type () {
+		return types.NONE;
+	}
 }
-

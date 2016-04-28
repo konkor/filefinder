@@ -73,6 +73,13 @@ public class Filefinder : Gtk.Application
 		window.show_all ();
 		window.post_init ();
 		window.go_clicked.connect ((q)=>{
+			Debug.info ("loc count", "%u".printf (q.locations.length ()));
+			Debug.info ("file count", "%u".printf (q.files.length ()));
+			Debug.info ("mask count", "%u".printf (q.masks.length ()));
+			Debug.info ("mime count", "%u".printf (q.mimes.length ()));
+			Debug.info ("mod count", "%u".printf (q.modifieds.length ()));
+			Debug.info ("text count", "%u".printf (q.texts.length ()));
+			Debug.info ("bin count", "%u".printf (q.bins.length ()));
 			service.start (q);
 		});
 		service.finished_search.connect (()=>{

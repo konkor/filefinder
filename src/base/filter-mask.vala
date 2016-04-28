@@ -17,9 +17,13 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class FilterMask : GLib.Object {
+public class FilterMask : GLib.Object, iFilter {
 
 	public FilterMask () {
+	}
+
+	public types filter_type () {
+		return types.FILEMASK;
 	}
 
 	private string _mask = "";

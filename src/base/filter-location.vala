@@ -17,9 +17,13 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class FilterLocation : GLib.Object {
+public class FilterLocation : Object, iFilter {
 
 	public FilterLocation () {
+	}
+
+	public types filter_type () {
+		return types.LOCATION;
 	}
 
 	private string _path = "";

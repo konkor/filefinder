@@ -17,10 +17,14 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class FilterMime : GLib.Object {
+public class FilterMime : GLib.Object, iFilter {
 
 	public FilterMime () {
 		_mime = new GLib.List<string>();
+	}
+
+	public types filter_type () {
+		return types.MIMETYPE;
 	}
 
 	private List<string> _mime;

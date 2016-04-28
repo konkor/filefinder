@@ -17,9 +17,13 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class FilterText : GLib.Object {
+public class FilterText : GLib.Object, iFilter {
 
 	public FilterText () {
+	}
+
+	public types filter_type () {
+		return types.TEXT;
 	}
 
 	private string _text = "";

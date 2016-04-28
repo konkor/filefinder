@@ -20,18 +20,19 @@
 public class Query : GLib.Object {
 
 	public List<FilterLocation> locations;
+	public List<string> files;
 	public List<FilterMask> masks;
 	public List<FilterModified> modifieds;
-	public List<FilterMime> mimes;
+	public List<string> mimes;
 	public List<FilterText> texts;
 	public List<FilterBin> bins;
 
 	public Query () {
 		locations = new List<FilterLocation> ();
-		//files = new List<FilterFiles> ();
+		files = new List<string> ();
 		masks = new List<FilterMask> ();
 		modifieds = new List<FilterModified> ();
-		mimes = new List<FilterMime> ();
+		mimes = new List<string> ();
 		texts = new List<FilterText> ();
 		bins = new List<FilterBin> ();
 	}
@@ -40,34 +41,107 @@ public class Query : GLib.Object {
 		if (filter == null) return;
 		switch (filter.filter_type) {
 			case types.LOCATION:
-				locations.append ((FilterLocation)filter.filter_value);
+				if (!location_exist ((FilterLocation)filter.filter_value))
+					locations.append ((FilterLocation)filter.filter_value);
 				break;
 			case types.FILES:
-				FilterLocation l;
 				foreach (string s in ((FilterFiles)filter.filter_value).files) {
-					l = new FilterLocation ();
-					l.folder = s;
-					l.recursive = false;
-					locations.append (l);
+					if (!file_exist (s))
+						files.append (s);
 				}
 				break;
 			case types.FILEMASK:
-				masks.append ((FilterMask)filter.filter_value);
+				if (!mask_exist ((FilterMask)filter.filter_value))
+					masks.append ((FilterMask)filter.filter_value);
 				break;
 			case types.TEXT:
-				texts.append ((FilterText)filter.filter_value);
+				if (!text_exist ((FilterText)filter.filter_value))
+					texts.append ((FilterText)filter.filter_value);
 				break;
 			case types.MODIFIED:
-				modifieds.append ((FilterModified)filter.filter_value);
+				if (!mod_exist ((FilterModified)filter.filter_value))
+					modifieds.append ((FilterModified)filter.filter_value);
 				break;
 			case types.BINARY:
-				bins.append ((FilterBin)filter.filter_value);
+				if (!bin_exist ((FilterBin)filter.filter_value))
+					bins.append ((FilterBin)filter.filter_value);
 				break;
 			case types.MIMETYPE:
-				mimes.append ((FilterMime)filter.filter_value);
+				foreach (string s in ((FilterMime)filter.filter_value).mime) {
+					if (!mime_exist (s))
+						mimes.append (s);
+				}
+				//mimes.append ((FilterMime)filter.filter_value);
 				break;
 		}
 	}
 
+	private bool location_exist (FilterLocation f) {
+		foreach (FilterLocation p in locations) {
+			if (p.folder == f.folder) {
+				if (p.recursive != f.recursive) {
+					p.recursive = true;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private bool file_exist (string file) {
+		foreach (string s in files) {
+			if (s == file) return true;
+		}
+		return false;
+	}
+
+	private bool mask_exist (FilterMask f) {
+		foreach (FilterMask p in masks) {
+			if (p.mask == f.mask) {
+				if (p.case_sensetive != f.case_sensetive) {
+					p.case_sensetive = false;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private bool text_exist (FilterText f) {
+		foreach (FilterText p in texts) {
+			if ((p.text == f.text) && (p.is_utf8 == f.is_utf8)){
+				if (p.case_sensetive != f.case_sensetive) {
+					p.case_sensetive = false;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private bool mod_exist (FilterModified f) {
+		foreach (FilterModified p in modifieds) {
+			if ((p.date.compare (f.date) == 0) && (p.operator == f.operator)){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private bool bin_exist (FilterBin f) {
+		foreach (FilterBin p in bins) {
+			if (p.bin == f.bin){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private bool mime_exist (string m) {
+		foreach (string s in mimes) {
+			if (s == m) return true;
+		}
+		return false;
+	}
 }
 

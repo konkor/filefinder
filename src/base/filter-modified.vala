@@ -17,9 +17,18 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class FilterModified : GLib.Object {
+public class FilterModified : GLib.Object, iFilter {
 
 	public FilterModified () {
+		DateTime d = new DateTime.now_local();
+		_date = new DateTime.local (d.get_year (),
+		                            d.get_month (),
+		                            d.get_day_of_month(),
+		                            0, 0, 0);
+	}
+
+	public types filter_type () {
+		return types.MODIFIED;
 	}
 
 	private date_operator _op = date_operator.EQUAL;
@@ -32,7 +41,7 @@ public class FilterModified : GLib.Object {
 		}
 	}
 
-	private DateTime _date = new DateTime.now_local();
+	private DateTime _date;
 	public DateTime date {
 		get {
 			return _date;

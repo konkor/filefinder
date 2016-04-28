@@ -17,9 +17,19 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+public interface iFilter : Object {
+  public abstract types filter_type ();
+}
+
 public class Filter {
 	private FilterNone none;
 	private FilterLocation location;
+	private FilterFiles file;
+	private FilterMask mask;
+	private FilterModified modified;
+	private FilterMime mime;
+	private FilterText text;
+	private FilterBin bin;
 	
 	public Filter () {
 		none = new FilterNone ();
@@ -41,6 +51,18 @@ public class Filter {
 		switch (filter_type) {
 			case types.LOCATION:
 				return location;
+			case types.FILES:
+				return file;
+			case types.FILEMASK:
+				return mask;
+			case types.MIMETYPE:
+				return mime;
+			case types.TEXT:
+				return text;
+			case types.BINARY:
+				return bin;
+			case types.MODIFIED:
+				return modified;
 			default:
 				return none;
 		}
@@ -50,10 +72,35 @@ public class Filter {
 			filter_type = types.NONE;
 			return;
 		}
-		switch (value.get_type ().name ()) {
-			case "FilterLocation":
+		//switch (value.get_type ().name ()) {
+		switch (((iFilter)value).filter_type ()) {
+			case types.LOCATION:
 				filter_type = types.LOCATION;
 				location =(FilterLocation) value;
+				break;
+			case types.FILES:
+				filter_type = types.FILES;
+				file =(FilterFiles) value;
+				break;
+			case types.FILEMASK:
+				filter_type = types.FILEMASK;
+				mask =(FilterMask) value;
+				break;
+			case types.MIMETYPE:
+				filter_type = types.MIMETYPE;
+				mime =(FilterMime) value;
+				break;
+			case types.TEXT:
+				filter_type = types.TEXT;
+				text =(FilterText) value;
+				break;
+			case types.BINARY:
+				filter_type = types.BINARY;
+				bin =(FilterBin) value;
+				break;
+			case types.MODIFIED:
+				filter_type = types.MODIFIED;
+				modified =(FilterModified) value;
 				break;
 			default:
 				filter_type = types.NONE;
