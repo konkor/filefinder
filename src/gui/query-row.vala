@@ -95,7 +95,7 @@ public class QueryRow : Gtk.Box {
 	private Gtk.Entry bin_entry;
 
 	private void create_type_widgets () {
-		//TODO additional widgets by type
+		int i;
 		if (hbox != null) hbox.destroy ();
 		hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 4);
 		pack_start (hbox, true, true, 0);
@@ -237,7 +237,6 @@ public class QueryRow : Gtk.Box {
 					pop.add (cal);
 					pop.show_all ();
 				});
-
 				break;
 			case types.TEXT:
 				text = new FilterText ();
@@ -248,11 +247,25 @@ public class QueryRow : Gtk.Box {
 					text.text = text_entry.text;
 				});
 
+				Gtk.ComboBoxText text_combo = new Gtk.ComboBoxText ();
+				i = 0;
+				foreach (string s in Text.encodings) {
+					text_combo.append_text (s);
+					if (s == "UTF-8")
+						text_combo.active = i;
+					i++;
+				}
+				text_combo.changed.connect (() => {
+					text.encoding = text_combo.get_active_text ();
+				});
+				text_combo.wrap_width = 4;
+				hbox.pack_start (text_combo, false, false, 0);
+
 				text_case = new Gtk.CheckButton ();
 				text_case.tooltip_text = "Case sensitive";
 				hbox.add (text_case);
 				text_case.toggled.connect (()=>{
-					text.case_sensetive = mask_case.active;
+					text.case_sensetive = text_case.active;
 				});
 				break;
 			case types.BINARY:
@@ -262,7 +275,7 @@ public class QueryRow : Gtk.Box {
 				bin_entry = new Gtk.Entry ();
 				hbox.pack_start (bin_entry, true, true, 0);
 				bin_entry.changed.connect (()=>{
-					//bin_entry.text = check_hex (bin_entry.text);
+					bin_entry.text = check_hex (bin_entry.text);
 					bin.bin = bin_entry.text;
 				});
 				break;
@@ -274,10 +287,25 @@ public class QueryRow : Gtk.Box {
 		}
 
 		hbox.show_all ();
-	 }
+	}
 
+	private string check_hex (string txt) {
+		string res = "";
+		if (txt == null) return res;
+		if (txt.length == 0) return res;
+		string symb = "0123456789ABCDEF";
+		unichar c = 0;
+		int index = 0;
+		for (int i = 0; txt.get_next_char (ref index, out c); i++) {
+			if (symb.index_of (c.to_string ().up ()) == -1) {
+				return res;
+			}
+			res += c.to_string ().up ();
+		}
+		return res;
+	}
 
-	 public MimeGroup[] mime_type_groups = {
+	public MimeGroup[] mime_type_groups = {
 	MimeGroup (){ name = "Text File",
 	  mimes = { "text/plain"
 	  }

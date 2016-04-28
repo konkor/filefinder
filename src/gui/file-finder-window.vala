@@ -209,6 +209,8 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	public void show_results (List<Result> results) {
 		Debug.info (this.name, "show_results () reached");
+		foreach (Result r in Filefinder.service.results)
+			Debug.info (this.name, r.filename);
 	}
 }
 

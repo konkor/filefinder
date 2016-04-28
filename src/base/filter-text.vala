@@ -32,6 +32,16 @@ public class FilterText : GLib.Object {
 		}
 	}
 
+	private string _enc = "UTF-8";
+	public string encoding {
+		get {
+			return _enc;
+		}
+		set {
+			_enc = value;
+		}
+	}
+
 	private bool _case = false;
 	public bool case_sensetive {
 		get {
@@ -41,4 +51,11 @@ public class FilterText : GLib.Object {
 			_case = value;
 		}
 	}
+
+	public bool is_utf8 {
+		get {
+			return encoding == "UTF-8";
+		}
+	}
+
 }

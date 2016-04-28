@@ -28,6 +28,7 @@ public class Query : GLib.Object {
 
 	public Query () {
 		locations = new List<FilterLocation> ();
+		//files = new List<FilterFiles> ();
 		masks = new List<FilterMask> ();
 		modifieds = new List<FilterModified> ();
 		mimes = new List<FilterMime> ();
@@ -40,6 +41,15 @@ public class Query : GLib.Object {
 		switch (filter.filter_type) {
 			case types.LOCATION:
 				locations.append ((FilterLocation)filter.filter_value);
+				break;
+			case types.FILES:
+				FilterLocation l;
+				foreach (string s in ((FilterFiles)filter.filter_value).files) {
+					l = new FilterLocation ();
+					l.folder = s;
+					l.recursive = false;
+					locations.append (l);
+				}
 				break;
 			case types.FILEMASK:
 				masks.append ((FilterMask)filter.filter_value);
