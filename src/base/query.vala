@@ -27,6 +27,8 @@ public class Query : GLib.Object {
 	public List<FilterText> texts;
 	public List<FilterBin> bins;
 
+	public bool exclude_mounts { get; private set; }
+
 	public Query () {
 		locations = new List<FilterLocation> ();
 		files = new List<string> ();
@@ -35,6 +37,8 @@ public class Query : GLib.Object {
 		mimes = new List<string> ();
 		texts = new List<FilterText> ();
 		bins = new List<FilterBin> ();
+
+		exclude_mounts = true;
 	}
 
 	public void add_filter (Filter filter) {

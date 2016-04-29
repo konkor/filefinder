@@ -20,8 +20,8 @@
 public class FilterModified : GLib.Object, iFilter {
 
 	public FilterModified () {
-		DateTime d = new DateTime.now_local();
-		_date = new DateTime.local (d.get_year (),
+		DateTime d = new DateTime.now_utc();
+		_date = new DateTime.utc (d.get_year (),
 		                            d.get_month (),
 		                            d.get_day_of_month(),
 		                            0, 0, 0);

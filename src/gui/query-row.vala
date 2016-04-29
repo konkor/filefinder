@@ -228,11 +228,11 @@ public class QueryRow : Gtk.Box {
 					Gtk.Popover pop = new Gtk.Popover (mod_btn);
 					Gtk.Calendar cal = new Gtk.Calendar ();
 					cal.year = modified.date.get_year ();
-					cal.month = modified.date.get_month ();
+					cal.month = modified.date.get_month () - 1;
 					cal.day = modified.date.get_day_of_month ();
 					cal.day_selected.connect (()=>{
-						modified.date = new DateTime.local (cal.year, cal.month, cal.day, 0, 0, 0);
-						mod_btn.label = "%04d-%02d-%02d".printf (cal.year, cal.month, cal.day);
+						modified.date = new DateTime.local (cal.year, cal.month+1, cal.day, 0, 0, 0);
+						mod_btn.label = "%04d-%02d-%02d".printf (cal.year, cal.month+1, cal.day);
 					});
 					pop.add (cal);
 					pop.show_all ();

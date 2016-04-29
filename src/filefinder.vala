@@ -122,5 +122,26 @@ public class Filefinder : Gtk.Application
         GLib.File file = File.new_for_path (filepath.strip ());
         return file.query_exists ();
     }
+
+	public static GenericSet<File> get_excluded_locations () {
+		var excluded_locations = new GenericSet<File> (File.hash, File.equal);
+		excluded_locations.add (File.new_for_path ("/dev"));
+		excluded_locations.add (File.new_for_path ("/proc"));
+		excluded_locations.add (File.new_for_path ("/sys"));
+		excluded_locations.add (File.new_for_path ("/selinux"));
+
+		var home = File.new_for_path (Environment.get_home_dir ()); 
+		excluded_locations.add (home.get_child (".gvfs"));
+
+		/*var root = File.new_for_path ("/");
+		foreach (var uri in prefs_settings.get_value ("excluded-uris")) {
+			var file = File.new_for_uri ((string) uri);
+			if (!file.equal (root)) {
+				excluded_locations.add (file);
+			}
+		}*/
+
+		return excluded_locations;
+	}
 }
 

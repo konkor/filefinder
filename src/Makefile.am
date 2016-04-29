@@ -38,7 +38,10 @@ filefinder_SOURCES = \
 #config.vapi 
 
 filefinder_VALAFLAGS =  \
+	--target-glib=2.38 \
 	--pkg gtk+-3.0 \
+	--pkg gio-2.0 \
+	--pkg gio-unix-2.0 \
 	-g --save-temps
 
 filefinder_LDFLAGS = \

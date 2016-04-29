@@ -21,7 +21,9 @@ AM_PROG_VALAC([0.10.0])
 
 
 PKG_CHECK_MODULES(FILEFINDER, [
-  gtk+-3.0 ])
+  gtk+-3.0
+  gio-2.0
+  gio-unix-2.0])
 
 PKG_CHECK_MODULES([NAUTILUS],[
   libnautilus-extension >= $NAUTILUS_REQUIRED
