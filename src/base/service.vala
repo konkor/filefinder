@@ -122,20 +122,25 @@ public class Service : Gtk.TreeStore {
 		finished_search ();
 	}
 
-	Results? list_dir (string path, bool recursive,ref uint64 c) {
+	ResultsArray? list_dir (string path, bool recursive,ref uint64 c) {
 		bool last = true;
-		var results = new Results ();
+		var results_array = new ResultsArray ();
 		var dir = File.new_for_path (path);
 		if (!dir.query_exists ()) return null;
 		if (dir in excluded_locations) {
 			return null;
 		}
-	    try {
+		try {
 			if (dir.query_file_type (FileQueryInfoFlags.NONE) == FileType.REGULAR) {
-				if (apply_masks (dir.query_info ("*", 0))) {
-					on_found_file (dir.query_info ("*", 0));
+				var res = apply_masks (dir);
+				if (res != null) {
+					//on_found_file (info);
+					results_array.results += res;
+					results_queue.push ((owned) results_array);
+					return results_array;
+				} else {
+					return null;
 				}
-				return null;
 			}
 		    var e = dir.enumerate_children (ATTRIBUTES,
 		                                    FileQueryInfoFlags.NONE,
@@ -146,13 +151,25 @@ public class Service : Gtk.TreeStore {
 					case FileType.DIRECTORY:
 						if (recursive) {
 							list_dir (path + Path.DIR_SEPARATOR_S + info.get_name (),
-							          recursive,ref c);
+												recursive,ref c);
 							last = false;
 						}
 						break;
 					case FileType.REGULAR:
-						if (apply_masks (info)) {
-							on_found_file (info);
+						if (info.has_attribute (FileAttribute.UNIX_NLINK)) {
+							if (info.get_attribute_uint32 (FileAttribute.UNIX_NLINK) > 1) {
+								var hl = HardLink (info);
+								// check if we've already encountered this file
+								if (hl in hardlinks) {
+									continue;
+								}
+								hardlinks += hl;
+							}
+						}
+						var res = apply_masks (info);
+						if (res != null) {
+							//on_found_file (info);
+							results_array.results += res;
 						}
 						break;
 					default:
@@ -161,23 +178,25 @@ public class Service : Gtk.TreeStore {
 				c++;
 			}
 		} catch (Error err) {
-    		Debug.error ("list_dir", err.message + " " + path);
+			Debug.error ("list_dir", err.message + " " + path);
 			//results.error = err;
 		}
 		/*if (last) {
 			DateTime de = new DateTime.now_local();
 			Debug.info ("search", "duration %ju counted %ju".printf (de.difference(d), c));
 		}*/
-		return results;
+		results_queue.push ((owned) results_array);
+		return results_array;
 	}
 
-	private bool apply_masks (FileInfo info) {
+	private Results? apply_masks (FileInfo info) {
 		bool flag = true;
 		string fname = info.get_name ();
 		string fmask;
 		int64 fsize = info.get_size ();
 		DateTime d;
 		int64 t = (int64) info.get_modification_time ().tv_sec;
+		//info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
 
 		//Maybe we want to find directories too...
 		//if (info.get_file_type () == FileType.REGULAR) {
@@ -187,42 +206,42 @@ public class Service : Gtk.TreeStore {
 					if (fsize != f.size) {
 						flag = true;
 					} else {
-						return false;
+						return null;
 					}
 					break;
 				case date_operator.EQUAL:
 					if (fsize == f.size) {
 						flag = true;
 					} else {
-						return false;
+						return null;
 					}
 					break;
 				case date_operator.LESS:
 					if (fsize < f.size) {
 						flag = true;
 					} else {
-						return false;
+						return null;
 					}
 					break;
 				case date_operator.MORE:
 					if (fsize > f.size) {
 						flag = true;
 					} else {
-						return false;
+						return null;
 					}
 					break;
 				case date_operator.LESS_EQUAL:
 					if (fsize <= f.size) {
 						flag = true;
 					} else {
-						return false;
+						return null;
 					}
 					break;
 				case date_operator.MORE_EQUAL:
 					if (fsize >= f.size) {
 						flag = true;
 					} else {
-						return false;
+						return null;
 					}
 					break;
 			}
@@ -235,7 +254,7 @@ public class Service : Gtk.TreeStore {
 					if ((t < f.date.to_unix()) || (t > d.to_unix())) {
 						flag = true;
 					} else {
-						return false;
+						return null;
 					}
 					break;
 				case date_operator.EQUAL:
@@ -243,14 +262,14 @@ public class Service : Gtk.TreeStore {
 					if ((t >= f.date.to_unix()) && (t <= d.to_unix())) {
 						flag = true;
 					} else {
-						return false;
+						return null;
 					}
 					break;
 				case date_operator.LESS:
 					if (t < f.date.to_unix()) {
 						flag = true;
 					} else {
-						return false;
+						return null;
 					}
 					break;
 				case date_operator.MORE:
@@ -258,7 +277,7 @@ public class Service : Gtk.TreeStore {
 					if (t >= d.to_unix()) {
 						flag = true;
 					} else {
-						return false;
+						return null;
 					}
 					break;
 				case date_operator.LESS_EQUAL:
@@ -266,14 +285,14 @@ public class Service : Gtk.TreeStore {
 					if (t <= d.to_unix()) {
 						flag = true;
 					} else {
-						return false;
+						return null;
 					}
 					break;
 				case date_operator.MORE_EQUAL:
 					if (t >= f.date.to_unix()) {
 						flag = true;
 					} else {
-						return false;
+						return null;
 					}
 					break;
 			}
@@ -290,7 +309,7 @@ public class Service : Gtk.TreeStore {
 				}
 			}
 			if (!mflag) {
-				return false;
+				return null;
 			}
 		}
 
@@ -307,7 +326,16 @@ public class Service : Gtk.TreeStore {
 				break;
 			}
 		}
-		return flag;
+
+		if (!flag) return null;
+
+		Results results = new Results ();
+		results.display_name = info.get_display_name ();
+		//results.parse_name = info.get_parse_name ();
+		results.time_modified = info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
+		results.size = fsize;
+		results.content_type = fmime;
+		return results;
 	}
 
 	private void get_files_thread () {
@@ -331,18 +359,14 @@ public class Service : Gtk.TreeStore {
 
     [Compact]
     class Results {
-        internal unowned Results? parent;
         internal string display_name;
         internal string parse_name;
+		internal string content_type;
 
         // written in the worker thread before dispatch
         // read from the main thread only after dispatch
         internal uint64 size;
-        internal uint64 alloc_size;
         internal uint64 time_modified;
-        internal int elements;
-        internal double percent;
-        internal int max_depth;
         internal Error? error;
         internal bool child_error;
 
