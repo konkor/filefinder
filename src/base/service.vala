@@ -26,6 +26,7 @@ public class Service : Gtk.TreeStore {
         FileAttribute.STANDARD_DISPLAY_NAME + "," +
         FileAttribute.STANDARD_TYPE + "," +
         FileAttribute.STANDARD_SIZE +  "," +
+		FileAttribute.STANDARD_CONTENT_TYPE +  "," +
         FileAttribute.TIME_MODIFIED + "," +
         FileAttribute.UNIX_NLINK + "," +
         FileAttribute.UNIX_INODE + "," +
@@ -144,11 +145,9 @@ public class Service : Gtk.TreeStore {
 				switch (info.get_file_type ()) {
 					case FileType.DIRECTORY:
 						if (recursive) {
-							if (info.get_file_type () == FileType.DIRECTORY) {
-								list_dir (path + Path.DIR_SEPARATOR_S + info.get_name (),
-								          recursive,ref c);
-								last = false;
-							}
+							list_dir (path + Path.DIR_SEPARATOR_S + info.get_name (),
+							          recursive,ref c);
+							last = false;
 						}
 						break;
 					case FileType.REGULAR:
@@ -176,8 +175,59 @@ public class Service : Gtk.TreeStore {
 		bool flag = true;
 		string fname = info.get_name ();
 		string fmask;
+		int64 fsize = info.get_size ();
 		DateTime d;
 		int64 t = (int64) info.get_modification_time ().tv_sec;
+
+		//Maybe we want to find directories too...
+		//if (info.get_file_type () == FileType.REGULAR) {
+		foreach (FilterSize f in query.sizes) {
+			switch (f.operator) {
+				case date_operator.NOT_EQUAL:
+					if (fsize != f.size) {
+						flag = true;
+					} else {
+						return false;
+					}
+					break;
+				case date_operator.EQUAL:
+					if (fsize == f.size) {
+						flag = true;
+					} else {
+						return false;
+					}
+					break;
+				case date_operator.LESS:
+					if (fsize < f.size) {
+						flag = true;
+					} else {
+						return false;
+					}
+					break;
+				case date_operator.MORE:
+					if (fsize > f.size) {
+						flag = true;
+					} else {
+						return false;
+					}
+					break;
+				case date_operator.LESS_EQUAL:
+					if (fsize <= f.size) {
+						flag = true;
+					} else {
+						return false;
+					}
+					break;
+				case date_operator.MORE_EQUAL:
+					if (fsize >= f.size) {
+						flag = true;
+					} else {
+						return false;
+					}
+					break;
+			}
+		}
+
 		foreach (FilterModified f in query.modifieds) {
 			switch (f.operator) {
 				case date_operator.NOT_EQUAL:
@@ -228,7 +278,22 @@ public class Service : Gtk.TreeStore {
 					break;
 			}
 		}
-		
+
+		string fmime = info.get_content_type ();
+		bool mflag = false;
+		if (query.mimes.length () > 0) {
+			//print ("%s - %s\n", info.get_content_type (), fname);
+			foreach (string s in query.mimes) {
+				if (s == fmime) {
+					mflag = true;
+					break;
+				}
+			}
+			if (!mflag) {
+				return false;
+			}
+		}
+
 		foreach (FilterMask f in query.masks) {
 			fmask = f.mask;
 			if (!f.case_sensetive) {

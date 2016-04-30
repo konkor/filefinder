@@ -26,6 +26,7 @@ public class Query : GLib.Object {
 	public List<string> mimes;
 	public List<FilterText> texts;
 	public List<FilterBin> bins;
+	public List<FilterSize> sizes;
 
 	public bool exclude_mounts { get; private set; }
 
@@ -37,6 +38,7 @@ public class Query : GLib.Object {
 		mimes = new List<string> ();
 		texts = new List<FilterText> ();
 		bins = new List<FilterBin> ();
+		sizes = new List<FilterSize> ();
 
 		exclude_mounts = true;
 	}
@@ -76,6 +78,10 @@ public class Query : GLib.Object {
 						mimes.append (s);
 				}
 				//mimes.append ((FilterMime)filter.filter_value);
+				break;
+			case types.SIZE:
+				if (!size_exist ((FilterSize)filter.filter_value))
+					sizes.append ((FilterSize)filter.filter_value);
 				break;
 		}
 	}
@@ -144,6 +150,15 @@ public class Query : GLib.Object {
 	private bool mime_exist (string m) {
 		foreach (string s in mimes) {
 			if (s == m) return true;
+		}
+		return false;
+	}
+
+	private bool size_exist (FilterSize f) {
+		foreach (FilterSize p in sizes) {
+			if ((p.size == f.size) && (p.operator == f.operator)){
+				return true;
+			}
 		}
 		return false;
 	}

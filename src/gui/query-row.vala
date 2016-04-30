@@ -94,8 +94,10 @@ public class QueryRow : Gtk.Box {
 	private FilterBin bin;
 	private Gtk.Entry bin_entry;
 
+	private FilterSize size;
+
 	private void create_type_widgets () {
-		int i;
+		int i = 0;
 		if (hbox != null) hbox.destroy ();
 		hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 4);
 		pack_start (hbox, true, true, 0);
@@ -205,6 +207,38 @@ public class QueryRow : Gtk.Box {
 				mask_case.toggled.connect (()=>{
 					mask.case_sensetive = mask_case.active;
 				});
+				break;
+			case types.SIZE:
+				size = new FilterSize ();
+				_filter.filter_value = size;
+				Gtk.ComboBoxText size_combo = new Gtk.ComboBoxText ();
+				foreach (string s in date_operators) {
+					size_combo.append_text (s);
+				}
+				size_combo.active = size.operator;
+				size_combo.changed.connect (() => {
+					size.operator =(date_operator) size_combo.active;
+				});
+				hbox.pack_start (size_combo, false, false, 0);
+				
+				Gtk.SpinButton size_btn = new Gtk.SpinButton.with_range (0, uint64.MAX, 1024);
+				hbox.pack_start (size_btn, true, true, 0);
+
+				Gtk.ComboBoxText w_combo = new Gtk.ComboBoxText ();
+				foreach (string s in new string[] {"Bytes", "KiB", "MiB", "GiB"}) {
+					w_combo.append_text (s);
+				}
+				w_combo.active = 0;
+				hbox.pack_start (w_combo, false, false, 0);
+				w_combo.changed.connect (() => {
+					size.size = (uint64) size_btn.get_value () *
+										size.WEIGHT[w_combo.active];
+				});
+
+				size_btn.value_changed.connect (()=>{
+					size.size = (uint64) size_btn.get_value () *
+										size.WEIGHT[w_combo.active];
+				});			
 				break;
 			case types.MODIFIED:
 				modified = new FilterModified ();

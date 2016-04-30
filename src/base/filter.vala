@@ -30,6 +30,7 @@ public class Filter {
 	private FilterMime mime;
 	private FilterText text;
 	private FilterBin bin;
+	private FilterSize size;
 	
 	public Filter () {
 		none = new FilterNone ();
@@ -61,6 +62,8 @@ public class Filter {
 				return text;
 			case types.BINARY:
 				return bin;
+			case types.SIZE:
+				return size;
 			case types.MODIFIED:
 				return modified;
 			default:
@@ -98,6 +101,10 @@ public class Filter {
 				filter_type = types.BINARY;
 				bin =(FilterBin) value;
 				break;
+			case types.SIZE:
+				filter_type = types.SIZE;
+				size =(FilterSize) value;
+				break;
 			case types.MODIFIED:
 				filter_type = types.MODIFIED;
 				modified =(FilterModified) value;
@@ -118,6 +125,7 @@ public enum types {
 	MIMETYPE,
 	TEXT,
 	BINARY,
+	SIZE,
 	MODIFIED,
 	NONE
 }
@@ -129,5 +137,6 @@ public static const string[] type_names = {
 	"Mimetype",
 	"Text",
 	"Binary",
+	"Size",
 	"Modified"
 };
