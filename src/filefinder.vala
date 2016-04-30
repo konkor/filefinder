@@ -24,10 +24,12 @@ public class Filefinder : Gtk.Application
 {
 	public static bool debugging;
 	public static FileFinderWindow window;
+	public static Preferences preferences;
 	public static Service service;
 	private List<string> uris;
 
 	private const GLib.ActionEntry[] action_entries = {
+		{"preferences", preferences_cb},
         {"about", about_cb},
         {"quit", quit_cb}
     };
@@ -58,6 +60,7 @@ public class Filefinder : Gtk.Application
         base.startup ();
         add_action_entries (action_entries, this);
         GLib.Menu section = new GLib.Menu ();
+		section.append_item (new GLib.MenuItem ("Preferences", "app.preferences"));
         section.append_item (new GLib.MenuItem ("About", "app.about"));
         section.append_item (new GLib.MenuItem ("Quit", "app.quit"));
         GLib.Menu menu = new GLib.Menu ();
@@ -67,6 +70,7 @@ public class Filefinder : Gtk.Application
 
         Environment.set_application_name (Text.app_name);
 
+		preferences = new Preferences ();
 		service = new Service ();
 
 		window = new FileFinderWindow (this);
@@ -80,6 +84,7 @@ public class Filefinder : Gtk.Application
 			Debug.info ("mod count", "%u".printf (q.modifieds.length ()));
 			Debug.info ("text count", "%u".printf (q.texts.length ()));
 			Debug.info ("bin count", "%u".printf (q.bins.length ()));
+			Debug.info ("size count", "%u".printf (q.sizes.length ()));
 			service.start (q);
 		});
 		service.finished_search.connect (()=>{
@@ -95,6 +100,13 @@ public class Filefinder : Gtk.Application
 
     private void quit_cb () {
         window.destroy ();
+    }
+
+	private void preferences_cb () {
+        if (!preferences.visible)
+				preferences.show ();
+			else
+				preferences.present ();
     }
 
     protected override void shutdown() {

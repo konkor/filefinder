@@ -40,6 +40,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	private Gtk.Box empty_box;
 
 	private QueryEditor editor;
+	private ResultsView result_view;
     
     protected void build () {
         set_position (Gtk.WindowPosition.CENTER);
@@ -111,6 +112,9 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		scrolledwindow.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
 		scrolledwindow.shadow_type = Gtk.ShadowType.OUT;
 		paned.pack2 (scrolledwindow, false, false);
+
+		result_view = new ResultsView ();
+		scrolledwindow.add (result_view);
 		
         set_default_size (800, 512);
     }

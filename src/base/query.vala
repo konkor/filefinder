@@ -107,6 +107,8 @@ public class Query : GLib.Object {
 
 	private bool mask_exist (FilterMask f) {
 		foreach (FilterMask p in masks) {
+			if (p.mask == null) return true;
+			if (p.mask.length == 0) return true;
 			if (p.mask == f.mask) {
 				if (p.case_sensetive != f.case_sensetive) {
 					p.case_sensetive = false;
@@ -119,6 +121,8 @@ public class Query : GLib.Object {
 
 	private bool text_exist (FilterText f) {
 		foreach (FilterText p in texts) {
+			if (p.text == null) return true;
+			if (p.text.length == 0) return true;
 			if ((p.text == f.text) && (p.is_utf8 == f.is_utf8)){
 				if (p.case_sensetive != f.case_sensetive) {
 					p.case_sensetive = false;
