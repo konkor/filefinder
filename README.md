@@ -12,6 +12,7 @@ File Finder is GTK 3.14+ advanced search tool written with Vala with Nautilus Ex
 * Modified time
 * Text search
 * Binary search for value
+
 ### Nautilus 3.0 Extension
 
 ![](/data/screenshots/nautilus_menu.png?raw=true)
