@@ -44,6 +44,7 @@ public class Service : Gtk.TreeStore {
     }
 
     Thread<void*>? thread = null;
+	List<Thread<void*>> thread_list;
     uint process_result_idle = 0;
 
     HardLink[] hardlinks;
@@ -55,8 +56,8 @@ public class Service : Gtk.TreeStore {
 	Cancellable cancellable;
 	Error? scan_error;
 
-	private List<string> files;
-	public List<Result> results;
+	//private List<string> files;
+	//public List<Result> results;
 	private Query query;
 	private bool threading;
 	private const int MAX_THREAD = 4;
@@ -68,24 +69,30 @@ public class Service : Gtk.TreeStore {
 		threading = false;
 		cancellable = new Cancellable();
 		scan_error = null;
-            set_column_types (new Type[] {
-				typeof (uint64),  // OFFSET/ROW
+		set_column_types (new Type[] {
+				typeof (int64),  // OFFSET/ROW
                 typeof (string),  // NAME
                 typeof (uint64),  // SIZE
+			typeof (int),  // TYPE
                 typeof (uint64),  // TIME_MODIFIED
-                typeof (int),     // ELEMENTS
-                typeof (State),   // STATE
-                typeof (Error)    // ERROR (if STATE is ERROR)
+                typeof (string),     // PERMISSIONS
+                typeof (string),   // MIME
+                typeof (string),    // PATH
+			typeof (string)  // ROW
             });
 		this.finished_thread.connect (()=>{
 			this.thread_count--;
+			if (this.thread_count < 1)
+				finished_search ();
 		});
 	}
 
 	private void init () {
 		thread_count = 0;
-		results = new List<Result> ();
-		files = new List<string> ();
+		//results = new List<Result> ();
+		//files = new List<string> ();
+		thread_list = new List<Thread<void*>>();
+		results_queue = new AsyncQueue<ResultsArray> ();
 
 		excluded_locations = Filefinder.get_excluded_locations ();
         if (query.exclude_mounts) {
@@ -120,7 +127,13 @@ public class Service : Gtk.TreeStore {
 			// the thread owns a reference on the Scanner object
 			this.self = this;
 
-			thread = new Thread<void*> ("scanner", scan_in_thread);
+			foreach (FilterLocation p in query.locations) {
+				thread = new Thread<void*> ("scanner" + thread_count.to_string (),
+				                            scan_in_thread);
+				thread_list.append (thread);
+				thread_count++;
+				Thread.usleep (200000);
+			}
 
 			process_result_idle = Timeout.add (100, () => {
 				bool res = process_results();
@@ -136,11 +149,8 @@ public class Service : Gtk.TreeStore {
 
 	void* scan_in_thread () {
 		try {
-			var array = new ResultsArray ();
-			var info = directory.query_info (ATTRIBUTES, 0, cancellable);
-			var results = list_dir (directory, info);
-			array.results += (owned) results;
-			results_queue.push ((owned) array);
+		print ("thread %d", this.thread_count);
+		list_dir (query.locations.nth_data (this.thread_count-1));
 		} catch (Error e) {
 		}
 		// drop the thread's reference on the Scanner object
@@ -149,6 +159,7 @@ public class Service : Gtk.TreeStore {
 	}
 
 	bool process_results () {
+		uint i;
 		while (true) {
 			var results_array = results_queue.try_pop ();
 
@@ -156,22 +167,15 @@ public class Service : Gtk.TreeStore {
 				break;
 			}
 
+			i = 0;
+			//print ("count %u\n", results_array.results.length);
 			foreach (unowned Results results in results_array.results) {
+				//print ("%s %ju\n", results.display_name, results.size);
+				i++;
 				ensure_iter_exists (results);
 
-				State state;
-				if (results.child_error) {
-					state = State.CHILD_ERROR;
-				} else if (results.error != null) {
-					state = State.ERROR;
-				} else {
-					state = State.DONE;
-				}
-
 				set (results.iter,
-					Columns.SIZE,       results.size,
-					Columns.STATE,      state,
-					Columns.ERROR,      results.error);
+					Columns.SIZE,       results.size);
 
 				// If the user cancelled abort the scan and
 				// report CANCELLED as the error, otherwise
@@ -180,24 +184,47 @@ public class Service : Gtk.TreeStore {
 				if (results.error != null) {
 					if (results.error is IOError.CANCELLED) {
 						scan_error = results.error;
-						//completed ();
-						finished_thread ();
-						return false;
+						if (this.thread_count == 1) {
+							finished_thread ();
+							return false;
+						} else {
+							finished_thread ();
+						}
+
 					} else if (scan_error == null) {
 						scan_error = results.error;
 					}
 				}
 
-				if (results.parent == null) {
-					successful = true;
-					//completed ();
-					finished_thread ();
-					return false;
+				if (results_array.first && (results_array.results.length == i)) {
+					if (this.thread_count == 1) {
+						successful = true;
+						//completed ();
+						finished_thread ();
+						return false;
+					} else {
+						finished_thread ();
+					}
 				}
 			}
 		}
-
 		return this.self != null;
+	}
+
+	void ensure_iter_exists (Results results) {
+		if (results.iter_is_set) {
+			return;
+		}
+
+		append (out results.iter, null);
+		set (results.iter,
+			Columns.DISPLAY_NAME, results.display_name,
+			Columns.TIME_MODIFIED,results.time_modified,
+			Columns.PATH,results.path,
+			Columns.POSITION,results.position,
+		    Columns.TYPE,results.type,
+		    Columns.MIME,results.mime);
+		results.iter_is_set = true;
 	}
 
 	public void cancel () {
@@ -236,7 +263,7 @@ public class Service : Gtk.TreeStore {
 		Debug.info ("started search", "");
 		uint64 c = 0;
 		foreach (FilterLocation p in query.locations) {
-			list_dir (p.folder, p.recursive,ref c);
+			list_dir (p);
 		}
 		//Debug.info ("finished search", "");
 		DateTime de = new DateTime.now_local();
@@ -244,13 +271,12 @@ public class Service : Gtk.TreeStore {
 		finished_search ();
 	}
 
-	ResultsArray? list_dir (string path, bool recursive,ref uint64 c, Results? parent = null) {
-		bool last = true;
+	void list_dir (FilterLocation loc, bool first = true) {
 		var results_array = new ResultsArray ();
-		var dir = File.new_for_path (path);
-		if (!dir.query_exists ()) return null;
+		var dir = File.new_for_path (loc.folder);
+		if (!dir.query_exists ()) return;
 		if (dir in excluded_locations) {
-			return null;
+			return;
 		}
 		try {
 			if (dir.query_file_type (FileQueryInfoFlags.NONE) == FileType.REGULAR) {
@@ -259,9 +285,9 @@ public class Service : Gtk.TreeStore {
 					//on_found_file (info);
 					results_array.results += (owned) res;
 					results_queue.push ((owned) results_array);
-					return results_array;
+					return;
 				} else {
-					return null;
+					return;
 				}
 			}
 		    var e = dir.enumerate_children (ATTRIBUTES,
@@ -271,10 +297,11 @@ public class Service : Gtk.TreeStore {
 			while ((info = e.next_file (cancellable)) != null) {
 				switch (info.get_file_type ()) {
 					case FileType.DIRECTORY:
-						if (recursive) {
-							list_dir (path + Path.DIR_SEPARATOR_S + info.get_name (),
-												recursive,ref c);
-							last = false;
+						if (loc.recursive) {
+							var l = new FilterLocation ();
+							l.folder = GLib.Path.build_filename (loc.folder, info.get_name ());
+							l.recursive = true;
+							list_dir (l, false);
 						}
 						break;
 					case FileType.REGULAR:
@@ -291,24 +318,25 @@ public class Service : Gtk.TreeStore {
 						var res = apply_masks (info);
 						if (res != null) {
 							//on_found_file (info);
+							res.path = loc.folder;
 							results_array.results += (owned) res;
 						}
 						break;
 					default:
 						break;
 				}
-				c++;
 			}
 		} catch (Error err) {
-			Debug.error ("list_dir", err.message + " " + path);
+			Debug.error ("list_dir", err.message + " " + loc.folder);
 			//results.error = err;
 		}
 		/*if (last) {
 			DateTime de = new DateTime.now_local();
 			Debug.info ("search", "duration %ju counted %ju".printf (de.difference(d), c));
 		}*/
+		results_array.first = first;
 		results_queue.push ((owned) results_array);
-		return results_array;
+		return;
 	}
 
 	private Results? apply_masks (FileInfo info) {
@@ -456,7 +484,8 @@ public class Service : Gtk.TreeStore {
 		//results.parse_name = info.get_parse_name ();
 		results.time_modified = info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
 		results.size = fsize;
-		results.content_type = fmime;
+		results.mime = fmime;
+		results.type = info.get_file_type();
 		return results;
 	}
 
@@ -476,38 +505,27 @@ public class Service : Gtk.TreeStore {
 
 	[Compact]
     class ResultsArray {
+		internal bool first = false;
         internal Results[] results;
     }
 
     [Compact]
     class Results {
-		internal unowned Results? parent;
-        internal string display_name;
-        internal string parse_name;
-		internal string content_type;
+		internal int64 position = -1;
+		internal string display_name;
+		internal uint64 size;
+		internal FileType type;
+		internal uint64 time_modified;
+		internal string permission;
+		internal string mime;
+		internal string path;
+		internal string row;
 
-        // written in the worker thread before dispatch
-        // read from the main thread only after dispatch
-        internal uint64 size;
-        internal uint64 time_modified;
-        internal Error? error;
-        internal bool child_error;
+		internal Error? error;
 
-        // accessed only by the main thread
-        internal Gtk.TreeIter iter;
-        internal bool iter_is_set;
-    }
-}
-
-public enum Columns {
-	ROW,
-	DISPLAY_NAME,
-	SIZE,
-	TIME_MODIFIED,
-	ELEMENTS,
-	STATE,
-	ERROR,
-	COLUMNS
+		internal Gtk.TreeIter iter;
+		internal bool iter_is_set;
+	}
 }
 
 public enum State {

@@ -56,18 +56,81 @@ public class ResultsView : Gtk.TreeView {
 		col.pack_start (colr, false);
 		append_column (col);
 
-		model = Filefinder.service;
+		set_model (Filefinder.service);
 		//TODO sort function
 		//int n = i;
 		//for (i = 0; i < n; i++) store.SetSortFunc (i, SortTree);
 	}
 
 	private void render_text (Gtk.CellLayout layout, Gtk.CellRenderer cell, Gtk.TreeModel model, Gtk.TreeIter iter) {
-        Result item;
         GLib.Value v;
-        model.get_value (iter, 0, out v);
-        item = (Result) v;
 		//TODO text cell render
+		switch ((layout as TreeViewColumn).sort_column_id) {
+			case 0:
+				model.get_value (iter, 0, out v);
+				if (v.get_int64() == -1) {
+					(cell as Gtk.CellRendererText).text = "";
+				} else {
+					(cell as Gtk.CellRendererText).text = v.get_uint64().to_string();
+				}
+				break;
+			case 1:
+				model.get_value (iter, 1, out v);
+				(cell as Gtk.CellRendererText).text = v.get_string();
+				break;
+			case 2:
+				model.get_value (iter, 2, out v);
+				(cell as Gtk.CellRendererText).text = v.get_uint64().to_string();
+				break;
+			case 3:
+				model.get_value (iter, 3, out v);
+				switch (v.get_int()) {
+					case 0:
+						(cell as Gtk.CellRendererText).text = "Unknown";
+						break;
+					case 1:
+						(cell as Gtk.CellRendererText).text = "Regular";
+						break;
+					case 2:
+						(cell as Gtk.CellRendererText).text = "Directory";
+						break;
+					case 3:
+						(cell as Gtk.CellRendererText).text = "Symlink";
+						break;
+					case 4:
+						(cell as Gtk.CellRendererText).text = "Special";
+						break;
+					case 5:
+						(cell as Gtk.CellRendererText).text = "Shortcut";
+						break;
+					case 6:
+						(cell as Gtk.CellRendererText).text = "Mountable";
+						break;
+				}
+				//(cell as Gtk.CellRendererText).text = v.get_string();
+				break;
+			case 4:
+				model.get_value (iter, 4, out v);
+				DateTime d = new DateTime.from_unix_utc ((int64) v.get_uint64());
+				(cell as Gtk.CellRendererText).text = d.to_string();
+				break;
+			case 5:
+				model.get_value (iter, 5, out v);
+				(cell as Gtk.CellRendererText).text = v.get_string();
+				break;
+			case 6:
+				model.get_value (iter, 6, out v);
+				(cell as Gtk.CellRendererText).text = v.get_string();
+				break;
+			case 7:
+				model.get_value (iter, 7, out v);
+				(cell as Gtk.CellRendererText).text = v.get_string();
+				break;
+			case 8:
+				model.get_value (iter, 8, out v);
+				(cell as Gtk.CellRendererText).text = v.get_string();
+				break;
+		}
 	}
 }
 

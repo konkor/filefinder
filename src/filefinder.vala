@@ -88,7 +88,7 @@ public class Filefinder : Gtk.Application
 			service.start (q);
 		});
 		service.finished_search.connect (()=>{
-			window.show_results (service.results);
+			window.show_results ();
 		});
         //window.add_locations (uris);
 		open.connect (()=>{window.add_locations (uris);});

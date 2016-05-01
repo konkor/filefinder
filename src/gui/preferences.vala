@@ -16,6 +16,17 @@
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+public enum Columns {
+	POSITION,
+	DISPLAY_NAME,
+	SIZE,
+	TYPE,
+	TIME_MODIFIED,
+	PERMISSIONS,
+	MIME,
+	PATH,
+	ROW
+}
 
 public class Preferences : Gtk.Window {
 	public ViewColumn[] columns = {
@@ -25,9 +36,9 @@ public class Preferences : Gtk.Window {
 	ViewColumn() { id = 3, name = "type", title = "Type", width = 60, visible = true },
 	ViewColumn() { id = 4, name = "mod", title = "Modified", width = 80, visible = true },
 	ViewColumn() { id = 5, name = "permissions", title = "Permissions", width = 60, visible = false },
-	ViewColumn() { id = 6, name = "mime", title = "MIME", width = 80, visible = false },
-	ViewColumn() { id = 7, name = "path", title = "Location", width = 120, visible = false },
-	ViewColumn() { id = 8, name = "row", title = "Row Content", width = 240, visible = true }
+	ViewColumn() { id = 6, name = "mime", title = "MIME", width = 80, visible = true },
+	ViewColumn() { id = 7, name = "path", title = "Location", width = 120, visible = true },
+	ViewColumn() { id = 8, name = "row", title = "Content", width = 240, visible = true }
 	};
 
 	public bool is_changed = false;
