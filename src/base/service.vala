@@ -103,11 +103,133 @@ public class Service : Gtk.TreeStore {
 		this.query = q;
 		init ();
 		d = new DateTime.now_local();
-		if (threading) {
+		/*if (threading) {
 			get_files_thread ();
 		} else {
 			get_files ();
+		}*/
+		scan (true);
+	}
+
+	public void scan (bool force) {
+		if (force) {
+			successful = false;
 		}
+		if (!successful) {
+			cancel_and_reset ();
+			// the thread owns a reference on the Scanner object
+			this.self = this;
+
+			thread = new Thread<void*> ("scanner", scan_in_thread);
+
+			process_result_idle = Timeout.add (100, () => {
+				bool res = process_results();
+				if (!res) {
+					process_result_idle = 0;
+				}
+				return res;
+			});
+		} else {
+			finished_search ();
+		}
+	}
+
+	void* scan_in_thread () {
+		try {
+			var array = new ResultsArray ();
+			var info = directory.query_info (ATTRIBUTES, 0, cancellable);
+			var results = list_dir (directory, info);
+			array.results += (owned) results;
+			results_queue.push ((owned) array);
+		} catch (Error e) {
+		}
+		// drop the thread's reference on the Scanner object
+		this.self = null;
+		return null;
+	}
+
+	bool process_results () {
+		while (true) {
+			var results_array = results_queue.try_pop ();
+
+			if (results_array == null) {
+				break;
+			}
+
+			foreach (unowned Results results in results_array.results) {
+				ensure_iter_exists (results);
+
+				State state;
+				if (results.child_error) {
+					state = State.CHILD_ERROR;
+				} else if (results.error != null) {
+					state = State.ERROR;
+				} else {
+					state = State.DONE;
+				}
+
+				set (results.iter,
+					Columns.SIZE,       results.size,
+					Columns.STATE,      state,
+					Columns.ERROR,      results.error);
+
+				// If the user cancelled abort the scan and
+				// report CANCELLED as the error, otherwise
+				// consider the error not fatal and report the
+				// first error we encountered
+				if (results.error != null) {
+					if (results.error is IOError.CANCELLED) {
+						scan_error = results.error;
+						//completed ();
+						finished_thread ();
+						return false;
+					} else if (scan_error == null) {
+						scan_error = results.error;
+					}
+				}
+
+				if (results.parent == null) {
+					successful = true;
+					//completed ();
+					finished_thread ();
+					return false;
+				}
+			}
+		}
+
+		return this.self != null;
+	}
+
+	public void cancel () {
+		if (!successful) {
+			cancel_and_reset ();
+		}
+	}
+
+	private void cancel_and_reset () {
+		cancellable.cancel ();
+
+		if (thread != null) {
+			thread.join ();
+			thread = null;
+		}
+
+		if (process_result_idle != 0) {
+			GLib.Source.remove (process_result_idle);
+			process_result_idle = 0;
+		}
+		// Drain the async queue
+		var tmp = results_queue.try_pop ();
+		while (tmp != null) {
+			tmp = results_queue.try_pop ();
+		}
+
+		hardlinks = null;
+
+		base.clear ();
+
+		cancellable.reset ();
+		scan_error = null;
 	}
 
 	private void get_files () {
@@ -122,7 +244,7 @@ public class Service : Gtk.TreeStore {
 		finished_search ();
 	}
 
-	ResultsArray? list_dir (string path, bool recursive,ref uint64 c) {
+	ResultsArray? list_dir (string path, bool recursive,ref uint64 c, Results? parent = null) {
 		bool last = true;
 		var results_array = new ResultsArray ();
 		var dir = File.new_for_path (path);
@@ -132,10 +254,10 @@ public class Service : Gtk.TreeStore {
 		}
 		try {
 			if (dir.query_file_type (FileQueryInfoFlags.NONE) == FileType.REGULAR) {
-				var res = apply_masks (dir);
+				var res = apply_masks (dir.query_info ("*", 0));
 				if (res != null) {
 					//on_found_file (info);
-					results_array.results += res;
+					results_array.results += (owned) res;
 					results_queue.push ((owned) results_array);
 					return results_array;
 				} else {
@@ -169,7 +291,7 @@ public class Service : Gtk.TreeStore {
 						var res = apply_masks (info);
 						if (res != null) {
 							//on_found_file (info);
-							results_array.results += res;
+							results_array.results += (owned) res;
 						}
 						break;
 					default:
@@ -359,6 +481,7 @@ public class Service : Gtk.TreeStore {
 
     [Compact]
     class Results {
+		internal unowned Results? parent;
         internal string display_name;
         internal string parse_name;
 		internal string content_type;
