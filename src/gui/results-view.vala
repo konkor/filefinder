@@ -71,7 +71,7 @@ public class ResultsView : Gtk.TreeView {
 				if (v.get_int64() == -1) {
 					(cell as Gtk.CellRendererText).text = "";
 				} else {
-					(cell as Gtk.CellRendererText).text = v.get_uint64().to_string();
+					(cell as Gtk.CellRendererText).text = v.get_int64().to_string();
 				}
 				break;
 			case Columns.DISPLAY_NAME:

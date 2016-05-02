@@ -56,8 +56,6 @@ public class Service : Gtk.TreeStore {
 	Cancellable cancellable;
 	Error? scan_error;
 
-	//private List<string> files;
-	//public List<Result> results;
 	private Query query;
 	private bool threading;
 	private const int MAX_THREAD = 4;
@@ -89,8 +87,6 @@ public class Service : Gtk.TreeStore {
 
 	private void init () {
 		thread_count = 0;
-		//results = new List<Result> ();
-		//files = new List<string> ();
 		thread_list = new List<Thread<void*>>();
 		results_queue = new AsyncQueue<ResultsArray> ();
 
@@ -110,11 +106,6 @@ public class Service : Gtk.TreeStore {
 		this.query = q;
 		init ();
 		d = new DateTime.now_local();
-		/*if (threading) {
-			get_files_thread ();
-		} else {
-			get_files ();
-		}*/
 		scan (true);
 	}
 
@@ -177,10 +168,6 @@ public class Service : Gtk.TreeStore {
 				set (results.iter,
 					Columns.SIZE,       results.size);
 
-				// If the user cancelled abort the scan and
-				// report CANCELLED as the error, otherwise
-				// consider the error not fatal and report the
-				// first error we encountered
 				if (results.error != null) {
 					if (results.error is IOError.CANCELLED) {
 						scan_error = results.error;
@@ -199,7 +186,6 @@ public class Service : Gtk.TreeStore {
 				if (results_array.first && (results_array.results.length == i)) {
 					if (this.thread_count == 1) {
 						successful = true;
-						//completed ();
 						finished_thread ();
 						return false;
 					} else {
@@ -223,7 +209,9 @@ public class Service : Gtk.TreeStore {
 			Columns.PATH,results.path,
 			Columns.POSITION,results.position,
 		    Columns.TYPE,results.type,
-		    Columns.MIME,results.mime);
+		    Columns.MIME,results.mime,
+		    Columns.POSITION,results.position,
+		    Columns.ROW,results.row);
 		results.iter_is_set = true;
 	}
 
@@ -280,7 +268,7 @@ public class Service : Gtk.TreeStore {
 		}
 		try {
 			if (dir.query_file_type (FileQueryInfoFlags.NONE) == FileType.REGULAR) {
-				var res = apply_masks (dir.query_info ("*", 0));
+				var res = apply_masks (dir.query_info ("*", 0),dir.get_path ());
 				if (res != null) {
 					//on_found_file (info);
 					results_array.results += (owned) res;
@@ -315,7 +303,7 @@ public class Service : Gtk.TreeStore {
 								hardlinks += hl;
 							}
 						}
-						var res = apply_masks (info);
+						var res = apply_masks (info, loc.folder);
 						if (res != null) {
 							//on_found_file (info);
 							res.path = loc.folder;
@@ -339,7 +327,7 @@ public class Service : Gtk.TreeStore {
 		return;
 	}
 
-	private Results? apply_masks (FileInfo info) {
+	private Results? apply_masks (FileInfo info, string? path) {
 		bool flag = true;
 		string fname = info.get_name ();
 		string fmask;
@@ -479,29 +467,85 @@ public class Service : Gtk.TreeStore {
 
 		if (!flag) return null;
 
-		Results results = new Results ();
+		Results? results = null;
+		if (query.texts.length () > 0) {
+			flag = false;
+			results = get_text_pos (info, path);
+			if (results == null) {
+				return null;
+			} else {
+				flag = true;
+			}
+		}
+
+		if (results == null)
+			results = new Results ();
 		results.display_name = info.get_display_name ();
 		//results.parse_name = info.get_parse_name ();
 		results.time_modified = info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
 		results.size = fsize;
 		results.mime = fmime;
 		results.type = info.get_file_type();
+
 		return results;
 	}
 
-	private void get_files_thread () {
-		foreach (FilterLocation p in query.locations) {
-			
+	Results? get_text_pos (FileInfo info, string? path) {
+		Results? res = null;
+		if ((path == null) || (info == null))
+			return res;
+		File file = File.new_for_path (GLib.Path.build_filename (path, info.get_name ()));
+
+		if (!file.query_exists ()) {
+			return res;
 		}
+
+		try {
+			DataInputStream dis = new DataInputStream (file.read ());
+			string line, s, enc, mask;
+			int64 pos = 0;
+			while ((line = dis.read_line (null)) != null) {
+				if (line.length >= 4096) {
+					return null;
+				}
+				foreach (FilterText f in query.texts) {
+					if (!f.case_sensetive) {
+						s = line.up ();
+						mask = f.text.up ();
+					} else {
+						s = line;
+						mask = f.text;
+					}
+					//enc = convert_to (s, f.encoding);
+					if (s.contains (mask)) {
+						res = new Results ();
+						res.position = pos;
+						res.row = line;
+						return res;
+					}
+				}
+				pos++;
+			}
+		} catch (Error err) {
+			return null;
+		}
+		return res;
 	}
 
-	private void on_found_file (FileInfo info) {
-		Debug.info ("on_found_file", "Found '%s'".printf (info.get_name ()));
-	}
-
-	private void on_found_result (Result result) {
-		//add result
-	}
+	public string convert_to (string str, string enc) throws ConvertError {
+        string s = str;
+        if (enc.length == 0) return s;
+        if (enc != "UTF-8") {
+            try {
+                s = convert (s, -1, enc, "UTF-8");
+            } catch (ConvertError err) {
+				throw new ConvertError.FAILED ("Converting error");
+            }
+        } else {
+            return s;
+        }
+        return s;
+    }
 
 	[Compact]
     class ResultsArray {

@@ -153,7 +153,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	public void set_subtitle () {
 		int n = result_view.model.iter_n_children (null);
-		if (n > 0)
+		if (n > -1)
 			hb.subtitle = "(%d items)".printf (n);
 		else
 			hb.subtitle = "";
@@ -221,7 +221,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	public void show_results () {
 		Debug.info (this.name, "show_results () reached");
-		
+		set_subtitle ();
 	}
 }
 
