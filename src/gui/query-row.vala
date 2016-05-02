@@ -341,7 +341,61 @@ public class QueryRow : Gtk.Box {
 
 	public MimeGroup[] mime_type_groups = {
 	MimeGroup (){ name = "Text File",
-	  mimes = { "text/plain"
+	  mimes = { "text/plain",
+		"text/x-authors",
+		"text/x-changelog",
+		"text/x-chdr",
+		"text/x-copying",
+		"text/x-csrc",
+		"text/x-gettext-translation",
+		"text/x-install",
+		"text/x-log",
+		"text/x-makefile",
+		"text/x-markdown",
+		"text/x-matlab",
+		"text/x-microdvd",
+		"text/x-tex",
+		"text/x-vala"
+	  }
+	},
+	MimeGroup (){ name = "Archive",
+	  mimes = { "application/x-compressed-tar",
+		"application/x-xz-compressed-tar"
+	  }
+	},
+	MimeGroup (){ name = "Temporary",
+	  mimes = { "application/x-trash"
+	  }
+	},
+	MimeGroup (){ name = "Development",
+	  mimes = { "application/x-anjuta",
+		"application/x-desktop",
+		"application/x-archive",
+		"application/x-executable",
+		"application/x-sharedlib",
+		"application/x-shared-library-la",
+		"application/x-gettext-translation",
+		"application/x-glade",
+		"application/x-gtk-builder",
+		"application/x-m4",
+		"application/xml",
+		"application/x-object",
+		"application/x-shellscript",
+		"application/x-sqlite3",
+		"text/x-authors",
+		"text/x-changelog",
+		"text/x-chdr",
+		"text/x-copying",
+		"text/x-csrc",
+		"text/x-gettext-translation",
+		"text/x-install",
+		"text/x-log",
+		"text/x-makefile",
+		"text/x-markdown",
+		"text/x-matlab",
+		"text/x-microdvd",
+		"text/x-tex",
+		"text/x-vala"
 	  }
 	},
 	MimeGroup (){ name = "Documents",
@@ -358,7 +412,8 @@ public class QueryRow : Gtk.Box {
 	    "application/docbook+xml",
 	    "application/x-kword",
 	    "application/x-kword-crypt",
-	    "application/x-lyx"
+	    "application/x-lyx",
+		"application/xml"
 	  }
 	},
 	MimeGroup (){ name = "Music",
@@ -372,7 +427,8 @@ public class QueryRow : Gtk.Box {
 	    "audio/mpeg",
 	    "audio/x-mpeg",
 	    "audio/x-ms-asx",
-	    "audio/x-pn-realaudio"
+	    "audio/x-pn-realaudio",
+		"audio/x-mpegurl"
 	  }
 	},
 	MimeGroup (){ name = "Video",
@@ -382,6 +438,7 @@ public class QueryRow : Gtk.Box {
 	    "video/quicktime",
 	    "video/vivo",
 	    "video/x-avi",
+	    "video/x-matroska",
 	    "video/x-mng",
 	    "video/x-ms-asf",
 	    "video/x-ms-wmv",
@@ -390,11 +447,34 @@ public class QueryRow : Gtk.Box {
 	    "video/x-real-video"
 	  }
 	},
+	MimeGroup (){ name = "Subtitles",
+	  mimes = { "application/x-subrip",
+		"text/x-ssa",
+		"text/x-microdvd"
+	  }
+	},
 	MimeGroup (){ name = "Picture",
 	  mimes = { "application/vnd.oasis.opendocument.image",
 	    "application/x-krita",
 	    "image/bmp",
 	    "image/cgm",
+	    "image/gif",
+	    "image/jpeg",
+	    "image/jpeg2000",
+	    "image/png",
+	    "image/svg+xml",
+	    "image/tiff",
+	    "image/x-compressed-xcf",
+	    "image/x-pcx",
+	    "image/x-photo-cd",
+	    "image/x-psd",
+	    "image/x-tga",
+	    "image/x-xcf"
+	  }
+	},
+	MimeGroup (){ name = "Raw Image",
+	  mimes = { "image/x-canon-cr2",
+	    "image/x-panasonic-raw2",
 	    "image/gif",
 	    "image/jpeg",
 	    "image/jpeg2000",

@@ -18,7 +18,7 @@
  */
 
 public class FilterSize : GLib.Object, iFilter {
-	public uint[] WEIGHT = {1, 1024, 1048576, 1073741824};
+	public static uint[] WEIGHT = {1, 1024, 1048576, 1073741824};
 
 	public FilterSize () {
 	}

@@ -17,7 +17,6 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 public enum Columns {
-	POSITION,
 	DISPLAY_NAME,
 	SIZE,
 	TYPE,
@@ -25,19 +24,20 @@ public enum Columns {
 	PERMISSIONS,
 	MIME,
 	PATH,
+	POSITION,
 	ROW
 }
 
 public class Preferences : Gtk.Window {
 	public ViewColumn[] columns = {
-	ViewColumn() { id = 0, name = "position", title = "Position", width = 64, visible = true },
-	ViewColumn() { id = 1, name = "name", title = "Name", width = 180, visible = true },
-	ViewColumn() { id = 2, name = "size", title = "Size", width = 60, visible = true },
-	ViewColumn() { id = 3, name = "type", title = "Type", width = 60, visible = true },
-	ViewColumn() { id = 4, name = "mod", title = "Modified", width = 80, visible = true },
-	ViewColumn() { id = 5, name = "permissions", title = "Permissions", width = 60, visible = false },
-	ViewColumn() { id = 6, name = "mime", title = "MIME", width = 80, visible = true },
-	ViewColumn() { id = 7, name = "path", title = "Location", width = 120, visible = true },
+	ViewColumn() { id = 0, name = "name", title = "Name", width = 400, visible = true },
+	ViewColumn() { id = 1, name = "size", title = "Size", width = 72, visible = true },
+	ViewColumn() { id = 2, name = "type", title = "Type", width = 60, visible = false },
+	ViewColumn() { id = 3, name = "mod", title = "Modified", width = 90, visible = true },
+	ViewColumn() { id = 4, name = "permissions", title = "Permissions", width = 60, visible = false },
+	ViewColumn() { id = 5, name = "mime", title = "MIME", width = 128, visible = true },
+	ViewColumn() { id = 6, name = "path", title = "Location", width = 240, visible = true },
+	ViewColumn() { id = 7, name = "position", title = "Position", width = 64, visible = true },
 	ViewColumn() { id = 8, name = "row", title = "Content", width = 240, visible = true }
 	};
 

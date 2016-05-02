@@ -90,6 +90,10 @@ public class Filefinder : Gtk.Application
 		service.finished_search.connect (()=>{
 			window.show_results ();
 		});
+		service.row_changed.connect(()=>{
+			window.set_subtitle ();
+		});
+
         //window.add_locations (uris);
 		open.connect (()=>{window.add_locations (uris);});
     }

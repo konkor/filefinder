@@ -50,7 +50,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		this.add_accel_group (accel_group);
 		
         hb = new Gtk.HeaderBar ();
-		hb.has_subtitle = false;
+		//hb.has_subtitle = false;
 		hb.title = Text.app_name;
         hb.set_show_close_button (true);
         set_titlebar (hb);
@@ -89,13 +89,13 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
         paned = new Gtk.Paned (Gtk.Orientation.VERTICAL);
 		paned.events |= Gdk.EventMask.VISIBILITY_NOTIFY_MASK;
 		paned.can_focus = true;
-		paned.position = 32;
+		paned.position = paned.min_position;
 		vbox1.add (paned);
 
 		Gtk.ScrolledWindow scrolledwindow = new Gtk.ScrolledWindow (null, null);
 		scrolledwindow.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
 		scrolledwindow.shadow_type = Gtk.ShadowType.OUT;
-		paned.pack1 (scrolledwindow, false, false);
+		paned.pack1 (scrolledwindow, false, true);
 
 		editor = new QueryEditor ();
 		editor.expand = true;
@@ -111,7 +111,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		scrolledwindow = new Gtk.ScrolledWindow (null, null);
 		scrolledwindow.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
 		scrolledwindow.shadow_type = Gtk.ShadowType.OUT;
-		paned.pack2 (scrolledwindow, false, false);
+		paned.pack2 (scrolledwindow, true, false);
 
 		result_view = new ResultsView ();
 		scrolledwindow.add (result_view);
@@ -150,6 +150,14 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
     private void on_go_clicked () {
         go_clicked (query);
     }
+
+	public void set_subtitle () {
+		int n = result_view.model.iter_n_children (null);
+		if (n > 0)
+			hb.subtitle = "(%d items)".printf (n);
+		else
+			hb.subtitle = "";
+	}
 
     public int show_message (string text, MessageType type = MessageType.INFO) {
         if (infoBar != null) infoBar.destroy ();

@@ -66,24 +66,24 @@ public class ResultsView : Gtk.TreeView {
         GLib.Value v;
 		//TODO text cell render
 		switch ((layout as TreeViewColumn).sort_column_id) {
-			case 0:
-				model.get_value (iter, 0, out v);
+			case Columns.POSITION:
+				model.get_value (iter, Columns.POSITION, out v);
 				if (v.get_int64() == -1) {
 					(cell as Gtk.CellRendererText).text = "";
 				} else {
 					(cell as Gtk.CellRendererText).text = v.get_uint64().to_string();
 				}
 				break;
-			case 1:
-				model.get_value (iter, 1, out v);
+			case Columns.DISPLAY_NAME:
+				model.get_value (iter, Columns.DISPLAY_NAME, out v);
 				(cell as Gtk.CellRendererText).text = v.get_string();
 				break;
-			case 2:
-				model.get_value (iter, 2, out v);
-				(cell as Gtk.CellRendererText).text = v.get_uint64().to_string();
+			case Columns.SIZE:
+				model.get_value (iter, Columns.SIZE, out v);
+				(cell as Gtk.CellRendererText).text = get_bin_size (v.get_uint64());
 				break;
-			case 3:
-				model.get_value (iter, 3, out v);
+			case Columns.TYPE:
+				model.get_value (iter, Columns.TYPE, out v);
 				switch (v.get_int()) {
 					case 0:
 						(cell as Gtk.CellRendererText).text = "Unknown";
@@ -109,28 +109,41 @@ public class ResultsView : Gtk.TreeView {
 				}
 				//(cell as Gtk.CellRendererText).text = v.get_string();
 				break;
-			case 4:
-				model.get_value (iter, 4, out v);
+			case Columns.TIME_MODIFIED:
+				model.get_value (iter, Columns.TIME_MODIFIED, out v);
 				DateTime d = new DateTime.from_unix_utc ((int64) v.get_uint64());
 				(cell as Gtk.CellRendererText).text = d.to_string();
 				break;
-			case 5:
-				model.get_value (iter, 5, out v);
+			case Columns.PERMISSIONS:
+				model.get_value (iter, Columns.PERMISSIONS, out v);
 				(cell as Gtk.CellRendererText).text = v.get_string();
 				break;
-			case 6:
-				model.get_value (iter, 6, out v);
+			case Columns.MIME:
+				model.get_value (iter, Columns.MIME, out v);
 				(cell as Gtk.CellRendererText).text = v.get_string();
 				break;
-			case 7:
-				model.get_value (iter, 7, out v);
+			case Columns.PATH:
+				model.get_value (iter, Columns.PATH, out v);
 				(cell as Gtk.CellRendererText).text = v.get_string();
 				break;
-			case 8:
-				model.get_value (iter, 8, out v);
+			case Columns.ROW:
+				model.get_value (iter, Columns.ROW, out v);
 				(cell as Gtk.CellRendererText).text = v.get_string();
 				break;
 		}
+	}
+
+	private string get_bin_size (uint64 i) {
+		string s = i.to_string ();
+		int len = s.length;
+		if (len > 9) {
+			return "%.1f GiB".printf ((double) i / 1073741824.0);
+		} else if (len > 6) {
+			return "%.1f MiB".printf ((double) i / 1048576.0);
+		} else if (len > 5) {
+			return "%.1f KiB".printf ((double) i / 1024.0);
+		}
+		return s;
 	}
 }
 

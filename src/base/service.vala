@@ -70,16 +70,16 @@ public class Service : Gtk.TreeStore {
 		cancellable = new Cancellable();
 		scan_error = null;
 		set_column_types (new Type[] {
-				typeof (int64),  // OFFSET/ROW
-                typeof (string),  // NAME
-                typeof (uint64),  // SIZE
-			typeof (int),  // TYPE
-                typeof (uint64),  // TIME_MODIFIED
-                typeof (string),     // PERMISSIONS
-                typeof (string),   // MIME
-                typeof (string),    // PATH
+			typeof (string), // NAME
+			typeof (uint64), // SIZE
+			typeof (int),    // TYPE
+			typeof (uint64), // TIME_MODIFIED
+			typeof (string), // PERMISSIONS
+			typeof (string), // MIME
+			typeof (string), // PATH
+			typeof (int64),  // OFFSET/ROW
 			typeof (string)  // ROW
-            });
+		});
 		this.finished_thread.connect (()=>{
 			this.thread_count--;
 			if (this.thread_count < 1)
