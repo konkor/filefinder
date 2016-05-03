@@ -294,7 +294,7 @@ public class Service : Gtk.TreeStore {
 				if (info.has_attribute (FileAttribute.UNIX_NLINK)) {
 					if (info.get_attribute_uint32 (FileAttribute.UNIX_NLINK) > 1) {
 						var hl = HardLink (info);
-						// check if we've already encountered this file
+						// check if we've already encountered this node
 						if (hl in hardlinks) {
 							continue;
 						}
