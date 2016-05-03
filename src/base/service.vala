@@ -139,12 +139,8 @@ public class Service : Gtk.TreeStore {
 	}
 
 	void* scan_in_thread () {
-		try {
-		print ("thread %d", this.thread_count);
+		Debug.info ("scaner", "thread %d".printf (this.thread_count));
 		list_dir (query.locations.nth_data (this.thread_count-1));
-		} catch (Error e) {
-		}
-		// drop the thread's reference on the Scanner object
 		this.self = null;
 		return null;
 	}
@@ -247,7 +243,7 @@ public class Service : Gtk.TreeStore {
 		scan_error = null;
 	}
 
-	private void get_files () {
+	/*private void get_files () {
 		Debug.info ("started search", "");
 		uint64 c = 0;
 		foreach (FilterLocation p in query.locations) {
@@ -257,7 +253,7 @@ public class Service : Gtk.TreeStore {
 		DateTime de = new DateTime.now_local();
 		Debug.info ("search", "duration %ju counted %ju".printf (de.difference(d), c));
 		finished_search ();
-	}
+	}*/
 
 	void list_dir (FilterLocation loc, bool first = true) {
 		FileInfo info;
@@ -617,7 +613,7 @@ public class Service : Gtk.TreeStore {
 		internal uint64 size;
 		internal FileType type;
 		internal uint64 time_modified;
-		internal string permission;
+		//internal string permission;
 		internal string mime;
 		internal string path;
 		internal string row;

@@ -51,5 +51,5 @@ AC_OUTPUT([
 Makefile
 src/Makefile
 src/nautilus/Makefile
-
+data/Makefile
 ])

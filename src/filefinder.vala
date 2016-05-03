@@ -114,6 +114,7 @@ public class Filefinder : Gtk.Application
     }
 
     protected override void shutdown() {
+		preferences.save ();
         base.shutdown();
     }
 
