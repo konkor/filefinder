@@ -125,6 +125,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			empty_box.visible = !paned.visible;
 			return false;
 		});
+		GLib.Timeout.add (5000, refresh_ui);
 	}
 
 	public void post_init () {
@@ -157,6 +158,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			hb.subtitle = "(%d items)".printf (n);
 		else
 			hb.subtitle = "";
+		//while (Gtk.events_pending ()) Gtk.main_iteration ();
 	}
 
     public int show_message (string text, MessageType type = MessageType.INFO) {
@@ -222,6 +224,14 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	public void show_results () {
 		Debug.info (this.name, "show_results () reached");
 		set_subtitle ();
+		while (Gtk.events_pending ())
+			Gtk.main_iteration ();
+	}
+
+	private bool refresh_ui () {
+		while (Gtk.events_pending ())
+			Gtk.main_iteration ();
+		return true;
 	}
 }
 

@@ -260,15 +260,22 @@ public class Service : Gtk.TreeStore {
 	}
 
 	void list_dir (FilterLocation loc, bool first = true) {
+		FileInfo info;
 		var results_array = new ResultsArray ();
 		var dir = File.new_for_path (loc.folder);
 		if (!dir.query_exists ()) return;
-		if (dir in excluded_locations) {
-			return;
-		}
 		try {
-			if (dir.query_file_type (FileQueryInfoFlags.NONE) == FileType.REGULAR) {
-				var res = apply_masks (dir.query_info ("*", 0),dir.get_path ());
+			info = dir.query_info ("*", 0);
+			if (info.get_is_symlink ()) {
+				loc.folder = Posix.realpath (loc.folder);
+				dir = File.new_for_path (loc.folder);
+				info = dir.query_info ("*", 0);
+			}
+			if (dir in excluded_locations) {
+				return;
+			}
+			if (info.get_file_type () == FileType.REGULAR) {
+				var res = apply_masks (info, dir.get_path ());
 				if (res != null) {
 					//on_found_file (info);
 					results_array.results += (owned) res;
@@ -277,12 +284,23 @@ public class Service : Gtk.TreeStore {
 				} else {
 					return;
 				}
+			} else if (!info.get_attribute_boolean (FileAttribute.ACCESS_CAN_READ)){
+				return;
 			}
 		    var e = dir.enumerate_children (ATTRIBUTES,
 		                                    FileQueryInfoFlags.NONE,
 		                                    cancellable);
-			FileInfo info;
 			while ((info = e.next_file (cancellable)) != null) {
+				if (info.has_attribute (FileAttribute.UNIX_NLINK)) {
+					if (info.get_attribute_uint32 (FileAttribute.UNIX_NLINK) > 1) {
+						var hl = HardLink (info);
+						// check if we've already encountered this file
+						if (hl in hardlinks) {
+							continue;
+						}
+						hardlinks += hl;
+					}
+				}
 				switch (info.get_file_type ()) {
 					case FileType.DIRECTORY:
 						if (loc.recursive) {
@@ -293,16 +311,6 @@ public class Service : Gtk.TreeStore {
 						}
 						break;
 					case FileType.REGULAR:
-						if (info.has_attribute (FileAttribute.UNIX_NLINK)) {
-							if (info.get_attribute_uint32 (FileAttribute.UNIX_NLINK) > 1) {
-								var hl = HardLink (info);
-								// check if we've already encountered this file
-								if (hl in hardlinks) {
-									continue;
-								}
-								hardlinks += hl;
-							}
-						}
 						var res = apply_masks (info, loc.folder);
 						if (res != null) {
 							//on_found_file (info);
@@ -501,7 +509,56 @@ public class Service : Gtk.TreeStore {
 		}
 
 		try {
-			DataInputStream dis = new DataInputStream (file.read ());
+			string contents, s, mask;
+			size_t length;
+			int pos = 0;
+			if (FileUtils.get_contents (GLib.Path.build_filename (path, info.get_name ()),
+			                  out contents, out length)) {
+				/*if (line.length >= 4096) {
+					return null;
+				}*/
+				foreach (string line in contents.split_set ("\n")) {
+					foreach (FilterText f in query.texts) {
+						if (f.text.length > contents.length)
+							return null;
+						if (!f.case_sensetive) {
+							s = line.up ();
+							mask = f.text.up ();
+						} else {
+							s = line;
+							mask = f.text;
+						}
+						s = convert_to (s, f.encoding);
+						if (s.contains (mask)) {
+							res = new Results ();
+							res.position = pos;
+							res.row = convert_to (line, f.encoding);;
+							return res;
+						}
+					}
+					pos++;
+				}
+				/*foreach (FilterText f in query.texts) {
+					if (f.text.length > contents.length)
+						return null;
+					if (!f.case_sensetive) {
+						s = contents.up ();
+						mask = f.text.up ();
+					} else {
+						s = contents;
+						mask = f.text;
+					}
+					s = convert_to (s, f.encoding);
+					if (s.contains (mask)) {
+						res = new Results ();
+						pos = s.index_of (mask);
+						res.position = pos;
+						//res.row = s.substring (pos, s.index_of ("\0", pos));
+						return res;
+					}
+				}*/
+			}
+			/*DataInputStream dis = new DataInputStream (file.read ());
 			string line, s, enc, mask;
 			int64 pos = 0;
 			while ((line = dis.read_line (null)) != null) {
@@ -525,7 +582,7 @@ public class Service : Gtk.TreeStore {
 					}
 				}
 				pos++;
-			}
+			}*/
 		} catch (Error err) {
 			return null;
 		}
