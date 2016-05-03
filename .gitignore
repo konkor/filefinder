@@ -39,6 +39,6 @@ src/Makefile
 src/filefinder
 src/*.c
 src/*.o
-src/*.stamp
+src/*.stamp*
 src/*.la
 src/*lo
