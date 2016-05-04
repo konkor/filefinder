@@ -48,6 +48,7 @@ public class Preferences : Gtk.Window {
 		title = Text.app_name + " Preferences";
 
 		build_gui ();
+		load ();
 		refresh_gui ();
 
 		delete_event.connect (on_delete);
@@ -57,6 +58,7 @@ public class Preferences : Gtk.Window {
 
 	private bool on_delete () {
         hide();
+		save ();
         return true;
     }
 
@@ -72,6 +74,74 @@ public class Preferences : Gtk.Window {
 
 	public bool save () {
 		//TODO save preferences
+		Debug.info ("preferences", "save");
+		File file;
+		DataOutputStream dos = null;
+		string config = Path.build_filename (Environment.get_user_data_dir (),"filefinder");
+		if (!FileUtils.test (config, FileTest.IS_REGULAR))
+			DirUtils.create (config, 0744);
+		config = Path.build_filename (config, "filefinder.conf");
+		file = File.new_for_path (config);
+		try {
+			file.delete ();
+			dos = new DataOutputStream (file.create (FileCreateFlags.REPLACE_DESTINATION));
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+			                                     "first_run", first_run.to_string ()));
+			foreach (ViewColumn p in columns) {
+				dos.put_string ("%d %s %s\n".printf (PreferenceType.COLUMN,
+								p.name, p.get_value ()));
+			}
+		} catch (Error e) {
+			Debug.error ("preferences", e.message);
+			return false;
+		}
+		
+		return true;
+	}
+
+	public bool load () {
+		int i;
+		string line, name, val;;
+		PreferenceType t;
+		string config = Path.build_filename (Environment.get_user_data_dir (),
+		                                     "filefinder", "filefinder.conf");
+		File file = File.new_for_path (config);
+		if (!file.query_exists ())
+			return false;
+		try {
+		DataInputStream dis = new DataInputStream (file.read ());
+		while ((line = dis.read_line (null)) != null) {
+			//TODO parse params
+			i = line.index_of (" ");
+			if ((i > 0) && (line.length > i)) {
+				t = (PreferenceType) int.parse (line.substring (0, i));
+				line = line.substring (i + 1);
+				i = line.index_of (" ");
+				if ((i > 0) && (line.length > i)) {
+					name = line.substring (0, i);
+					val = line.substring (i + 1);
+					
+					if (t == PreferenceType.GENERAL) {
+					switch (name) {
+						case "first_run":
+							first_run = bool.parse (val);
+							break;
+					}
+					} else if (t == PreferenceType.COLUMN) {
+						string[] stringValues = val.split(":");
+						int id = int.parse(stringValues[0]);
+						int w = int.parse(stringValues[1]);
+						bool vis = bool.parse(stringValues[2]);
+						columns [id].width = w;
+						columns [id].visible = vis;
+					}
+				}
+			}
+		}
+		} catch (Error e) {
+			Debug.error ("preferences", e.message);
+			return false;
+		} 
 		return true;
 	}
 

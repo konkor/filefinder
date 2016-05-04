@@ -116,7 +116,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		result_view = new ResultsView ();
 		scrolledwindow.add (result_view);
 		
-        set_default_size (800, 512);
+		set_default_size (800, 512);
     }
 
     private void initialize () {
@@ -125,7 +125,6 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			empty_box.visible = !paned.visible;
 			return false;
 		});
-		GLib.Timeout.add (5000, refresh_ui);
 	}
 
 	public void post_init () {
@@ -164,8 +163,8 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
     public int show_message (string text, MessageType type = MessageType.INFO) {
         if (infoBar != null) infoBar.destroy ();
         if (type == Gtk.MessageType.QUESTION) {
-            infoBar = new InfoBar.with_buttons (Gtk.STOCK_YES, Gtk.ResponseType.YES,
-                                                Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL);
+            infoBar = new InfoBar.with_buttons ("gtk-yes", Gtk.ResponseType.YES,
+                                                "gtk-cancel", Gtk.ResponseType.CANCEL);
         } else {
             infoBar = new InfoBar.with_buttons ("gtk-close", Gtk.ResponseType.CLOSE);
             infoBar.set_default_response (Gtk.ResponseType.OK);
@@ -174,16 +173,16 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
         Gtk.Container content = infoBar.get_content_area ();
         switch (type) {
             case Gtk.MessageType.QUESTION:
-                content.add (new Gtk.Image.from_stock ("gtk-dialog-question", Gtk.IconSize.DIALOG));
+                content.add (new Gtk.Image.from_icon_name ("gtk-dialog-question", Gtk.IconSize.DIALOG));
                 break;
             case Gtk.MessageType.INFO:
-                content.add (new Gtk.Image.from_stock ("gtk-dialog-info", Gtk.IconSize.DIALOG));
+                content.add (new Gtk.Image.from_icon_name ("gtk-dialog-info", Gtk.IconSize.DIALOG));
                 break;
             case Gtk.MessageType.ERROR:
-                content.add (new Gtk.Image.from_stock ("gtk-dialog-error", Gtk.IconSize.DIALOG));
+                content.add (new Gtk.Image.from_icon_name ("gtk-dialog-error", Gtk.IconSize.DIALOG));
                 break;
             case Gtk.MessageType.WARNING:
-                content.add (new Gtk.Image.from_stock ("gtk-dialog-warning", Gtk.IconSize.DIALOG));
+                content.add (new Gtk.Image.from_icon_name ("gtk-dialog-warning", Gtk.IconSize.DIALOG));
                 break;
         }
         content.add (new Gtk.Label (text));
@@ -228,10 +227,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			Gtk.main_iteration ();
 	}
 
-	private bool refresh_ui () {
+	/*private bool refresh_ui () {
 		while (Gtk.events_pending ())
 			Gtk.main_iteration ();
 		return true;
-	}
+	}*/
 }
 

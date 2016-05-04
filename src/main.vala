@@ -47,5 +47,5 @@ static int main (string[] args) {
 
 	var app = new Filefinder (args);
 
-	return app.run (args);
+	return app.run ();
 }

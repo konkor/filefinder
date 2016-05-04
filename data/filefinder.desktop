@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Name=File Finder
+GenericName=Advanced Search Tool
+Comment=Advanced Search Tool
+TryExec=filefinder
+Exec=filefinder %f
+Icon=filefinder
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=GNOME;GTK;Utility;System;
