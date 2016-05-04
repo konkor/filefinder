@@ -87,6 +87,9 @@ public class Filefinder : Gtk.Application
 			Debug.info ("size count", "%u".printf (q.sizes.length ()));
 			service.start (q);
 		});
+		window.canceled.connect (()=>{
+			service.cancel ();
+		});
 		service.finished_search.connect (()=>{
 			window.show_results ();
 		});

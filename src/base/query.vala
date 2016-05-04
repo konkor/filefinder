@@ -30,6 +30,8 @@ public class Query : GLib.Object {
 
 	public bool exclude_mounts { get; private set; }
 
+	public bool apply_masks { get; set; }
+
 	public Query () {
 		locations = new List<FilterLocation> ();
 		files = new List<string> ();

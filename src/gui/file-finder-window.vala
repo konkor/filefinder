@@ -20,6 +20,7 @@ using Gtk;
 
 public class FileFinderWindow : Gtk.ApplicationWindow {
 	public signal void go_clicked (Query q);
+	public signal void canceled ();
 
 	public FileFinderWindow (Gtk.Application app) {
         GLib.Object (application: app);
@@ -31,9 +32,8 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
     private Gtk.InfoBar infoBar;
 	private Gtk.Box infoBox;
     private Gtk.HeaderBar hb;
-    private Gtk.Button button_go;
+    private Gtk.ToggleButton button_go;
 	private Gtk.Button button_plus;
-	//private Gtk.Entry search_entry;
 	private Gtk.Paned paned;
 	private Gtk.AccelGroup accel_group;
 
@@ -55,7 +55,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
         hb.set_show_close_button (true);
         set_titlebar (hb);
 
-		button_go = new Gtk.Button ( );
+		button_go = new Gtk.ToggleButton ( );
         button_go.use_underline = true;
         button_go.can_default = true;
         this.set_default (button_go);
@@ -125,6 +125,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			empty_box.visible = !paned.visible;
 			return false;
 		});
+		//GLib.Timeout.add (2000, refresh_ui);
 	}
 
 	public void post_init () {
@@ -148,7 +149,13 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
     private void on_go_clicked () {
-        go_clicked (query);
+		if (button_go.active) {
+			button_go.label = "Stop";
+			go_clicked (query);
+		} else {
+			button_go.label = "Search";
+			canceled ();
+		}
     }
 
 	public void set_subtitle () {
@@ -157,7 +164,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			hb.subtitle = "(%d items)".printf (n);
 		else
 			hb.subtitle = "";
-		//while (Gtk.events_pending ()) Gtk.main_iteration ();
+		if ((n%1000) == 0) while (Gtk.events_pending ()) Gtk.main_iteration ();
 	}
 
     public int show_message (string text, MessageType type = MessageType.INFO) {
@@ -223,6 +230,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	public void show_results () {
 		Debug.info (this.name, "show_results () reached");
 		set_subtitle ();
+		button_go.active = false;
 		while (Gtk.events_pending ())
 			Gtk.main_iteration ();
 	}

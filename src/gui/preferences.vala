@@ -84,6 +84,10 @@ public class Preferences : Gtk.Window {
 		file = File.new_for_path (config);
 		try {
 			file.delete ();
+		} catch (Error e) {
+			Debug.error ("preferences", e.message);
+		}
+		try {
 			dos = new DataOutputStream (file.create (FileCreateFlags.REPLACE_DESTINATION));
 			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
 			                                     "first_run", first_run.to_string ()));
@@ -148,6 +152,7 @@ public class Preferences : Gtk.Window {
 	private void refresh_gui () {
 
 	}
+
 
 	private void build_gui () {
 

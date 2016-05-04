@@ -47,7 +47,8 @@ public class Service : Gtk.TreeStore {
 	List<Thread<void*>> thread_list;
     uint process_result_idle = 0;
 
-    HardLink[] hardlinks;
+    private int mutex { get; set; }
+	HardLink[] hardlinks;
     GenericSet<File> excluded_locations;
 
     bool successful = false;
@@ -80,12 +81,14 @@ public class Service : Gtk.TreeStore {
 		});
 		this.finished_thread.connect (()=>{
 			this.thread_count--;
+			print ("thread_count %d\n", thread_count);
 			if (this.thread_count < 1)
 				finished_search ();
 		});
 	}
 
 	private void init () {
+		base.clear ();
 		thread_count = 0;
 		thread_list = new List<Thread<void*>>();
 		results_queue = new AsyncQueue<ResultsArray> ();
@@ -126,7 +129,7 @@ public class Service : Gtk.TreeStore {
 				Thread.usleep (200000);
 			}
 
-			process_result_idle = Timeout.add (100, () => {
+			process_result_idle = Timeout.add (200, () => {
 				bool res = process_results();
 				if (!res) {
 					process_result_idle = 0;
@@ -167,25 +170,20 @@ public class Service : Gtk.TreeStore {
 				if (results.error != null) {
 					if (results.error is IOError.CANCELLED) {
 						scan_error = results.error;
-						if (this.thread_count == 1) {
-							finished_thread ();
+						finished_thread ();
+						if (this.thread_count == 0) {
 							return false;
-						} else {
-							finished_thread ();
 						}
-
-					} else if (scan_error == null) {
+					} else if (scan_error != null) {
 						scan_error = results.error;
 					}
 				}
 
 				if (results_array.first && (results_array.results.length == i)) {
-					if (this.thread_count == 1) {
+					finished_thread ();
+					if (this.thread_count == 0) {
 						successful = true;
-						finished_thread ();
 						return false;
-					} else {
-						finished_thread ();
 					}
 				}
 			}
@@ -220,10 +218,13 @@ public class Service : Gtk.TreeStore {
 	private void cancel_and_reset () {
 		cancellable.cancel ();
 
-		if (thread != null) {
-			thread.join ();
-			thread = null;
+
+		foreach (Thread<void*> p in thread_list)
+		if (p != null) {
+			p.join ();
+			p = null;
 		}
+		thread_list = null;
 
 		if (process_result_idle != 0) {
 			GLib.Source.remove (process_result_idle);
@@ -237,7 +238,7 @@ public class Service : Gtk.TreeStore {
 
 		hardlinks = null;
 
-		base.clear ();
+		//base.clear ();
 
 		cancellable.reset ();
 		scan_error = null;
@@ -271,7 +272,7 @@ public class Service : Gtk.TreeStore {
 				return;
 			}
 			if (info.get_file_type () == FileType.REGULAR) {
-				var res = apply_masks (info, dir.get_path ());
+				Results res = apply_masks (info, dir.get_path ());
 				if (res != null) {
 					//on_found_file (info);
 					results_array.results += (owned) res;
@@ -291,10 +292,12 @@ public class Service : Gtk.TreeStore {
 					if (info.get_attribute_uint32 (FileAttribute.UNIX_NLINK) > 1) {
 						var hl = HardLink (info);
 						// check if we've already encountered this node
-						if (hl in hardlinks) {
-							continue;
+						lock (mutex) {
+							if (hl in hardlinks) {
+								continue;
+							}
+							hardlinks += hl;
 						}
-						hardlinks += hl;
 					}
 				}
 				switch (info.get_file_type ()) {
@@ -307,7 +310,7 @@ public class Service : Gtk.TreeStore {
 						}
 						break;
 					case FileType.REGULAR:
-						var res = apply_masks (info, loc.folder);
+						Results res = apply_masks (info, loc.folder);
 						if (res != null) {
 							//on_found_file (info);
 							res.path = loc.folder;
@@ -333,13 +336,23 @@ public class Service : Gtk.TreeStore {
 
 	private Results? apply_masks (FileInfo info, string? path) {
 		bool flag = true;
-		string fname = info.get_name ();
+		string fname = info.get_display_name ();
 		string fmask;
 		int64 fsize = info.get_size ();
+		string fmime = info.get_content_type ();
 		DateTime d;
 		int64 t = (int64) info.get_modification_time ().tv_sec;
 		//info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
-
+		Results? results = null;
+		if (!query.apply_masks) {
+			results = new Results ();
+			results.display_name = fname;
+			results.time_modified = info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
+			results.size = fsize;
+			results.mime = fmime;
+			results.type = info.get_file_type();
+			return results;
+		}
 		//Maybe we want to find directories too...
 		//if (info.get_file_type () == FileType.REGULAR) {
 		foreach (FilterSize f in query.sizes) {
@@ -440,7 +453,6 @@ public class Service : Gtk.TreeStore {
 			}
 		}
 
-		string fmime = info.get_content_type ();
 		bool mflag = false;
 		if (query.mimes.length () > 0) {
 			//print ("%s - %s\n", info.get_content_type (), fname);
@@ -471,7 +483,6 @@ public class Service : Gtk.TreeStore {
 
 		if (!flag) return null;
 
-		Results? results = null;
 		if (query.texts.length () > 0) {
 			flag = false;
 			results = get_text_pos (info, path);

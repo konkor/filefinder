@@ -48,6 +48,12 @@ public class QueryEditor : Gtk.Box {
 			foreach (QueryRow p in rows) {
 				_q.add_filter (p.filter);
 			}
+			_q.apply_masks = (_q.masks.length ()>0) ||
+				(_q.modifieds.length ()>0) ||
+				(_q.mimes.length ()>0) ||
+				(_q.texts.length ()>0) ||
+				(_q.bins.length ()>0) ||
+				(_q.sizes.length ()>0);
 			return _q;
 		}
 	}
