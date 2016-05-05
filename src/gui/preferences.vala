@@ -16,6 +16,8 @@
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+using Gtk;
+
 public enum Columns {
 	DISPLAY_NAME,
 	SIZE,
@@ -73,10 +75,11 @@ public class Preferences : Gtk.Window {
 	}
 
 	public bool save () {
-		//TODO save preferences
 		Debug.info ("preferences", "save");
 		File file;
 		DataOutputStream dos = null;
+		Gtk.TreeIter iter;
+		GLib.Value val;
 		string config = Path.build_filename (Environment.get_user_data_dir (),"filefinder");
 		if (!FileUtils.test (config, FileTest.IS_REGULAR))
 			DirUtils.create (config, 0744);
@@ -91,9 +94,22 @@ public class Preferences : Gtk.Window {
 			dos = new DataOutputStream (file.create (FileCreateFlags.REPLACE_DESTINATION));
 			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
 			                                     "first_run", first_run.to_string ()));
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+			                                     "check_mounts", check_mounts.to_string ()));
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+			                                     "check_links", check_links.to_string ()));
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+			                                     "check_hidden", check_hidden.to_string ()));
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+			                                     "check_backup", check_backup.to_string ()));
 			foreach (ViewColumn p in columns) {
 				dos.put_string ("%d %s %s\n".printf (PreferenceType.COLUMN,
 								p.name, p.get_value ()));
+			}
+			for (bool next = store_excluded.get_iter_first (out iter); next; next = store_excluded.iter_next (ref iter)) {
+				store_excluded.get_value (iter, 0, out val);
+				dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+								"excluded", (string) val));
 			}
 		} catch (Error e) {
 			Debug.error ("preferences", e.message);
@@ -107,6 +123,7 @@ public class Preferences : Gtk.Window {
 		int i;
 		string line, name, val;;
 		PreferenceType t;
+		Gtk.TreeIter iter;
 		string config = Path.build_filename (Environment.get_user_data_dir (),
 		                                     "filefinder", "filefinder.conf");
 		File file = File.new_for_path (config);
@@ -115,7 +132,6 @@ public class Preferences : Gtk.Window {
 		try {
 		DataInputStream dis = new DataInputStream (file.read ());
 		while ((line = dis.read_line (null)) != null) {
-			//TODO parse params
 			i = line.index_of (" ");
 			if ((i > 0) && (line.length > i)) {
 				t = (PreferenceType) int.parse (line.substring (0, i));
@@ -129,6 +145,22 @@ public class Preferences : Gtk.Window {
 					switch (name) {
 						case "first_run":
 							first_run = bool.parse (val);
+							break;
+						case "check_backup":
+							cb_backup.active = bool.parse (val);
+							break;
+						case "check_hidden":
+							cb_hidden.active = bool.parse (val);
+							break;
+						case "check_links":
+							cb_links.active = bool.parse (val);
+							break;
+						case "check_mounts":
+							cb_mounts.active = bool.parse (val);
+							break;
+						case "excluded":
+							store_excluded.append (out iter, null);
+							store_excluded.set (iter, 0, val, -1);
 							break;
 					}
 					} else if (t == PreferenceType.COLUMN) {
@@ -145,7 +177,8 @@ public class Preferences : Gtk.Window {
 		} catch (Error e) {
 			Debug.error ("preferences", e.message);
 			return false;
-		} 
+		}
+		is_changed = false;
 		return true;
 	}
 
@@ -153,10 +186,150 @@ public class Preferences : Gtk.Window {
 
 	}
 
-
+	private Gtk.Notebook notebook;
+	private Gtk.CheckButton cb_mounts;
+	private Gtk.CheckButton cb_links;
+	private Gtk.CheckButton cb_hidden;
+	private Gtk.CheckButton cb_backup;
+	private Gtk.TreeView view_excluded;
+	private Gtk.TreeStore store_excluded;
+	
 	private void build_gui () {
+		Gtk.Label label;
+		Gtk.ScrolledWindow scroll;
+		Gtk.Box box, hbox, vbox;
+		//Gtk.TreeView view;
+		Gtk.Button button;
+		
+		notebook = new Gtk.Notebook ();
+		add (notebook);
 
+		//Excluded locations
+		scroll = new ScrolledWindow (null, null);
+		notebook.add (scroll);
+		box = new Gtk.Box (Gtk.Orientation.VERTICAL, 6);
+		box.border_width = 6;
+		scroll.add (box);
+		label = new Label ("General");
+		notebook.set_tab_label (scroll, label);
+
+		cb_mounts = new Gtk.CheckButton.with_label ("Exclude mount points");
+		box.add (cb_mounts);
+		cb_mounts.toggled.connect (()=>{
+			check_mounts = cb_mounts.active;
+			is_changed = true;
+		});
+		cb_mounts.active = true;
+
+		cb_links = new Gtk.CheckButton.with_label ("Don't follow to symbolic links");
+		box.add (cb_links);
+		cb_links.toggled.connect (()=>{
+			check_links = cb_links.active;
+			is_changed = true;
+		});
+		cb_links.active = false;
+
+		cb_hidden = new Gtk.CheckButton.with_label ("Exclude hidden locations");
+		box.add (cb_hidden);
+		cb_hidden.toggled.connect (()=>{
+			check_hidden = cb_hidden.active;
+			is_changed = true;
+		});
+		cb_hidden.active = false;
+
+		cb_backup = new Gtk.CheckButton.with_label ("Exclude backups");
+		box.add (cb_backup);
+		cb_backup.toggled.connect (()=>{
+			check_backup = cb_backup.active;
+			is_changed = true;
+		});
+		cb_backup.active = false;
+
+		label = new Label ("<b>User defined excluded locations</b>");
+		label.use_markup = true;
+		label.xalign = 0;
+		box.add (label);
+
+		hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 6);
+		box.pack_start (hbox, true, true, 0);
+
+		scroll = new ScrolledWindow (null, null);
+		scroll.shadow_type = Gtk.ShadowType.OUT;
+		hbox.pack_start (scroll, true, true, 0);
+		view_excluded = new Gtk.TreeView ();
+		store_excluded = new Gtk.TreeStore (1, typeof (string));
+		view_excluded.set_model (store_excluded);
+		view_excluded.insert_column_with_attributes (-1, "Path", new Gtk.CellRendererText (), "text", 0, null);
+		scroll.add (view_excluded);
+
+		vbox = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
+		hbox.pack_end (vbox, false, false, 0);
+		button = new Gtk.Button.with_label ("Add");
+		button.tooltip_text = "Add New Locations";
+		button.clicked.connect (()=>{
+			Gtk.TreeIter iter;
+			bool exist = false;
+			string filename;
+			Value val;
+			Gtk.FileChooserDialog c = new Gtk.FileChooserDialog ("Select Folder",
+											Filefinder.window,
+											Gtk.FileChooserAction.SELECT_FOLDER ,
+											"_Cancel",
+											Gtk.ResponseType.CANCEL,
+											"_Open",
+											Gtk.ResponseType.ACCEPT);
+			if (c.run () == Gtk.ResponseType.ACCEPT) {
+				filename = c.get_filename ();
+				for (bool next = store_excluded.get_iter_first (out iter); next; next = store_excluded.iter_next (ref iter)) {
+					store_excluded.get_value (iter, 0, out val);
+					if (filename == (string) val) {
+						exist = true;
+						break;
+					}
+				}
+				if (!exist) {
+					store_excluded.append (out iter, null);
+					store_excluded.set (iter, 0, filename, -1);
+					is_changed = true;
+				}
+			}
+			c.close ();
+		});
+		vbox.add (button);
+
+		button = new Gtk.Button.with_label ("Remove");
+		button.tooltip_text = "Remove Selected Locations";
+		button.clicked.connect (()=>{
+			Gtk.TreeIter iter;
+			Gtk.TreeSelection selection = view_excluded.get_selection ();
+			if (selection.count_selected_rows () == 0)
+				return;
+			if (store_excluded.get_iter (out iter, selection.get_selected_rows (null).first().data))
+				store_excluded.remove (ref iter);
+			is_changed = true;
+		});
+		vbox.add (button);
+
+		button = new Gtk.Button.with_label ("Clear");
+		button.tooltip_text = "Clear All Locations";
+		button.clicked.connect (()=>{
+			store_excluded.clear ();
+			is_changed = true;
+		});
+		vbox.add (button);
+
+		set_default_size (640, 400);
+		show_all ();
+		//hide ();
 	}
+
+	public bool check_mounts {get; protected set;}
+
+	public bool check_links {get; protected set;}
+
+	public bool check_hidden {get; protected set;}
+
+	public bool check_backup {get; protected set;}
 
 }
 

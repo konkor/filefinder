@@ -19,6 +19,7 @@
 using Gtk;
 
 public class ResultsView : Gtk.TreeView {
+	private Gtk.Menu context_menu;
 
 	public ResultsView () {
 		can_focus = true;
@@ -26,6 +27,7 @@ public class ResultsView : Gtk.TreeView {
 		get_selection ().mode = Gtk.SelectionMode.MULTIPLE;
 
 		build_columns ();
+		build_menus ();
 	}
 
 	private void build_columns () {
@@ -60,6 +62,10 @@ public class ResultsView : Gtk.TreeView {
 		//TODO sort function
 		//int n = i;
 		//for (i = 0; i < n; i++) store.SetSortFunc (i, SortTree);
+	}
+
+	private void build_menus () {
+		//TODO context_menu
 	}
 
 	private void render_text (Gtk.CellLayout layout, Gtk.CellRenderer cell, Gtk.TreeModel model, Gtk.TreeIter iter) {
