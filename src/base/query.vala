@@ -28,8 +28,6 @@ public class Query : GLib.Object {
 	public List<FilterBin> bins;
 	public List<FilterSize> sizes;
 
-	public bool exclude_mounts { get; private set; }
-
 	public bool apply_masks { get; set; }
 
 	public Query () {
@@ -41,8 +39,6 @@ public class Query : GLib.Object {
 		texts = new List<FilterText> ();
 		bins = new List<FilterBin> ();
 		sizes = new List<FilterSize> ();
-
-		exclude_mounts = true;
 	}
 
 	public void add_filter (Filter filter) {

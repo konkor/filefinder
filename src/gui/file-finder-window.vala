@@ -86,7 +86,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
         empty_box.add (image);
 		empty_box.add (new Label("No search results."));
 
-        paned = new Gtk.Paned (Gtk.Orientation.VERTICAL);
+        paned = new Gtk.Paned (Filefinder.preferences.split_orientation);
 		paned.events |= Gdk.EventMask.VISIBILITY_NOTIFY_MASK;
 		paned.can_focus = true;
 		paned.position = paned.min_position;
@@ -165,6 +165,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		else
 			hb.subtitle = "";
 		if ((n%1000) == 0) while (Gtk.events_pending ()) Gtk.main_iteration ();
+	}
+
+	public void split_orientation (Gtk.Orientation orientation) {
+		paned.orientation = orientation;
 	}
 
     public int show_message (string text, MessageType type = MessageType.INFO) {

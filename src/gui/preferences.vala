@@ -102,6 +102,8 @@ public class Preferences : Gtk.Window {
 			                                     "check_hidden", check_hidden.to_string ()));
 			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
 			                                     "check_backup", check_backup.to_string ()));
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+			                                     "split_orientation", cb_vertical.active.to_string ()));
 			foreach (ViewColumn p in columns) {
 				dos.put_string ("%d %s %s\n".printf (PreferenceType.COLUMN,
 								p.name, p.get_value ()));
@@ -162,6 +164,9 @@ public class Preferences : Gtk.Window {
 							store_excluded.append (out iter, null);
 							store_excluded.set (iter, 0, val, -1);
 							break;
+						case "split_orientation":
+							cb_vertical.active = bool.parse (val);
+							break;
 					}
 					} else if (t == PreferenceType.COLUMN) {
 						string[] stringValues = val.split(":");
@@ -187,13 +192,16 @@ public class Preferences : Gtk.Window {
 	}
 
 	private Gtk.Notebook notebook;
+
 	private Gtk.CheckButton cb_mounts;
 	private Gtk.CheckButton cb_links;
 	private Gtk.CheckButton cb_hidden;
 	private Gtk.CheckButton cb_backup;
 	private Gtk.TreeView view_excluded;
 	private Gtk.TreeStore store_excluded;
-	
+
+	private Gtk.CheckButton cb_vertical;
+
 	private void build_gui () {
 		Gtk.Label label;
 		Gtk.ScrolledWindow scroll;
@@ -318,6 +326,28 @@ public class Preferences : Gtk.Window {
 		});
 		vbox.add (button);
 
+		//UI Settings
+		box = new Gtk.Box (Gtk.Orientation.VERTICAL, 6);
+		box.border_width = 6;
+		notebook.add (box);
+		label = new Label ("Interface");
+		notebook.set_tab_label (box, label);
+
+		cb_vertical = new Gtk.CheckButton.with_label ("Split Vertical");
+		cb_vertical.tooltip_text = "Setting Split Orientation of the Results View";
+		box.add (cb_vertical);
+		cb_vertical.toggled.connect (()=>{
+			if (cb_vertical.active) {
+				split_orientation = Gtk.Orientation.VERTICAL;
+			} else {
+				split_orientation = Gtk.Orientation.HORIZONTAL;
+			}
+			if (Filefinder.window != null)
+				Filefinder.window.split_orientation (split_orientation);
+			is_changed = true;
+		});
+		cb_vertical.active = true;
+		
 		set_default_size (640, 400);
 		show_all ();
 		//hide ();
@@ -330,6 +360,28 @@ public class Preferences : Gtk.Window {
 	public bool check_hidden {get; protected set;}
 
 	public bool check_backup {get; protected set;}
+
+	public string[] get_user_excluded () {
+		string[] locations = {};
+		Gtk.TreeIter iter;
+		GLib.Value val;
+		for (bool next = store_excluded.get_iter_first (out iter); next; next = store_excluded.iter_next (ref iter)) {
+			store_excluded.get_value (iter, 0, out val);
+			locations += (string) val;
+		}
+		return locations;
+	}
+
+	public GLib.FileQueryInfoFlags follow_links {
+		get {
+			if (check_links)
+				return GLib.FileQueryInfoFlags.NOFOLLOW_SYMLINKS;
+			else
+				return GLib.FileQueryInfoFlags.NONE;
+		}
+	}
+
+	public Gtk.Orientation split_orientation {get; protected set;}
 
 }
 

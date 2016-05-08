@@ -94,10 +94,14 @@ public class Service : Gtk.TreeStore {
 		results_queue = new AsyncQueue<ResultsArray> ();
 
 		excluded_locations = Filefinder.get_excluded_locations ();
-        if (query.exclude_mounts) {
+		assert_null (Filefinder.preferences);
+        if (Filefinder.preferences.check_mounts) {
             foreach (unowned UnixMountEntry mount in UnixMountEntry.get (null)) {
                 excluded_locations.add (File.new_for_path (mount.get_mount_path ()));
             }
+        }
+		foreach (string mount in Filefinder.preferences.get_user_excluded ()) {
+    		excluded_locations.add (File.new_for_path (mount));
         }
 		foreach (FilterLocation f in query.locations) {
 			excluded_locations.remove (File.new_for_path (f.folder));
@@ -285,9 +289,17 @@ public class Service : Gtk.TreeStore {
 				return;
 			}
 		    var e = dir.enumerate_children (ATTRIBUTES,
-		                                    FileQueryInfoFlags.NONE,
+		                                    Filefinder.preferences.follow_links,
 		                                    cancellable);
 			while ((info = e.next_file (cancellable)) != null) {
+				if (Filefinder.preferences.check_hidden) {
+					if (info.get_name ().has_prefix ("."))
+						continue;
+				}
+				if (Filefinder.preferences.check_backup) {
+					if (info.get_is_backup ())
+						continue;
+				}
 				if (info.has_attribute (FileAttribute.UNIX_NLINK)) {
 					if (info.get_attribute_uint32 (FileAttribute.UNIX_NLINK) > 1) {
 						var hl = HardLink (info);
