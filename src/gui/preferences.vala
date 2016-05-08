@@ -188,7 +188,28 @@ public class Preferences : Gtk.Window {
 	}
 
 	private void refresh_gui () {
+		refresh_general ();
+		refresh_ui ();
+	}
 
+	private void refresh_general () {
+	}
+
+	private void refresh_ui () {
+		Gtk.TreeIter it;
+		store.clear ();
+		foreach (ViewColumn p in columns) {
+			store.append (out it, null);
+			store.set (it, 0, p.visible, 1, p.title, -1);
+		}
+	}
+
+	public void update_column (int column, int width, bool visible) {
+		if (columns [column].width != width || columns [column].visible != visible) {
+			columns [column].width = width;
+			columns [column].visible = visible;
+			is_changed = true;
+		}
 	}
 
 	private Gtk.Notebook notebook;
@@ -199,6 +220,7 @@ public class Preferences : Gtk.Window {
 	private Gtk.CheckButton cb_backup;
 	private Gtk.TreeView view_excluded;
 	private Gtk.TreeStore store_excluded;
+	private Gtk.TreeStore store;
 
 	private Gtk.CheckButton cb_vertical;
 
@@ -206,7 +228,8 @@ public class Preferences : Gtk.Window {
 		Gtk.Label label;
 		Gtk.ScrolledWindow scroll;
 		Gtk.Box box, hbox, vbox;
-		//Gtk.TreeView view;
+		Gtk.TreeView view;
+		
 		Gtk.Button button;
 		
 		notebook = new Gtk.Notebook ();
@@ -275,9 +298,9 @@ public class Preferences : Gtk.Window {
 		button = new Gtk.Button.with_label ("Add");
 		button.tooltip_text = "Add New Locations";
 		button.clicked.connect (()=>{
-			Gtk.TreeIter iter;
 			bool exist = false;
 			string filename;
+			Gtk.TreeIter iter;
 			Value val;
 			Gtk.FileChooserDialog c = new Gtk.FileChooserDialog ("Select Folder",
 											Filefinder.window,
@@ -347,7 +370,38 @@ public class Preferences : Gtk.Window {
 			is_changed = true;
 		});
 		cb_vertical.active = true;
-		
+
+		label = new Label ("<b>Choose the information to appear in the result view.</b>");
+		label.use_markup = true;
+		label.xalign = 0;
+		box.add (label);
+
+		hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 6);
+		box.pack_start (hbox, true, true, 0);
+
+		scroll = new ScrolledWindow (null, null);
+		scroll.shadow_type = Gtk.ShadowType.OUT;
+		hbox.pack_start (scroll, true, true, 0);
+
+		view = new Gtk.TreeView ();
+		store = new Gtk.TreeStore (2, typeof (bool), typeof (string));
+		view.set_model (store);
+		view.headers_visible = false;
+		Gtk.CellRendererToggle toggle = new Gtk.CellRendererToggle ();
+		toggle.toggled.connect ((toggle, path) => {
+			Gtk.TreePath tree_path = new Gtk.TreePath.from_string (path);
+			Gtk.TreeIter iter;
+			int i = tree_path.get_indices ()[0];
+			store.get_iter (out iter, tree_path);
+			store.set (iter, 0, !toggle.active);
+			columns[i].visible = !columns[i].visible;
+			if (Filefinder.window != null)
+				Filefinder.window.set_column_visiblity (i, columns[i].visible);
+		});
+		view.insert_column_with_attributes (-1, "Active", toggle, "active", 0, null);
+		view.insert_column_with_attributes (-1, "Name", new Gtk.CellRendererText (), "text", 1, null);
+		scroll.add (view);
+				
 		set_default_size (640, 400);
 		show_all ();
 		//hide ();

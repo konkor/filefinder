@@ -48,6 +48,11 @@ public class ResultsView : Gtk.TreeView {
 			col.set_cell_data_func (colr, render_text);
 			col.visible = p.visible;
 			append_column (col);
+			col.notify_property ("width");
+			col.notify["width"].connect ((o)=>{
+				print ("width");
+				//Filefinder.preferences.update_column (o.sort_column_id, o.width, o.visible);
+			});
 			i++;
 		}
 

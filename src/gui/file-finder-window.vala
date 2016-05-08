@@ -171,6 +171,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		paned.orientation = orientation;
 	}
 
+	public void set_column_visiblity (int column, bool visible) {
+		result_view.get_column (column).visible = visible;
+	}
+
     public int show_message (string text, MessageType type = MessageType.INFO) {
         if (infoBar != null) infoBar.destroy ();
         if (type == Gtk.MessageType.QUESTION) {
