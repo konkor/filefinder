@@ -23,6 +23,7 @@ filefinder_SOURCES = \
 	gui/query-row.vala \
 	gui/query-editor.vala \
 	gui/results-view.vala \
+	gui/column-menu-item.vala \
 	gui/preferences.vala \
 	base/query.vala \
 	base/filter.vala \

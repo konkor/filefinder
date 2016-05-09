@@ -205,8 +205,12 @@ public class Preferences : Gtk.Window {
 	}
 
 	public void update_column (int column, int width, bool visible) {
-		if (columns [column].width != width || columns [column].visible != visible) {
+		if (column < 0) return;
+		if (columns [column].width != width && width != -1) {
 			columns [column].width = width;
+			is_changed = true;
+		}
+		if (columns [column].visible != visible) {
 			columns [column].visible = visible;
 			is_changed = true;
 		}

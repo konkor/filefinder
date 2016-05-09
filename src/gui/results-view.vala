@@ -19,7 +19,8 @@
 using Gtk;
 
 public class ResultsView : Gtk.TreeView {
-	private Gtk.Menu context_menu;
+	private Gtk.Menu menu;
+	private Gtk.Menu menu_columns;
 
 	public ResultsView () {
 		can_focus = true;
@@ -28,18 +29,19 @@ public class ResultsView : Gtk.TreeView {
 
 		build_columns ();
 		build_menus ();
+
+		button_press_event.connect (on_tree_button);
 	}
 
 	private void build_columns () {
-		Gtk.TreeViewColumn col;
+		Gtk.TreeViewColumn col0;
 		Gtk.CellRendererText colr;
 		int i = 0;
 		foreach (ViewColumn p in Filefinder.preferences.columns) {
-			col = new Gtk.TreeViewColumn ();
+			Gtk.TreeViewColumn col = new Gtk.TreeViewColumn ();
 			col.title = p.title;
 			col.expand = false;
 			col.fixed_width = p.width;
-			//TODO col.AddSignalHandler ("notify::width", column_width);
 			col.resizable = true;
 			col.sizing = TreeViewColumnSizing.FIXED;
 			col.sort_column_id = i;
@@ -48,34 +50,39 @@ public class ResultsView : Gtk.TreeView {
 			col.set_cell_data_func (colr, render_text);
 			col.visible = p.visible;
 			append_column (col);
-			col.notify_property ("width");
-			col.notify["width"].connect ((o)=>{
-				print ("width");
-				//Filefinder.preferences.update_column (o.sort_column_id, o.width, o.visible);
+			col.notify["width"].connect (()=>{
+				Filefinder.preferences.update_column (col.sort_column_id,
+				                                      col.width, col.visible);
 			});
 			i++;
 		}
 
-		col = new Gtk.TreeViewColumn ();
-		col.title = " ";
-		col.sizing = TreeViewColumnSizing.AUTOSIZE;
+		col0 = new Gtk.TreeViewColumn ();
+		col0.title = " ";
+		col0.sizing = TreeViewColumnSizing.AUTOSIZE;
 		colr = new Gtk.CellRendererText ();
-		col.pack_start (colr, false);
-		append_column (col);
+		col0.pack_start (colr, false);
+		append_column (col0);
 
 		set_model (Filefinder.service);
-		//TODO sort function
-		//int n = i;
-		//for (i = 0; i < n; i++) store.SetSortFunc (i, SortTree);
 	}
 
 	private void build_menus () {
-		//TODO context_menu
+		menu_columns = new Gtk.Menu ();
+		foreach (ViewColumn p in Filefinder.preferences.columns) {
+			ColumnMenuItem mic = new ColumnMenuItem (p);
+			mic.active = p.visible;
+			mic.toggled.connect (()=>{
+				Filefinder.preferences.update_column (mic.column_id, -1, mic.active);
+				get_column (mic.column_id).visible = mic.active;
+			});
+			mic.show ();
+			menu_columns.add (mic);
+		}
 	}
 
 	private void render_text (Gtk.CellLayout layout, Gtk.CellRenderer cell, Gtk.TreeModel model, Gtk.TreeIter iter) {
         GLib.Value v;
-		//TODO text cell render
 		switch ((layout as TreeViewColumn).sort_column_id) {
 			case Columns.POSITION:
 				model.get_value (iter, Columns.POSITION, out v);
@@ -118,7 +125,6 @@ public class ResultsView : Gtk.TreeView {
 						(cell as Gtk.CellRendererText).text = "Mountable";
 						break;
 				}
-				//(cell as Gtk.CellRendererText).text = v.get_string();
 				break;
 			case Columns.TIME_MODIFIED:
 				model.get_value (iter, Columns.TIME_MODIFIED, out v);
@@ -142,6 +148,19 @@ public class ResultsView : Gtk.TreeView {
 				(cell as Gtk.CellRendererText).text = v.get_string();
 				break;
 		}
+	}
+
+	private bool on_tree_button (Gdk.EventButton event) {
+		if (event.button == 3) { //right click
+			int x, y;
+			get_pointer (out x, out y);
+			if (y <= 32) {
+        		menu_columns.popup (null, null, null, 3, get_current_event_time ());
+			}
+		} else if (event.type == Gdk.EventType.DOUBLE_BUTTON_PRESS) {
+			//global_actions.OnPlaySelected (this, null);
+		}
+        return false;
 	}
 
 	private string get_bin_size (uint64 i) {
