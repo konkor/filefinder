@@ -61,6 +61,7 @@ public class QueryEditor : Gtk.Box {
 	public void add_folder (string path) {
 		QueryRow row = new QueryRow ();
 		row.chooser.select_filename (path);
+		row.location.folder = path;
 		add_row (row);
 	}
 

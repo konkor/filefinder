@@ -21,9 +21,11 @@ class FilefinderMenuProvider : Nautilus.MenuProvider, Object {
                 //info.launch (gfiles, null);
                 appinfo.launch (null, null);
             } catch (Error e) {
-                new Gtk.MessageDialog(null, 0, Gtk.MessageType.ERROR,
+                var dlg = new Gtk.MessageDialog (null, 0, Gtk.MessageType.ERROR,
                     Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
-                    e.message).show();
+                    e.message);
+				dlg.run ();
+				dlg.destroy ();
             }
         });
         list.append(item);
@@ -42,9 +44,11 @@ class FilefinderMenuProvider : Nautilus.MenuProvider, Object {
             try {
                 appinfo.launch (null, null);
             } catch (Error e) {
-                new Gtk.MessageDialog(null, 0, Gtk.MessageType.ERROR,
+                var dlg = new Gtk.MessageDialog (null, 0, Gtk.MessageType.ERROR,
                     Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
-                    e.message).show();
+                    e.message);
+				dlg.run ();
+				dlg.destroy ();
             }
         });
         list.append(item);

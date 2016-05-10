@@ -69,7 +69,7 @@ public class QueryRow : Gtk.Box {
 		show_all ();
 	}
 
-	private FilterLocation location;
+	public FilterLocation location;
 	public Gtk.FileChooserButton chooser;
 	private Gtk.CheckButton chk_rec;
 

@@ -89,7 +89,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
         paned = new Gtk.Paned (Filefinder.preferences.split_orientation);
 		paned.events |= Gdk.EventMask.VISIBILITY_NOTIFY_MASK;
 		paned.can_focus = true;
-		paned.position = paned.min_position;
+		if (Filefinder.preferences.split_orientation == Gtk.Orientation.VERTICAL)
+			paned.position = paned.min_position;
+		else
+			paned.position = 480;
 		vbox1.add (paned);
 
 		Gtk.ScrolledWindow scrolledwindow = new Gtk.ScrolledWindow (null, null);
@@ -175,6 +178,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		result_view.get_column (column).visible = visible;
 	}
 
+	private uint info_timeout_id = 0;
     public int show_message (string text, MessageType type = MessageType.INFO) {
         if (infoBar != null) infoBar.destroy ();
         if (type == Gtk.MessageType.QUESTION) {
@@ -207,7 +211,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			infoBar.destroy ();
 			//hide();
 		});
-        GLib.Timeout.add (5000, on_info_timeout);
+		if (info_timeout_id > 0) {
+			GLib.Source.remove (info_timeout_id);
+		}
+		info_timeout_id = GLib.Timeout.add (5000, on_info_timeout);
         return -1;
     }
 

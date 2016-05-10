@@ -408,7 +408,7 @@ public class Preferences : Gtk.Window {
 				
 		set_default_size (640, 400);
 		show_all ();
-		//hide ();
+		hide ();
 	}
 
 	public bool check_mounts {get; protected set;}

@@ -79,6 +79,103 @@ public class ResultsView : Gtk.TreeView {
 			mic.show ();
 			menu_columns.add (mic);
 		}
+
+		menu = new Gtk.Menu ();
+		Gtk.MenuItem mi = new Gtk.MenuItem.with_label ("Open");
+		menu.add (mi);
+		mi.activate.connect (()=>{
+		});
+		//menu.add (new Gtk.SeparatorMenuItem ());
+		mi = new Gtk.MenuItem.with_label ("Open Location");
+		menu.add (mi);
+		mi.activate.connect (()=>{
+			AppInfo appinfo = GLib.AppInfo.get_default_for_type ("inode/directory", false);
+			if (appinfo == null) return;
+			try {
+                appinfo.launch (get_selected_dirs (), null);
+            } catch (Error e) {
+                var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+                    Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
+                    e.message);
+				dlg.run ();
+				dlg.destroy ();
+            }
+		});
+		menu.add (new Gtk.SeparatorMenuItem ());
+		mi = new Gtk.MenuItem.with_label ("Move to...");
+		menu.add (mi);
+		mi.activate.connect (()=>{
+			Gtk.FileChooserDialog c = new Gtk.FileChooserDialog ("Select Destination Folder",
+																Filefinder.window,
+																Gtk.FileChooserAction.SELECT_FOLDER,
+																"_Cancel",
+																Gtk.ResponseType.CANCEL,
+																"_Select",
+																Gtk.ResponseType.ACCEPT);
+			c.create_folders = true;
+			if (c.run () == Gtk.ResponseType.ACCEPT) {
+				move_to (get_selected_files (), c.get_filename ());
+			}
+			c.destroy ();
+		});
+		mi = new Gtk.MenuItem.with_label ("Copy to...");
+		menu.add (mi);
+		mi.activate.connect (()=>{
+			Gtk.FileChooserDialog c = new Gtk.FileChooserDialog ("Select Destination Folder",
+																Filefinder.window,
+																Gtk.FileChooserAction.SELECT_FOLDER,
+																"_Cancel",
+																Gtk.ResponseType.CANCEL,
+																"_Select",
+																Gtk.ResponseType.ACCEPT);
+			c.create_folders = true;
+			if (c.run () == Gtk.ResponseType.ACCEPT) {
+				copy_to (get_selected_files (), c.get_filename ());
+			}
+			c.destroy ();
+		});
+		menu.add (new Gtk.SeparatorMenuItem ());
+		mi = new Gtk.MenuItem.with_label ("Move to Trash");
+		menu.add (mi);
+		mi.activate.connect (()=>{
+			move_to_trash (get_selected_files ());
+		});
+		menu.add (new Gtk.SeparatorMenuItem ());
+		mi = new Gtk.MenuItem.with_label ("Properties");
+		menu.add (mi);
+		mi.activate.connect (()=>{
+		});
+		menu.show_all ();
+		menu.show.connect (()=>{
+			Gtk.TreeIter iter;
+			GLib.Value val;
+			GLib.AppInfo app;
+			int count = get_selection ().count_selected_rows (); 
+			foreach (Widget p in menu.get_children ()) {
+				p.sensitive = count != 0;
+			}
+			if (count == 0) {
+				return;
+			}
+			Gtk.MenuItem item = (Gtk.MenuItem) menu.get_children ().nth_data (0);
+			item.label = "Open";
+			if (count == 1) {
+				if (model.get_iter (out iter, get_selection ().get_selected_rows(null).nth_data (0))) {
+					model.get_value (iter, Columns.MIME, out val);
+					if (((string)val) != "application/x-executable") {
+						app = GLib.AppInfo.get_default_for_type ((string)val, false);
+						if (app != null) {
+							item.label = "Open With " + app.get_name ();
+						}
+					} else {
+						item.label = "Run";
+					}
+				}
+			} else {
+				item.sensitive = false;
+			}
+			return ;
+		});
 	}
 
 	private void render_text (Gtk.CellLayout layout, Gtk.CellRenderer cell, Gtk.TreeModel model, Gtk.TreeIter iter) {
@@ -128,8 +225,8 @@ public class ResultsView : Gtk.TreeView {
 				break;
 			case Columns.TIME_MODIFIED:
 				model.get_value (iter, Columns.TIME_MODIFIED, out v);
-				DateTime d = new DateTime.from_unix_utc ((int64) v.get_uint64());
-				(cell as Gtk.CellRendererText).text = d.to_string();
+				DateTime d = new DateTime.from_unix_local ((int64) v.get_uint64());
+				(cell as Gtk.CellRendererText).text = d.format ("%F %T");
 				break;
 			case Columns.PERMISSIONS:
 				model.get_value (iter, Columns.PERMISSIONS, out v);
@@ -150,12 +247,20 @@ public class ResultsView : Gtk.TreeView {
 		}
 	}
 
+	protected override bool button_press_event (Gdk.EventButton event) {
+		if (event.type == Gdk.EventType.BUTTON_PRESS && event.button == 3) {
+			return true;
+		} else {
+			return base.button_press_event (event);
+		}
+	}
+
 	private bool on_tree_button (Gdk.EventButton event) {
 		if (event.button == 3) { //right click
-			int x, y;
-			get_pointer (out x, out y);
-			if (y <= 32) {
-        		menu_columns.popup (null, null, null, 3, get_current_event_time ());
+			if (event.y <= 16.0) {
+        		menu_columns.popup (null, null, null, event.button, event.time);
+			} else {
+				menu.popup (null, null, null, event.button, event.time);
 			}
 		} else if (event.type == Gdk.EventType.DOUBLE_BUTTON_PRESS) {
 			//global_actions.OnPlaySelected (this, null);
@@ -174,6 +279,229 @@ public class ResultsView : Gtk.TreeView {
 			return "%.1f KiB".printf ((double) i / 1024.0);
 		}
 		return s;
+	}
+
+	private GLib.List<GLib.File>? get_selected_dirs () {
+		GLib.List<GLib.File> files = new GLib.List<GLib.File> ();
+		Gtk.TreeIter iter;
+		GLib.Value val;
+		string[] paths = {};
+		foreach (TreePath p in get_selection ().get_selected_rows (null)) {
+			if (model.get_iter (out iter, p)) {
+				model.get_value (iter, Columns.PATH, out val);
+				var file = File.new_for_path ((string) val);
+				if (file.query_exists ()) {
+					if (!(((string) val) in paths)) {
+						files.append (file);
+						paths += (string) val;
+					}
+				}
+			}
+		}
+		if (files.length() == 0)
+			return null;
+		return files;
+	}
+
+	private GLib.List<GLib.File>? get_selected_files () {
+		GLib.List<GLib.File> files = new GLib.List<GLib.File> ();
+		Gtk.TreeIter iter;
+		GLib.Value val;
+		string[] paths = {};
+		string path;
+		foreach (TreePath p in get_selection ().get_selected_rows (null)) {
+			if (model.get_iter (out iter, p)) {
+				model.get_value (iter, Columns.PATH, out val);
+				path = (string) val;
+				model.get_value (iter, Columns.DISPLAY_NAME, out val);
+				path = Path.build_filename (path, (string) val);
+				var file = File.new_for_path (path);
+				if (file.query_exists ()) {
+					if (!((string) val in paths)) {
+						files.append (file);
+						paths += (string) val;
+					}
+				}
+			}
+		}
+		if (files.length() == 0) return null;
+		return files;
+	}
+
+	private int files_count_ready;
+	private uint files_count;
+	private DateTime last_info;
+	private bool skip_all;
+	private bool replace_all;
+	private void copy_to (GLib.List<GLib.File>? files, string destination) {
+		if ((files == null) || (destination == null)) return;
+		File file;
+		files_count_ready = 0;
+		files_count = files.length ();
+		last_info = new DateTime.now_local ();
+		skip_all = false;
+		replace_all = false;
+		foreach (File f in files) {
+			file = File.new_for_path (Path.build_filename (destination, f.get_basename ()));
+			if (file.query_exists ()) {
+				if (skip_all)
+					continue;
+				if (!replace_all) {
+					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+    		            Gtk.MessageType.WARNING, Gtk.ButtonsType.NONE,
+					    "The destination file is exist.\nDo you want replace it?\n\n%s",
+                		file.get_path());
+					dlg.add_buttons ("Skip All", Gtk.ResponseType.CANCEL + 100,
+					                 "Replace All", Gtk.ResponseType.ACCEPT + 100,
+					                 "Skip", Gtk.ResponseType.CANCEL,
+						             "Replace", Gtk.ResponseType.ACCEPT);
+					int r = dlg.run ();
+					dlg.destroy ();
+					switch (r) {
+					case Gtk.ResponseType.ACCEPT:
+						if (!delete_file (file)) continue;
+						break;
+					case Gtk.ResponseType.CANCEL:
+						continue;
+					case Gtk.ResponseType.ACCEPT + 100:
+						replace_all = true;
+						if (!delete_file (file)) continue;
+						break;
+					case Gtk.ResponseType.CANCEL + 100:
+						skip_all = true;
+						continue;
+					}
+				} else {
+					if (!delete_file (file)) continue;
+				}
+			}
+			f.copy_async.begin (file, 0, Priority.DEFAULT, null, (current_num_bytes, total_num_bytes) => {
+				DateTime d = new DateTime.now_local ();
+				if (d.difference (last_info) > (2*TimeSpan.SECOND)) {
+					lock (files_count_ready) {
+						last_info = new DateTime.now_local ();
+						Filefinder.window.show_info ("%s of %s copied.".printf (get_bin_size (current_num_bytes), get_bin_size(total_num_bytes)));
+					}
+				}
+				}, (obj, res) => {
+					try {
+						f.copy_async.end (res);
+					lock (files_count_ready) {
+						files_count_ready++;
+						Filefinder.window.show_info ("File(s) copied %d of the %u".printf (files_count_ready, files_count));
+					}
+					} catch (Error e) {
+						Filefinder.window.show_error (e.message);
+					}
+				});
+		}
+	}
+
+	private bool delete_file (File file) {
+		try {
+			return file.delete ();
+		} catch (Error e) {
+			var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+    		            Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE,
+					    "Can't replace the destination file.\n\n%s\n\n%s",
+                		file.get_path(), e.message);
+			dlg.run ();
+			dlg.destroy ();
+			return false;
+		}
+	}
+
+	private void move_to (GLib.List<GLib.File>? files, string destination) {
+		if ((files == null) || (destination == null)) return;
+		File file;
+		files_count_ready = 0;
+		files_count = files.length ();
+		last_info = new DateTime.now_local ();
+		skip_all = false;
+		replace_all = false;
+		foreach (File f in files) {
+			file = File.new_for_path (Path.build_filename (destination, f.get_basename ()));
+			if (file.query_exists ()) {
+				if (skip_all)
+					continue;
+				if (!replace_all) {
+					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+    		            Gtk.MessageType.WARNING, Gtk.ButtonsType.NONE,
+					    "The destination file is exist.\nDo you want replace it?\n\n%s",
+                		file.get_path());
+					dlg.add_buttons ("Skip All", Gtk.ResponseType.CANCEL + 100,
+					                 "Replace All", Gtk.ResponseType.ACCEPT + 100,
+					                 "Skip", Gtk.ResponseType.CANCEL,
+						             "Replace", Gtk.ResponseType.ACCEPT);
+					int r = dlg.run ();
+					dlg.destroy ();
+					switch (r) {
+					case Gtk.ResponseType.ACCEPT:
+						if (!delete_file (file)) continue;
+						break;
+					case Gtk.ResponseType.CANCEL:
+						continue;
+					case Gtk.ResponseType.ACCEPT + 100:
+						replace_all = true;
+						if (!delete_file (file)) continue;
+						break;
+					case Gtk.ResponseType.CANCEL + 100:
+						skip_all = true;
+						continue;
+					}
+				} else {
+					if (!delete_file (file)) continue;
+				}
+			}
+			try {
+				f.move (file, FileCopyFlags.NONE, null, (current_num_bytes, total_num_bytes) => {
+					DateTime d = new DateTime.now_local ();
+					if (d.difference (last_info) > (2*TimeSpan.SECOND)) {
+						lock (files_count_ready) {
+							last_info = new DateTime.now_local ();
+							Filefinder.window.show_info (("%s of %s copied.\n" +
+							"File(s) moved %d of the %u").printf (get_bin_size (current_num_bytes),
+							get_bin_size(total_num_bytes),files_count_ready, files_count));
+						}
+					}
+				});
+				files_count_ready++;
+			} catch (Error e) {
+				Filefinder.window.show_error (e.message);
+			}
+		}
+		Filefinder.window.show_info ("File(s) moved %d of the %u".printf (files_count_ready, files_count));
+	}
+
+	private void move_to_trash (GLib.List<GLib.File>? files) {
+		if (files == null) return;
+		files_count_ready = 0;
+		files_count = files.length ();
+		last_info = new DateTime.now_local ();
+		var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+    				Gtk.MessageType.WARNING, Gtk.ButtonsType.YES_NO,
+					"Are you realy want delete %u file(s)?\n",
+                	files.length ());
+		int r = dlg.run ();
+		dlg.destroy ();
+		if (r == Gtk.ResponseType.NO) {
+			return;
+		}
+		foreach (File f in files) {
+			try {
+				f.trash (null);
+				lock (files_count_ready) {
+					files_count_ready++;
+					DateTime d = new DateTime.now_local ();
+					if (d.difference (last_info) > (2*TimeSpan.SECOND)) {
+						last_info = new DateTime.now_local ();
+						Filefinder.window.show_info ("File(s) trashed %d of the %u".printf (files_count_ready, files_count));
+					}
+				}
+			} catch (Error e) {
+				Filefinder.window.show_error (e.message);
+			}
+		}
 	}
 }
 

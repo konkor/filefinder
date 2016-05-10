@@ -21,14 +21,9 @@ public class Service : Gtk.TreeStore {
 	private signal void finished_thread ();
 	public signal void finished_search ();
 
-	static const string ATTRIBUTES =
-        FileAttribute.STANDARD_NAME + "," +
-        FileAttribute.STANDARD_DISPLAY_NAME + "," +
-        FileAttribute.STANDARD_TYPE + "," +
-        FileAttribute.STANDARD_SIZE +  "," +
-		FileAttribute.STANDARD_CONTENT_TYPE +  "," +
+	static const string ATTRIBUTES = "standard," +
         FileAttribute.TIME_MODIFIED + "," +
-        FileAttribute.UNIX_NLINK + "," +
+		FileAttribute.UNIX_NLINK + "," +
         FileAttribute.UNIX_INODE + "," +
         FileAttribute.UNIX_DEVICE + "," +
         FileAttribute.ACCESS_CAN_READ;
@@ -362,7 +357,10 @@ public class Service : Gtk.TreeStore {
 			results.time_modified = info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
 			results.size = fsize;
 			results.mime = fmime;
-			results.type = info.get_file_type();
+			if (info.get_is_symlink())
+				results.type = (FileType) 3;
+			else
+				results.type = info.get_file_type();
 			return results;
 		}
 		//Maybe we want to find directories too...
@@ -512,7 +510,10 @@ public class Service : Gtk.TreeStore {
 		results.time_modified = info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
 		results.size = fsize;
 		results.mime = fmime;
-		results.type = info.get_file_type();
+		if (info.get_is_symlink())
+			results.type = (FileType) 3;
+		else
+			results.type = info.get_file_type();
 
 		return results;
 	}
@@ -530,7 +531,7 @@ public class Service : Gtk.TreeStore {
 		try {
 			string contents, s, mask;
 			size_t length;
-			int pos = 0;
+			int pos = 1;
 			if (FileUtils.get_contents (GLib.Path.build_filename (path, info.get_name ()),
 			                  out contents, out length)) {
 				/*if (line.length >= 4096) {
