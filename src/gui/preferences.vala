@@ -7,12 +7,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * filefinder is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -59,15 +59,15 @@ public class Preferences : Gtk.Window {
 	}
 
 	private bool on_delete () {
-        hide();
+		hide();
 		save ();
-        return true;
-    }
+		return true;
+	}
 
 	private bool on_destroy () {
-        save ();
-        return false;
-    }
+		save ();
+		return false;
+	}
 
 	private bool on_focus_in (Gdk.EventFocus evnt) {
 		refresh_gui ();
@@ -93,17 +93,17 @@ public class Preferences : Gtk.Window {
 		try {
 			dos = new DataOutputStream (file.create (FileCreateFlags.REPLACE_DESTINATION));
 			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
-			                                     "first_run", first_run.to_string ()));
+												"first_run", first_run.to_string ()));
 			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
-			                                     "check_mounts", check_mounts.to_string ()));
+												"check_mounts", check_mounts.to_string ()));
 			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
-			                                     "check_links", check_links.to_string ()));
+												"check_links", check_links.to_string ()));
 			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
-			                                     "check_hidden", check_hidden.to_string ()));
+												"check_hidden", check_hidden.to_string ()));
 			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
-			                                     "check_backup", check_backup.to_string ()));
+												"check_backup", check_backup.to_string ()));
 			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
-			                                     "split_orientation", cb_vertical.active.to_string ()));
+												"split_orientation", cb_vertical.active.to_string ()));
 			foreach (ViewColumn p in columns) {
 				dos.put_string ("%d %s %s\n".printf (PreferenceType.COLUMN,
 								p.name, p.get_value ()));
@@ -117,7 +117,7 @@ public class Preferences : Gtk.Window {
 			Debug.error ("preferences", e.message);
 			return false;
 		}
-		
+
 		return true;
 	}
 
@@ -127,7 +127,7 @@ public class Preferences : Gtk.Window {
 		PreferenceType t;
 		Gtk.TreeIter iter;
 		string config = Path.build_filename (Environment.get_user_data_dir (),
-		                                     "filefinder", "filefinder.conf");
+											"filefinder", "filefinder.conf");
 		File file = File.new_for_path (config);
 		if (!file.query_exists ())
 			return false;
@@ -142,7 +142,7 @@ public class Preferences : Gtk.Window {
 				if ((i > 0) && (line.length > i)) {
 					name = line.substring (0, i);
 					val = line.substring (i + 1);
-					
+
 					if (t == PreferenceType.GENERAL) {
 					switch (name) {
 						case "first_run":
@@ -233,9 +233,9 @@ public class Preferences : Gtk.Window {
 		Gtk.ScrolledWindow scroll;
 		Gtk.Box box, hbox, vbox;
 		Gtk.TreeView view;
-		
+
 		Gtk.Button button;
-		
+
 		notebook = new Gtk.Notebook ();
 		add (notebook);
 
@@ -405,7 +405,7 @@ public class Preferences : Gtk.Window {
 		view.insert_column_with_attributes (-1, "Active", toggle, "active", 0, null);
 		view.insert_column_with_attributes (-1, "Name", new Gtk.CellRendererText (), "text", 1, null);
 		scroll.add (view);
-				
+
 		set_default_size (640, 400);
 		show_all ();
 		hide ();

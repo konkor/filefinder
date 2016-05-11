@@ -7,12 +7,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * filefinder is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -22,31 +22,31 @@ public class Service : Gtk.ListStore {
 	public signal void finished_search ();
 
 	static const string ATTRIBUTES = "standard," +
-        FileAttribute.TIME_MODIFIED + "," +
+		FileAttribute.TIME_MODIFIED + "," +
 		FileAttribute.UNIX_NLINK + "," +
-        FileAttribute.UNIX_INODE + "," +
-        FileAttribute.UNIX_DEVICE + "," +
-        FileAttribute.ACCESS_CAN_READ;
+		FileAttribute.UNIX_INODE + "," +
+		FileAttribute.UNIX_DEVICE + "," +
+		FileAttribute.ACCESS_CAN_READ;
 
-    struct HardLink {
-        uint64 inode;
-        uint32 device;
+	struct HardLink {
+		uint64 inode;
+		uint32 device;
 
-        public HardLink (FileInfo info) {
-            this.inode = info.get_attribute_uint64 (FileAttribute.UNIX_INODE);
-            this.device = info.get_attribute_uint32 (FileAttribute.UNIX_DEVICE);
-        }
-    }
+		public HardLink (FileInfo info) {
+			this.inode = info.get_attribute_uint64 (FileAttribute.UNIX_INODE);
+			this.device = info.get_attribute_uint32 (FileAttribute.UNIX_DEVICE);
+		}
+	}
 
-    Thread<void*>? thread = null;
+	Thread<void*>? thread = null;
 	List<Thread<void*>> thread_list;
-    uint process_result_idle = 0;
+	uint process_result_idle = 0;
 
-    private int mutex { get; set; }
+	private int mutex { get; set; }
 	HardLink[] hardlinks;
-    GenericSet<File> excluded_locations;
+	GenericSet<File> excluded_locations;
 
-    bool successful = false;
+	bool successful = false;
 	AsyncQueue<ResultsArray> results_queue;
 	Service? self;
 	Cancellable cancellable;
@@ -66,7 +66,7 @@ public class Service : Gtk.ListStore {
 		set_column_types (new Type[] {
 			typeof (string), // NAME
 			typeof (uint64), // SIZE
-			typeof (int),    // TYPE
+			typeof (int),	// TYPE
 			typeof (uint64), // TIME_MODIFIED
 			typeof (string), // PERMISSIONS
 			typeof (string), // MIME
@@ -88,17 +88,17 @@ public class Service : Gtk.ListStore {
 		thread_count = 0;
 		thread_list = new List<Thread<void*>>();
 		results_queue = new AsyncQueue<ResultsArray> ();
-		
+
 		excluded_locations = Filefinder.get_excluded_locations ();
 		assert_null (Filefinder.preferences);
-        if (Filefinder.preferences.check_mounts) {
-            foreach (unowned UnixMountEntry mount in UnixMountEntry.get (null)) {
-                excluded_locations.add (File.new_for_path (mount.get_mount_path ()));
-            }
-        }
+		if (Filefinder.preferences.check_mounts) {
+			foreach (unowned UnixMountEntry mount in UnixMountEntry.get (null)) {
+				excluded_locations.add (File.new_for_path (mount.get_mount_path ()));
+			}
+		}
 		foreach (string mount in Filefinder.preferences.get_user_excluded ()) {
-    		excluded_locations.add (File.new_for_path (mount));
-        }
+			excluded_locations.add (File.new_for_path (mount));
+		}
 		foreach (FilterLocation f in query.locations) {
 			excluded_locations.remove (File.new_for_path (f.folder));
 		}
@@ -123,7 +123,7 @@ public class Service : Gtk.ListStore {
 
 			foreach (FilterLocation p in query.locations) {
 				thread = new Thread<void*> ("scanner" + thread_count.to_string (),
-				                            scan_in_thread);
+											scan_in_thread);
 				thread_list.append (thread);
 				thread_count++;
 				Thread.usleep (200000);
@@ -185,7 +185,7 @@ public class Service : Gtk.ListStore {
 					}
 				}
 
-				
+
 			}
 			if (results_array.first) {
 				finished_thread ();
@@ -206,14 +206,14 @@ public class Service : Gtk.ListStore {
 		insert_after (out results.iter, null);
 		set (results.iter,
 			Columns.DISPLAY_NAME, results.display_name,
-		    Columns.SIZE, results.size,
+			Columns.SIZE, results.size,
 			Columns.TIME_MODIFIED,results.time_modified,
 			Columns.PATH,results.path,
 			Columns.POSITION,results.position,
-		    Columns.TYPE,results.type,
-		    Columns.MIME,results.mime,
-		    Columns.POSITION,results.position,
-		    Columns.ROW,results.row);
+			Columns.TYPE,results.type,
+			Columns.MIME,results.mime,
+			Columns.POSITION,results.position,
+			Columns.ROW,results.row);
 		results.iter_is_set = true;
 	}
 
@@ -292,9 +292,9 @@ public class Service : Gtk.ListStore {
 			} else if (!info.get_attribute_boolean (FileAttribute.ACCESS_CAN_READ)){
 				return;
 			}
-		    var e = dir.enumerate_children (ATTRIBUTES,
-		                                    Filefinder.preferences.follow_links,
-		                                    cancellable);
+			var e = dir.enumerate_children (ATTRIBUTES,
+											Filefinder.preferences.follow_links,
+											cancellable);
 			while ((info = e.next_file (cancellable)) != null) {
 				if (Filefinder.preferences.check_hidden) {
 					if (info.get_name ().has_prefix ("."))
@@ -542,7 +542,7 @@ public class Service : Gtk.ListStore {
 			size_t length;
 			int pos = 1;
 			if (FileUtils.get_contents (GLib.Path.build_filename (path, info.get_name ()),
-			                  out contents, out length)) {
+							  out contents, out length)) {
 				/*if (line.length >= 4096) {
 					return null;
 				}*/
@@ -619,28 +619,28 @@ public class Service : Gtk.ListStore {
 	}
 
 	public string convert_to (string str, string enc) throws ConvertError {
-        string s = str;
-        if (enc.length == 0) return s;
-        if (enc != "UTF-8") {
-            try {
-                s = convert (s, -1, enc, "UTF-8");
-            } catch (ConvertError err) {
+		string s = str;
+		if (enc.length == 0) return s;
+		if (enc != "UTF-8") {
+			try {
+				s = convert (s, -1, enc, "UTF-8");
+			} catch (ConvertError err) {
 				throw new ConvertError.FAILED ("Converting error");
-            }
-        } else {
-            return s;
-        }
-        return s;
-    }
+			}
+		} else {
+			return s;
+		}
+		return s;
+	}
 
 	[Compact]
-    class ResultsArray {
+	class ResultsArray {
 		internal bool first = false;
-        internal Results[] results;
-    }
+		internal Results[] results;
+	}
 
-    [Compact]
-    class Results {
+	[Compact]
+	class Results {
 		internal int64 position = -1;
 		internal string display_name;
 		internal uint64 size;

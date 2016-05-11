@@ -7,12 +7,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * filefinder is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -52,7 +52,7 @@ public class ResultsView : Gtk.TreeView {
 			append_column (col);
 			col.notify["width"].connect (()=>{
 				Filefinder.preferences.update_column (col.sort_column_id,
-				                                      col.width, col.visible);
+													col.width, col.visible);
 			});
 			i++;
 		}
@@ -70,7 +70,7 @@ public class ResultsView : Gtk.TreeView {
 	public void connect_model () {
 		set_model (Filefinder.service);
 	}
-		
+
 	public void disconnect_model () {
 		set_model (null);
 	}
@@ -101,14 +101,14 @@ public class ResultsView : Gtk.TreeView {
 			AppInfo appinfo = GLib.AppInfo.get_default_for_type ("inode/directory", false);
 			if (appinfo == null) return;
 			try {
-                appinfo.launch (get_selected_dirs (), null);
-            } catch (Error e) {
-                var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
-                    Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
-                    e.message);
+				appinfo.launch (get_selected_dirs (), null);
+			} catch (Error e) {
+				var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+					Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
+					e.message);
 				dlg.run ();
 				dlg.destroy ();
-            }
+			}
 		});
 		menu.add (new Gtk.SeparatorMenuItem ());
 		mi = new Gtk.MenuItem.with_label ("Move to...");
@@ -159,7 +159,7 @@ public class ResultsView : Gtk.TreeView {
 			Gtk.TreeIter iter;
 			GLib.Value val;
 			GLib.AppInfo app;
-			int count = get_selection ().count_selected_rows (); 
+			int count = get_selection ().count_selected_rows ();
 			foreach (Widget p in menu.get_children ()) {
 				p.sensitive = count != 0;
 			}
@@ -188,7 +188,7 @@ public class ResultsView : Gtk.TreeView {
 	}
 
 	private void render_text (Gtk.CellLayout layout, Gtk.CellRenderer cell, Gtk.TreeModel model, Gtk.TreeIter iter) {
-        GLib.Value v;
+		GLib.Value v;
 		switch ((layout as TreeViewColumn).sort_column_id) {
 			case Columns.POSITION:
 				model.get_value (iter, Columns.POSITION, out v);
@@ -267,14 +267,14 @@ public class ResultsView : Gtk.TreeView {
 	private bool on_tree_button (Gdk.EventButton event) {
 		if (event.button == 3) { //right click
 			if (event.y <= 16.0) {
-        		menu_columns.popup (null, null, null, event.button, event.time);
+				menu_columns.popup (null, null, null, event.button, event.time);
 			} else {
 				menu.popup (null, null, null, event.button, event.time);
 			}
 		} else if (event.type == Gdk.EventType.DOUBLE_BUTTON_PRESS) {
 			open_selected ();
 		}
-        return false;
+		return false;
 	}
 
 	private string get_bin_size (uint64 i) {
@@ -361,7 +361,7 @@ public class ResultsView : Gtk.TreeView {
 		Gtk.TreeIter iter;
 		GLib.Value val;
 		GLib.AppInfo app;
-		int count = get_selection ().count_selected_rows (); 
+		int count = get_selection ().count_selected_rows ();
 		if (count == 0) {
 			return;
 		}
@@ -372,32 +372,32 @@ public class ResultsView : Gtk.TreeView {
 					app = GLib.AppInfo.get_default_for_type ((string)val, false);
 					if (app != null) {
 						try {
-           					app.launch (get_selected_files (), null);
-       					} catch (Error e) {
-           					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
-               					Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
-               					e.message);
+							app.launch (get_selected_files (), null);
+						} catch (Error e) {
+							var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+								Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
+								e.message);
 							dlg.run ();
 							dlg.destroy ();
-       					}
+						}
 					} else {
 						var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
-               				Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "No registered application to file type to:\n%s",
-               				(string)val);
+							Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "No registered application to file type to:\n%s",
+							(string)val);
 						dlg.run ();
 						dlg.destroy ();
 					}
 				} else {
 					try {
 						app = AppInfo.create_from_commandline (((File)get_selected_files ().nth_data(0)).get_path (), null, AppInfoCreateFlags.NONE);
-           				app.launch (null, null);
-   					} catch (Error e) {
-       					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
-           					Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
-           					e.message);
+						app.launch (null, null);
+					} catch (Error e) {
+						var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+							Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
+							e.message);
 						dlg.run ();
 						dlg.destroy ();
-   					}
+					}
 				}
 			}
 		}
@@ -430,13 +430,13 @@ public class ResultsView : Gtk.TreeView {
 				}
 				if (!replace_all) {
 					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
-    		            Gtk.MessageType.WARNING, Gtk.ButtonsType.NONE,
-					    "The destination file is exist.\nDo you want replace it?\n\n%s",
-                		file.get_path());
+						Gtk.MessageType.WARNING, Gtk.ButtonsType.NONE,
+						"The destination file is exist.\nDo you want replace it?\n\n%s",
+						file.get_path());
 					dlg.add_buttons ("Skip All", Gtk.ResponseType.CANCEL + 100,
-					                 "Replace All", Gtk.ResponseType.ACCEPT + 100,
-					                 "Skip", Gtk.ResponseType.CANCEL,
-						             "Replace", Gtk.ResponseType.ACCEPT);
+									 "Replace All", Gtk.ResponseType.ACCEPT + 100,
+									 "Skip", Gtk.ResponseType.CANCEL,
+									 "Replace", Gtk.ResponseType.ACCEPT);
 					int r = dlg.run ();
 					dlg.destroy ();
 					switch (r) {
@@ -507,9 +507,9 @@ public class ResultsView : Gtk.TreeView {
 			return file.delete ();
 		} catch (Error e) {
 			var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
-    		            Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE,
-					    "Can't replace the destination file.\n\n%s\n\n%s",
-                		file.get_path(), e.message);
+						Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE,
+						"Can't replace the destination file.\n\n%s\n\n%s",
+						file.get_path(), e.message);
 			dlg.run ();
 			dlg.destroy ();
 			return false;
@@ -537,13 +537,13 @@ public class ResultsView : Gtk.TreeView {
 				}
 				if (!replace_all) {
 					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
-    		            Gtk.MessageType.WARNING, Gtk.ButtonsType.NONE,
-					    "The destination file is exist.\nDo you want replace it?\n\n%s",
-                		file.get_path());
+						Gtk.MessageType.WARNING, Gtk.ButtonsType.NONE,
+						"The destination file is exist.\nDo you want replace it?\n\n%s",
+						file.get_path());
 					dlg.add_buttons ("Skip All", Gtk.ResponseType.CANCEL + 100,
-					                 "Replace All", Gtk.ResponseType.ACCEPT + 100,
-					                 "Skip", Gtk.ResponseType.CANCEL,
-						             "Replace", Gtk.ResponseType.ACCEPT);
+									"Replace All", Gtk.ResponseType.ACCEPT + 100,
+									"Skip", Gtk.ResponseType.CANCEL,
+									"Replace", Gtk.ResponseType.ACCEPT);
 					int r = dlg.run ();
 					dlg.destroy ();
 					switch (r) {
@@ -605,9 +605,9 @@ public class ResultsView : Gtk.TreeView {
 			GLib.Thread.usleep (2500);
 		}
 		var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
-    				Gtk.MessageType.WARNING, Gtk.ButtonsType.YES_NO,
+					Gtk.MessageType.WARNING, Gtk.ButtonsType.YES_NO,
 					"Are you realy want trash %u file(s)?\n",
-                	files.length ());
+					files.length ());
 		int r = dlg.run ();
 		dlg.destroy ();
 		if (r != Gtk.ResponseType.YES) {
@@ -636,4 +636,3 @@ public class ResultsView : Gtk.TreeView {
 		files_count = files_processed = files_count_ready = 0;
 	}
 }
-

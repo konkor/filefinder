@@ -6,12 +6,12 @@
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * filefinder is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -58,7 +58,7 @@ public class QueryRow : Gtk.Box {
 		create_type_widgets ();
 
 		Gtk.Button btn  = new Gtk.Button.from_icon_name ("window-close-symbolic",
-		                                                 Gtk.IconSize.BUTTON);
+														Gtk.IconSize.BUTTON);
 		btn.get_style_context ().add_class (Gtk.STYLE_CLASS_ACCELERATOR);
 		btn.tooltip_text = "Remove this criterion from the search";
 		pack_end (btn, false, false, 0);
@@ -107,10 +107,10 @@ public class QueryRow : Gtk.Box {
 				_filter.filter_value = location;
 				location.folder = Environment.get_home_dir ();
 				chooser = new Gtk.FileChooserButton ("Select folder",
-		    	                                     Gtk.FileChooserAction.SELECT_FOLDER);
+													Gtk.FileChooserAction.SELECT_FOLDER);
 				chooser.set_current_folder (location.folder);
 				hbox.pack_start (chooser, true, true, 0);
-				chooser.file_set.connect (()=>{ 
+				chooser.file_set.connect (()=>{
 					location.folder = chooser.tooltip_text = chooser.get_filename ();
 				});
 
@@ -150,7 +150,7 @@ public class QueryRow : Gtk.Box {
 							files_btn.label += " ... (%u selected items)".printf (uris.length());
 					}
 					c.close ();
-				});				
+				});
 				break;
 			case types.MIMETYPE:
 				mime = new FilterMime ();
@@ -220,7 +220,7 @@ public class QueryRow : Gtk.Box {
 					size.operator =(date_operator) size_combo.active;
 				});
 				hbox.pack_start (size_combo, false, false, 0);
-				
+
 				Gtk.SpinButton size_btn = new Gtk.SpinButton.with_range (0, uint64.MAX, 1024);
 				hbox.pack_start (size_btn, true, true, 0);
 
@@ -238,7 +238,7 @@ public class QueryRow : Gtk.Box {
 				size_btn.value_changed.connect (()=>{
 					size.size = (uint64) size_btn.get_value () *
 										size.WEIGHT[w_combo.active];
-				});			
+				});
 				break;
 			case types.MODIFIED:
 				modified = new FilterModified ();
@@ -255,8 +255,8 @@ public class QueryRow : Gtk.Box {
 
 				mod_btn = new Gtk.Button ();
 				mod_btn.label = "%04d-%02d-%02d".printf (modified.date.get_year(),
-				                                         modified.date.get_month(),
-				                                         modified.date.get_day_of_month());
+														modified.date.get_month(),
+														modified.date.get_day_of_month());
 				hbox.pack_start (mod_btn, false, true, 6);
 				mod_btn.clicked.connect (()=>{
 					Gtk.Popover pop = new Gtk.Popover (mod_btn);
@@ -341,7 +341,7 @@ public class QueryRow : Gtk.Box {
 
 	public MimeGroup[] mime_type_groups = {
 	MimeGroup (){ name = "Text File",
-	  mimes = { "text/plain",
+	mimes = { "text/plain",
 		"text/x-authors",
 		"text/x-changelog",
 		"text/x-chdr",
@@ -356,19 +356,19 @@ public class QueryRow : Gtk.Box {
 		"text/x-microdvd",
 		"text/x-tex",
 		"text/x-vala"
-	  }
+	}
 	},
 	MimeGroup (){ name = "Archive",
-	  mimes = { "application/x-compressed-tar",
+	mimes = { "application/x-compressed-tar",
 		"application/x-xz-compressed-tar"
-	  }
+	}
 	},
 	MimeGroup (){ name = "Temporary",
-	  mimes = { "application/x-trash"
-	  }
+	mimes = { "application/x-trash"
+	}
 	},
 	MimeGroup (){ name = "Development",
-	  mimes = { "application/x-anjuta",
+	mimes = { "application/x-anjuta",
 		"application/x-desktop",
 		"application/x-archive",
 		"application/x-executable",
@@ -396,141 +396,129 @@ public class QueryRow : Gtk.Box {
 		"text/x-microdvd",
 		"text/x-tex",
 		"text/x-vala"
-	  }
+	}
 	},
 	MimeGroup (){ name = "Documents",
-	  mimes = { "application/rtf",
-	    "application/msword",
-	    "application/vnd.sun.xml.writer",
-	    "application/vnd.sun.xml.writer.global",
-	    "application/vnd.sun.xml.writer.template",
-	    "application/vnd.oasis.opendocument.text",
-	    "application/vnd.oasis.opendocument.text-template",
-	    "application/x-abiword",
-	    "application/x-applix-word",
-	    "application/x-mswrite",
-	    "application/docbook+xml",
-	    "application/x-kword",
-	    "application/x-kword-crypt",
-	    "application/x-lyx",
+	mimes = { "application/rtf",
+		"application/msword",
+		"application/vnd.sun.xml.writer",
+		"application/vnd.sun.xml.writer.global",
+		"application/vnd.sun.xml.writer.template",
+		"application/vnd.oasis.opendocument.text",
+		"application/vnd.oasis.opendocument.text-template",
+		"application/x-abiword",
+		"application/x-applix-word",
+		"application/x-mswrite",
+		"application/docbook+xml",
+		"application/x-kword",
+		"application/x-kword-crypt",
+		"application/x-lyx",
 		"application/xml"
-	  }
+	}
 	},
 	MimeGroup (){ name = "Music",
-	  mimes = { "application/ogg",
-	    "audio/x-vorbis+ogg",
-	    "audio/ac3",
-	    "audio/basic",
-	    "audio/midi",
-	    "audio/x-flac",
-	    "audio/mp4",
-	    "audio/mpeg",
-	    "audio/x-mpeg",
-	    "audio/x-ms-asx",
-	    "audio/x-pn-realaudio",
+	mimes = { "application/ogg",
+		"audio/x-vorbis+ogg",
+		"audio/ac3",
+		"audio/basic",
+		"audio/midi",
+		"audio/x-flac",
+		"audio/mp4",
+		"audio/mpeg",
+		"audio/x-mpeg",
+		"audio/x-ms-asx",
+		"audio/x-pn-realaudio",
 		"audio/x-mpegurl"
-	  }
+	}
 	},
 	MimeGroup (){ name = "Video",
-	  mimes = { "video/mp4",
-	    "video/3gpp",
-	    "video/mpeg",
-	    "video/quicktime",
-	    "video/vivo",
-	    "video/x-avi",
-	    "video/x-matroska",
-	    "video/x-mng",
-	    "video/x-ms-asf",
-	    "video/x-ms-wmv",
-	    "video/x-msvideo",
-	    "video/x-nsv",
-	    "video/x-real-video"
-	  }
+	mimes = { "video/mp4",
+		"video/3gpp",
+		"video/mpeg",
+		"video/quicktime",
+		"video/vivo",
+		"video/x-avi",
+		"video/x-matroska",
+		"video/x-mng",
+		"video/x-ms-asf",
+		"video/x-ms-wmv",
+		"video/x-msvideo",
+		"video/x-nsv",
+		"video/x-real-video"
+	}
 	},
 	MimeGroup (){ name = "Subtitles",
-	  mimes = { "application/x-subrip",
+	mimes = { "application/x-subrip",
 		"text/x-ssa",
 		"text/x-microdvd"
-	  }
+	}
 	},
 	MimeGroup (){ name = "Picture",
-	  mimes = { "application/vnd.oasis.opendocument.image",
-	    "application/x-krita",
-	    "image/bmp",
-	    "image/cgm",
-	    "image/gif",
-	    "image/jpeg",
-	    "image/jpeg2000",
-	    "image/png",
-	    "image/svg+xml",
-	    "image/tiff",
-	    "image/x-compressed-xcf",
-	    "image/x-pcx",
-	    "image/x-photo-cd",
-	    "image/x-psd",
-	    "image/x-tga",
-	    "image/x-xcf"
-	  }
+	mimes = { "application/vnd.oasis.opendocument.image",
+		"application/x-krita",
+		"image/bmp",
+		"image/cgm",
+		"image/gif",
+		"image/jpeg",
+		"image/jpeg2000",
+		"image/png",
+		"image/svg+xml",
+		"image/tiff",
+		"image/x-compressed-xcf",
+		"image/x-pcx",
+		"image/x-photo-cd",
+		"image/x-psd",
+		"image/x-tga",
+		"image/x-xcf"
+	}
 	},
 	MimeGroup (){ name = "Raw Image",
-	  mimes = { "image/x-canon-cr2",
-	    "image/x-panasonic-raw2",
-	    "image/gif",
-	    "image/jpeg",
-	    "image/jpeg2000",
-	    "image/png",
-	    "image/svg+xml",
-	    "image/tiff",
-	    "image/x-compressed-xcf",
-	    "image/x-pcx",
-	    "image/x-photo-cd",
-	    "image/x-psd",
-	    "image/x-tga",
-	    "image/x-xcf"
-	  }
+	mimes = { "image/x-canon-cr2",
+		"image/x-panasonic-raw2"
+	}
 	},
 	MimeGroup (){ name = "Illustration",
-	  mimes = { "application/illustrator",
-	    "application/vnd.corel-draw",
-	    "application/vnd.stardivision.draw",
-	    "application/vnd.oasis.opendocument.graphics",
-	    "application/x-dia-diagram",
-	    "application/x-karbon",
-	    "application/x-killustrator",
-	    "application/x-kivio",
-	    "application/x-kontour",
-	    "application/x-wpg"
-	  }
+	mimes = { "application/illustrator",
+		"application/vnd.corel-draw",
+		"application/vnd.stardivision.draw",
+		"application/vnd.oasis.opendocument.graphics",
+		"application/x-dia-diagram",
+		"application/x-karbon",
+		"application/x-killustrator",
+		"application/x-kivio",
+		"application/x-kontour",
+		"application/x-wpg"
+	}
 	},
 	MimeGroup (){ name = "Spreadsheet",
-	  mimes = { "application/vnd.lotus-1-2-3",
-	    "application/vnd.ms-excel",
-	    "application/vnd.stardivision.calc",
-	    "application/vnd.sun.xml.calc",
-	    "application/vnd.oasis.opendocument.spreadsheet",
-	    "application/x-applix-spreadsheet",
-	    "application/x-gnumeric",
-	    "application/x-kspread",
-	    "application/x-kspread-crypt",
-	    "application/x-quattropro",
-	    "application/x-sc",
-	    "application/x-siag"
-	  }
+	mimes = { "application/vnd.lotus-1-2-3",
+		"application/vnd.ms-excel",
+		"application/vnd.stardivision.calc",
+		"application/vnd.sun.xml.calc",
+		"application/vnd.oasis.opendocument.spreadsheet",
+		"application/x-applix-spreadsheet",
+		"application/x-gnumeric",
+		"application/x-kspread",
+		"application/x-kspread-crypt",
+		"application/x-quattropro",
+		"application/x-sc",
+		"application/x-siag"
+	}
 	},
 	MimeGroup (){ name = "Presentation",
-	  mimes = { "application/vnd.ms-powerpoint",
-	    "application/vnd.sun.xml.impress",
-	    "application/vnd.oasis.opendocument.presentation",
-	    "application/x-magicpoint",
-	    "application/x-kpresenter"
-	  }
+	mimes = { "application/vnd.ms-powerpoint",
+		"application/vnd.sun.xml.impress",
+		"application/vnd.oasis.opendocument.presentation",
+		"application/x-magicpoint",
+		"application/x-kpresenter"
+	}
 	},
 	MimeGroup (){ name = "PDF / PostScript",
-	  mimes = { "application/pdf",
-	    "application/postscript",
-	    "application/x-dvi",
-	    "image/x-eps"
-	  }
+	mimes = { "application/pdf",
+		"application/postscript",
+		"application/x-dvi",
+		"image/x-eps"
+	}
 	}
 };
 
@@ -539,7 +527,4 @@ public class QueryRow : Gtk.Box {
 public struct MimeGroup {
 	public string name;
 	public string[] mimes;
-} 
-
-
-
+}
