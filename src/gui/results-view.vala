@@ -92,50 +92,7 @@ public class ResultsView : Gtk.TreeView {
 		Gtk.MenuItem mi = new Gtk.MenuItem.with_label ("Open");
 		menu.add (mi);
 		mi.activate.connect (()=>{
-			Gtk.TreeIter iter;
-			GLib.Value val;
-			GLib.AppInfo app;
-			int count = get_selection ().count_selected_rows (); 
-			if (count == 0) {
-				return;
-			}
-			if (count == 1) {
-				if (model.get_iter (out iter, get_selection ().get_selected_rows(null).nth_data (0))) {
-					model.get_value (iter, Columns.MIME, out val);
-					if (((string)val) != "application/x-executable") {
-						app = GLib.AppInfo.get_default_for_type ((string)val, false);
-						if (app != null) {
-							try {
-            					app.launch (get_selected_files (), null);
-        					} catch (Error e) {
-            					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
-                					Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
-                					e.message);
-								dlg.run ();
-								dlg.destroy ();
-        					}
-						} else {
-							var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
-                				Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "No registered application to file type to:\n%s",
-                				(string)val);
-							dlg.run ();
-							dlg.destroy ();
-						}
-					} else {
-						try {
-							app = AppInfo.create_from_commandline (((File)get_selected_files ().nth_data(0)).get_path (), null, AppInfoCreateFlags.NONE);
-            				app.launch (null, null);
-       					} catch (Error e) {
-           					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
-               					Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
-               					e.message);
-							dlg.run ();
-							dlg.destroy ();
-       					}
-					}
-				}
-			}
-			return ;
+			open_selected ();
 		});
 		//menu.add (new Gtk.SeparatorMenuItem ());
 		mi = new Gtk.MenuItem.with_label ("Open Location");
@@ -315,7 +272,7 @@ public class ResultsView : Gtk.TreeView {
 				menu.popup (null, null, null, event.button, event.time);
 			}
 		} else if (event.type == Gdk.EventType.DOUBLE_BUTTON_PRESS) {
-			//global_actions.OnPlaySelected (this, null);
+			open_selected ();
 		}
         return false;
 	}
@@ -398,6 +355,52 @@ public class ResultsView : Gtk.TreeView {
 			}
 		}
 		return;
+	}
+
+	private void open_selected () {
+		Gtk.TreeIter iter;
+		GLib.Value val;
+		GLib.AppInfo app;
+		int count = get_selection ().count_selected_rows (); 
+		if (count == 0) {
+			return;
+		}
+		if (count == 1) {
+			if (model.get_iter (out iter, get_selection ().get_selected_rows(null).nth_data (0))) {
+				model.get_value (iter, Columns.MIME, out val);
+				if (((string)val) != "application/x-executable") {
+					app = GLib.AppInfo.get_default_for_type ((string)val, false);
+					if (app != null) {
+						try {
+           					app.launch (get_selected_files (), null);
+       					} catch (Error e) {
+           					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+               					Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
+               					e.message);
+							dlg.run ();
+							dlg.destroy ();
+       					}
+					} else {
+						var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+               				Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "No registered application to file type to:\n%s",
+               				(string)val);
+						dlg.run ();
+						dlg.destroy ();
+					}
+				} else {
+					try {
+						app = AppInfo.create_from_commandline (((File)get_selected_files ().nth_data(0)).get_path (), null, AppInfoCreateFlags.NONE);
+           				app.launch (null, null);
+   					} catch (Error e) {
+       					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+           					Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
+           					e.message);
+						dlg.run ();
+						dlg.destroy ();
+   					}
+				}
+			}
+		}
 	}
 
 	private int files_count_ready;
