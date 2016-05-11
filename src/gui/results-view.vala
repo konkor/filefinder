@@ -67,6 +67,14 @@ public class ResultsView : Gtk.TreeView {
 		set_model (Filefinder.service);
 	}
 
+	public void connect_model () {
+		set_model (Filefinder.service);
+	}
+		
+	public void disconnect_model () {
+		set_model (null);
+	}
+
 	private void build_menus () {
 		menu_columns = new Gtk.Menu ();
 		foreach (ViewColumn p in Filefinder.preferences.columns) {
@@ -84,6 +92,50 @@ public class ResultsView : Gtk.TreeView {
 		Gtk.MenuItem mi = new Gtk.MenuItem.with_label ("Open");
 		menu.add (mi);
 		mi.activate.connect (()=>{
+			Gtk.TreeIter iter;
+			GLib.Value val;
+			GLib.AppInfo app;
+			int count = get_selection ().count_selected_rows (); 
+			if (count == 0) {
+				return;
+			}
+			if (count == 1) {
+				if (model.get_iter (out iter, get_selection ().get_selected_rows(null).nth_data (0))) {
+					model.get_value (iter, Columns.MIME, out val);
+					if (((string)val) != "application/x-executable") {
+						app = GLib.AppInfo.get_default_for_type ((string)val, false);
+						if (app != null) {
+							try {
+            					app.launch (get_selected_files (), null);
+        					} catch (Error e) {
+            					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+                					Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
+                					e.message);
+								dlg.run ();
+								dlg.destroy ();
+        					}
+						} else {
+							var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+                				Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "No registered application to file type to:\n%s",
+                				(string)val);
+							dlg.run ();
+							dlg.destroy ();
+						}
+					} else {
+						try {
+							app = AppInfo.create_from_commandline (((File)get_selected_files ().nth_data(0)).get_path (), null, AppInfoCreateFlags.NONE);
+            				app.launch (null, null);
+       					} catch (Error e) {
+           					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+               					Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
+               					e.message);
+							dlg.run ();
+							dlg.destroy ();
+       					}
+					}
+				}
+			}
+			return ;
 		});
 		//menu.add (new Gtk.SeparatorMenuItem ());
 		mi = new Gtk.MenuItem.with_label ("Open Location");
@@ -328,24 +380,50 @@ public class ResultsView : Gtk.TreeView {
 		return files;
 	}
 
+	private void remove_selected_file (File file) {
+		Gtk.TreeIter iter;
+		GLib.Value val;
+		string path;
+		foreach (TreePath p in get_selection ().get_selected_rows (null)) {
+			if (model.get_iter (out iter, p)) {
+				model.get_value (iter, Columns.PATH, out val);
+				path = (string) val;
+				model.get_value (iter, Columns.DISPLAY_NAME, out val);
+				path = Path.build_filename (path, (string) val);
+				if (path == file.get_path ()) {
+					Filefinder.service.remove (iter);
+					break;
+				}
+			}
+		}
+		return;
+	}
+
 	private int files_count_ready;
+	private int files_processed;
 	private uint files_count;
 	private DateTime last_info;
 	private bool skip_all;
 	private bool replace_all;
 	private void copy_to (GLib.List<GLib.File>? files, string destination) {
 		if ((files == null) || (destination == null)) return;
+		while (files_count != 0) {
+			GLib.Thread.usleep (2500);
+		}
 		File file;
-		files_count_ready = 0;
+		files_count_ready = files_processed = 0;
 		files_count = files.length ();
 		last_info = new DateTime.now_local ();
 		skip_all = false;
 		replace_all = false;
 		foreach (File f in files) {
+			files_processed++;
 			file = File.new_for_path (Path.build_filename (destination, f.get_basename ()));
 			if (file.query_exists ()) {
-				if (skip_all)
+				if (skip_all) {
+					if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 					continue;
+				}
 				if (!replace_all) {
 					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
     		            Gtk.MessageType.WARNING, Gtk.ButtonsType.NONE,
@@ -359,20 +437,31 @@ public class ResultsView : Gtk.TreeView {
 					dlg.destroy ();
 					switch (r) {
 					case Gtk.ResponseType.ACCEPT:
-						if (!delete_file (file)) continue;
+						if (!delete_file (file)) {
+							if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
+							continue;
+						}
 						break;
 					case Gtk.ResponseType.CANCEL:
+						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 						continue;
 					case Gtk.ResponseType.ACCEPT + 100:
 						replace_all = true;
-						if (!delete_file (file)) continue;
+						if (!delete_file (file)) {
+							if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
+							continue;
+						}
 						break;
 					case Gtk.ResponseType.CANCEL + 100:
 						skip_all = true;
+						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 						continue;
 					}
 				} else {
-					if (!delete_file (file)) continue;
+					if (!delete_file (file)) {
+						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
+						continue;
+					}
 				}
 			}
 			f.copy_async.begin (file, 0, Priority.DEFAULT, null, (current_num_bytes, total_num_bytes) => {
@@ -389,8 +478,10 @@ public class ResultsView : Gtk.TreeView {
 					lock (files_count_ready) {
 						files_count_ready++;
 						Filefinder.window.show_info ("File(s) copied %d of the %u".printf (files_count_ready, files_count));
+						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 					}
 					} catch (Error e) {
+						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 						Filefinder.window.show_error (e.message);
 					}
 				});
@@ -414,16 +505,22 @@ public class ResultsView : Gtk.TreeView {
 	private void move_to (GLib.List<GLib.File>? files, string destination) {
 		if ((files == null) || (destination == null)) return;
 		File file;
+		while (files_count != 0) {
+			GLib.Thread.usleep (2500);
+		}
 		files_count_ready = 0;
 		files_count = files.length ();
 		last_info = new DateTime.now_local ();
 		skip_all = false;
 		replace_all = false;
 		foreach (File f in files) {
+			files_processed++;
 			file = File.new_for_path (Path.build_filename (destination, f.get_basename ()));
 			if (file.query_exists ()) {
-				if (skip_all)
+				if (skip_all) {
+					if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 					continue;
+				}
 				if (!replace_all) {
 					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
     		            Gtk.MessageType.WARNING, Gtk.ButtonsType.NONE,
@@ -437,20 +534,31 @@ public class ResultsView : Gtk.TreeView {
 					dlg.destroy ();
 					switch (r) {
 					case Gtk.ResponseType.ACCEPT:
-						if (!delete_file (file)) continue;
+						if (!delete_file (file)) {
+							if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
+							continue;
+						}
 						break;
 					case Gtk.ResponseType.CANCEL:
+						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 						continue;
 					case Gtk.ResponseType.ACCEPT + 100:
 						replace_all = true;
-						if (!delete_file (file)) continue;
+						if (!delete_file (file)) {
+							if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
+							continue;
+						}
 						break;
 					case Gtk.ResponseType.CANCEL + 100:
 						skip_all = true;
+						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 						continue;
 					}
 				} else {
-					if (!delete_file (file)) continue;
+					if (!delete_file (file)) {
+						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
+						continue;
+					}
 				}
 			}
 			try {
@@ -471,16 +579,20 @@ public class ResultsView : Gtk.TreeView {
 			}
 		}
 		Filefinder.window.show_info ("File(s) moved %d of the %u".printf (files_count_ready, files_count));
+		files_count = files_processed = files_count_ready = 0;
 	}
 
 	private void move_to_trash (GLib.List<GLib.File>? files) {
 		if (files == null) return;
+		while (files_count != 0) {
+			GLib.Thread.usleep (2500);
+		}
 		files_count_ready = 0;
 		files_count = files.length ();
 		last_info = new DateTime.now_local ();
 		var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
     				Gtk.MessageType.WARNING, Gtk.ButtonsType.YES_NO,
-					"Are you realy want delete %u file(s)?\n",
+					"Are you realy want trash %u file(s)?\n",
                 	files.length ());
 		int r = dlg.run ();
 		dlg.destroy ();
@@ -488,6 +600,7 @@ public class ResultsView : Gtk.TreeView {
 			return;
 		}
 		foreach (File f in files) {
+			files_processed++;
 			try {
 				f.trash (null);
 				lock (files_count_ready) {
@@ -498,10 +611,12 @@ public class ResultsView : Gtk.TreeView {
 						Filefinder.window.show_info ("File(s) trashed %d of the %u".printf (files_count_ready, files_count));
 					}
 				}
+				remove_selected_file (f);
 			} catch (Error e) {
 				Filefinder.window.show_error (e.message);
 			}
 		}
+		files_count = files_processed = files_count_ready = 0;
 	}
 }
 

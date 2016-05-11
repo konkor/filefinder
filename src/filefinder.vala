@@ -53,7 +53,6 @@ public class Filefinder : Gtk.Application
 					break;
 			}
 		}
-		
 	}
 
 	protected override void startup () {
@@ -85,18 +84,17 @@ public class Filefinder : Gtk.Application
 			Debug.info ("text count", "%u".printf (q.texts.length ()));
 			Debug.info ("bin count", "%u".printf (q.bins.length ()));
 			Debug.info ("size count", "%u".printf (q.sizes.length ()));
+			service = new Service ();
+			window.result_view.connect_model ();
+			service.finished_search.connect (()=>{
+				window.show_results ();
+			});
+			service.row_changed.connect(()=>{window.set_subtitle ();});
+			window.canceled.connect (()=>{
+				service.cancel ();
+			});
 			service.start (q);
 		});
-		window.canceled.connect (()=>{
-			service.cancel ();
-		});
-		service.finished_search.connect (()=>{
-			window.show_results ();
-		});
-		service.row_changed.connect(()=>{
-			window.set_subtitle ();
-		});
-
         //window.add_locations (uris);
 		open.connect (()=>{window.add_locations (uris);});
     }

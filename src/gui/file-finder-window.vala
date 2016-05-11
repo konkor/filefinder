@@ -40,7 +40,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	private Gtk.Box empty_box;
 
 	private QueryEditor editor;
-	private ResultsView result_view;
+	public ResultsView result_view;
     
     protected void build () {
         set_position (Gtk.WindowPosition.CENTER);
@@ -155,9 +155,11 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		if (button_go.active) {
 			button_go.label = "Stop";
 			go_clicked (query);
+			//result_view.disconnect_model ();
 		} else {
 			button_go.label = "Search";
 			canceled ();
+			//result_view.connect_model ();
 		}
     }
 
@@ -167,7 +169,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			hb.subtitle = "(%d items)".printf (n);
 		else
 			hb.subtitle = "";
-		if ((n%1000) == 0) while (Gtk.events_pending ()) Gtk.main_iteration ();
+		//if ((n%1000) == 0) while (Gtk.events_pending ()) Gtk.main_iteration ();
 	}
 
 	public void split_orientation (Gtk.Orientation orientation) {
@@ -244,6 +246,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	public void show_results () {
 		Debug.info (this.name, "show_results () reached");
+		//result_view.connect_model ();
 		set_subtitle ();
 		button_go.active = false;
 		while (Gtk.events_pending ())

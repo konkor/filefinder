@@ -17,7 +17,7 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class Service : Gtk.TreeStore {
+public class Service : Gtk.ListStore {
 	private signal void finished_thread ();
 	public signal void finished_search ();
 
@@ -77,8 +77,9 @@ public class Service : Gtk.TreeStore {
 		this.finished_thread.connect (()=>{
 			this.thread_count--;
 			print ("thread_count %d\n", thread_count);
-			if (this.thread_count < 1)
+			if (this.thread_count < 1) {
 				finished_search ();
+			}
 		});
 	}
 
@@ -87,7 +88,7 @@ public class Service : Gtk.TreeStore {
 		thread_count = 0;
 		thread_list = new List<Thread<void*>>();
 		results_queue = new AsyncQueue<ResultsArray> ();
-
+		
 		excluded_locations = Filefinder.get_excluded_locations ();
 		assert_null (Filefinder.preferences);
         if (Filefinder.preferences.check_mounts) {
@@ -158,19 +159,25 @@ public class Service : Gtk.TreeStore {
 
 			i = 0;
 			//print ("count %u\n", results_array.results.length);
+			//base_array.results += unowned results_array.results;
 			foreach (unowned Results results in results_array.results) {
 				//print ("%s %ju\n", results.display_name, results.size);
 				i++;
 				ensure_iter_exists (results);
-
-				set (results.iter,
-					Columns.SIZE,       results.size);
+				//set (results.iter, Columns.SIZE, results.size);
+				/*Results res = new Results ();
+				res.display_name = results.display_name;
+				res.time_modified = results.time_modified;
+				res.size = results.size;
+				res.mime = results.mime;
+				res.type = results.type;
+				base_array.results += (owned) res;*/
 
 				if (results.error != null) {
 					if (results.error is IOError.CANCELLED) {
 						scan_error = results.error;
 						finished_thread ();
-						if (this.thread_count == 0) {
+						if (this.thread_count < 1) {
 							return false;
 						}
 					} else if (scan_error != null) {
@@ -178,12 +185,13 @@ public class Service : Gtk.TreeStore {
 					}
 				}
 
-				if (results_array.first && (results_array.results.length == i)) {
-					finished_thread ();
-					if (this.thread_count == 0) {
-						successful = true;
-						return false;
-					}
+				
+			}
+			if (results_array.first) {
+				finished_thread ();
+				if (this.thread_count < 1) {
+					successful = true;
+					return false;
 				}
 			}
 		}
@@ -195,9 +203,10 @@ public class Service : Gtk.TreeStore {
 			return;
 		}
 
-		append (out results.iter, null);
+		insert_after (out results.iter, null);
 		set (results.iter,
 			Columns.DISPLAY_NAME, results.display_name,
+		    Columns.SIZE, results.size,
 			Columns.TIME_MODIFIED,results.time_modified,
 			Columns.PATH,results.path,
 			Columns.POSITION,results.position,
