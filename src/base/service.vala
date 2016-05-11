@@ -362,7 +362,7 @@ public class Service : Gtk.ListStore {
 		Results? results = null;
 		if (!query.apply_masks) {
 			results = new Results ();
-			results.display_name = fname;
+			results.display_name = info.get_name ();
 			results.time_modified = info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
 			results.size = fsize;
 			results.mime = fmime;
@@ -514,7 +514,7 @@ public class Service : Gtk.ListStore {
 
 		if (results == null)
 			results = new Results ();
-		results.display_name = info.get_display_name ();
+		results.display_name = info.get_name ();//.get_display_name ();
 		//results.parse_name = info.get_parse_name ();
 		results.time_modified = info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
 		results.size = fsize;

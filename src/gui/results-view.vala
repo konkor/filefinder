@@ -359,7 +359,7 @@ public class ResultsView : Gtk.TreeView {
 		GLib.List<GLib.File> files = new GLib.List<GLib.File> ();
 		Gtk.TreeIter iter;
 		GLib.Value val;
-		string[] paths = {};
+		//string[] paths = {};
 		string path;
 		foreach (TreePath p in get_selection ().get_selected_rows (null)) {
 			if (model.get_iter (out iter, p)) {
@@ -368,12 +368,13 @@ public class ResultsView : Gtk.TreeView {
 				model.get_value (iter, Columns.DISPLAY_NAME, out val);
 				path = Path.build_filename (path, (string) val);
 				var file = File.new_for_path (path);
-				if (file.query_exists ()) {
+				files.append (file);
+				/*if (file.query_exists ()) {
 					if (!((string) val in paths)) {
 						files.append (file);
 						paths += (string) val;
 					}
-				}
+				}*/
 			}
 		}
 		if (files.length() == 0) return null;
@@ -417,10 +418,10 @@ public class ResultsView : Gtk.TreeView {
 		skip_all = false;
 		replace_all = false;
 		foreach (File f in files) {
-			files_processed++;
 			file = File.new_for_path (Path.build_filename (destination, f.get_basename ()));
 			if (file.query_exists ()) {
 				if (skip_all) {
+					files_processed++;
 					if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 					continue;
 				}
@@ -438,27 +439,36 @@ public class ResultsView : Gtk.TreeView {
 					switch (r) {
 					case Gtk.ResponseType.ACCEPT:
 						if (!delete_file (file)) {
+							files_processed++;
 							if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 							continue;
 						}
 						break;
 					case Gtk.ResponseType.CANCEL:
+						files_processed++;
 						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 						continue;
 					case Gtk.ResponseType.ACCEPT + 100:
 						replace_all = true;
 						if (!delete_file (file)) {
+							files_processed++;
 							if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 							continue;
 						}
 						break;
 					case Gtk.ResponseType.CANCEL + 100:
 						skip_all = true;
+						files_processed++;
+						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
+						continue;
+					default:
+						files_processed++;
 						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 						continue;
 					}
 				} else {
 					if (!delete_file (file)) {
+						files_processed++;
 						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 						continue;
 					}
@@ -474,6 +484,7 @@ public class ResultsView : Gtk.TreeView {
 				}
 				}, (obj, res) => {
 					try {
+						files_processed++;
 						f.copy_async.end (res);
 					lock (files_count_ready) {
 						files_count_ready++;
@@ -553,6 +564,9 @@ public class ResultsView : Gtk.TreeView {
 						skip_all = true;
 						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 						continue;
+					default:
+						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
+						continue;
 					}
 				} else {
 					if (!delete_file (file)) {
@@ -587,18 +601,18 @@ public class ResultsView : Gtk.TreeView {
 		while (files_count != 0) {
 			GLib.Thread.usleep (2500);
 		}
-		files_count_ready = 0;
-		files_count = files.length ();
-		last_info = new DateTime.now_local ();
 		var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
     				Gtk.MessageType.WARNING, Gtk.ButtonsType.YES_NO,
 					"Are you realy want trash %u file(s)?\n",
                 	files.length ());
 		int r = dlg.run ();
 		dlg.destroy ();
-		if (r == Gtk.ResponseType.NO) {
+		if (r != Gtk.ResponseType.YES) {
 			return;
 		}
+		files_count_ready = 0;
+		files_count = files.length ();
+		last_info = new DateTime.now_local ();
 		foreach (File f in files) {
 			files_processed++;
 			try {
