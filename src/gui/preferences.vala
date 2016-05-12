@@ -88,7 +88,7 @@ public class Preferences : Gtk.Window {
 		try {
 			file.delete ();
 		} catch (Error e) {
-			Debug.error ("preferences", e.message);
+			Debug.info ("preferences", e.message);
 		}
 		try {
 			dos = new DataOutputStream (file.create (FileCreateFlags.REPLACE_DESTINATION));

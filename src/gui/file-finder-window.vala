@@ -107,9 +107,11 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			int h1, h2;
 			paned.visible = true;
 			editor.add_row (new QueryRow ());
-			(editor.rows.nth_data(0) as QueryRow).get_preferred_height (out h1, out h2); 
-			if (editor.rows.length() * h1 < 200)
-				paned.position = (int) editor.rows.length() * h1 + 8;
+			if (Filefinder.preferences.split_orientation == Gtk.Orientation.VERTICAL) {
+				(editor.rows.nth_data(0) as QueryRow).get_preferred_height (out h1, out h2); 
+				if (editor.rows.length() * h1 < 200)
+					paned.position = (int) editor.rows.length() * h1 + 8;
+			}
 		});
 
 		scrolledwindow = new Gtk.ScrolledWindow (null, null);
@@ -243,7 +245,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		if (info_timeout_id > 0) {
 			GLib.Source.remove (info_timeout_id);
 		}
-		info_timeout_id = GLib.Timeout.add (5000, on_info_timeout);
+		info_timeout_id = GLib.Timeout.add (10000, on_info_timeout);
 		return -1;
 	}
 
@@ -279,10 +281,4 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		while (Gtk.events_pending ())
 			Gtk.main_iteration ();
 	}
-
-	/*private bool refresh_ui () {
-		while (Gtk.events_pending ())
-			Gtk.main_iteration ();
-		return true;
-	}*/
 }
