@@ -57,6 +57,8 @@ public class Service : Gtk.ListStore {
 	private const int MAX_THREAD = 4;
 	private int thread_count;
 	private DateTime d;
+	
+	public Results results_all;
 
 	public Service () {
 		threading = Thread.supported ();
@@ -102,6 +104,9 @@ public class Service : Gtk.ListStore {
 		foreach (FilterLocation f in query.locations) {
 			excluded_locations.remove (File.new_for_path (f.folder));
 		}
+		
+		results_all = new Results ();
+		results_all.position = 0;
 	}
 
 	public void start (Query q) {
@@ -129,6 +134,10 @@ public class Service : Gtk.ListStore {
 				Thread.usleep (200000);
 			}
 
+			foreach (string s in query.files) {
+				get_file (s);
+			}
+
 			process_result_idle = Timeout.add (200, () => {
 				bool res = process_results();
 				if (!res) {
@@ -136,6 +145,9 @@ public class Service : Gtk.ListStore {
 				}
 				return res;
 			});
+
+			if (thread_count == 0)
+				finished_search ();
 		} else {
 			finished_search ();
 		}
@@ -164,6 +176,7 @@ public class Service : Gtk.ListStore {
 				//print ("%s %ju\n", results.display_name, results.size);
 				i++;
 				ensure_iter_exists (results);
+
 				//set (results.iter, Columns.SIZE, results.size);
 				/*Results res = new Results ();
 				res.display_name = results.display_name;
@@ -202,7 +215,6 @@ public class Service : Gtk.ListStore {
 		if (results.iter_is_set) {
 			return;
 		}
-
 		insert_after (out results.iter, null);
 		set (results.iter,
 			Columns.DISPLAY_NAME, results.display_name,
@@ -215,6 +227,29 @@ public class Service : Gtk.ListStore {
 			Columns.POSITION,results.position,
 			Columns.ROW,results.row);
 		results.iter_is_set = true;
+
+		if (results_all.position == 0) {
+			results_all.display_name = results.display_name;
+			results_all.time_modified = results.time_modified;
+			results_all.size = results.size;
+			results_all.mime = results.mime;
+			results_all.type = results.type;
+			results_all.path = results.path;
+			results_all.position = 1;
+		} else {
+			if (results_all.display_name != results.display_name)
+				results_all.display_name = "--";
+			if (results_all.path != results.path)
+				results_all.path = "--";
+			if (results_all.type != results.type)
+				results_all.type = 0;
+			if (results_all.mime != results.mime)
+				results_all.mime = "--";
+			if (results_all.time_modified != results.time_modified)
+				results_all.time_modified = 0;
+			results_all.size += results.size;
+			results_all.position++;
+		}
 	}
 
 	public void cancel () {
@@ -252,19 +287,34 @@ public class Service : Gtk.ListStore {
 		scan_error = null;
 	}
 
-	/*private void get_files () {
-		Debug.info ("started search", "");
-		uint64 c = 0;
-		foreach (FilterLocation p in query.locations) {
-			list_dir (p);
-		}
-		//Debug.info ("finished search", "");
-		DateTime de = new DateTime.now_local();
-		Debug.info ("search", "duration %ju counted %ju".printf (de.difference(d), c));
-		finished_search ();
-	}*/
+	private void get_file (string path) {
+		FileInfo info;
+		File dir = File.new_for_path (path);
+		if (!dir.query_exists ()) return;
+		try {
+			info = dir.query_info ("*", 0);
+			if (info.get_is_symlink ()) {
+				dir = File.new_for_path (Posix.realpath (path));
+				info = dir.query_info ("*", 0);
+			}
+			if (dir in excluded_locations) {
+				return;
+			}
+			if (!info.get_attribute_boolean (FileAttribute.ACCESS_CAN_READ)){
+				return;
+			}
+			if (info.get_file_type () == FileType.REGULAR) {
+				Results res = apply_masks (info, dir.get_path ().substring (0, dir.get_path ().last_index_of ("/")));
+				if (res != null) {
+					ensure_iter_exists (res);
+				}
+			}
+		} catch (Error err) {
+			Debug.error ("get_file", err.message + " " + path);
+		} 
+	}
 
-	void list_dir (FilterLocation loc, bool first = true) {
+	private void list_dir (FilterLocation loc, bool first = true) {
 		FileInfo info;
 		var results_array = new ResultsArray ();
 		var dir = File.new_for_path (loc.folder);
@@ -279,18 +329,18 @@ public class Service : Gtk.ListStore {
 			if (dir in excluded_locations) {
 				return;
 			}
+			if (!info.get_attribute_boolean (FileAttribute.ACCESS_CAN_READ)){
+				return;
+			}
 			if (info.get_file_type () == FileType.REGULAR) {
 				Results res = apply_masks (info, dir.get_path ());
 				if (res != null) {
-					//on_found_file (info);
 					results_array.results += (owned) res;
 					results_queue.push ((owned) results_array);
 					return;
 				} else {
 					return;
 				}
-			} else if (!info.get_attribute_boolean (FileAttribute.ACCESS_CAN_READ)){
-				return;
 			}
 			var e = dir.enumerate_children (ATTRIBUTES,
 											Filefinder.preferences.follow_links,
@@ -307,7 +357,6 @@ public class Service : Gtk.ListStore {
 				if (info.has_attribute (FileAttribute.UNIX_NLINK)) {
 					if (info.get_attribute_uint32 (FileAttribute.UNIX_NLINK) > 1) {
 						var hl = HardLink (info);
-						// check if we've already encountered this node
 						lock (mutex) {
 							if (hl in hardlinks) {
 								continue;
@@ -328,8 +377,6 @@ public class Service : Gtk.ListStore {
 					case FileType.REGULAR:
 						Results res = apply_masks (info, loc.folder);
 						if (res != null) {
-							//on_found_file (info);
-							res.path = loc.folder;
 							results_array.results += (owned) res;
 						}
 						break;
@@ -341,16 +388,12 @@ public class Service : Gtk.ListStore {
 			Debug.error ("list_dir", err.message + " " + loc.folder);
 			//results.error = err;
 		}
-		/*if (last) {
-			DateTime de = new DateTime.now_local();
-			Debug.info ("search", "duration %ju counted %ju".printf (de.difference(d), c));
-		}*/
 		results_array.first = first;
 		results_queue.push ((owned) results_array);
 		return;
 	}
 
-	private Results? apply_masks (FileInfo info, string? path) {
+	private Results? apply_masks (FileInfo info, string path) {
 		bool flag = true;
 		string fname = info.get_display_name ();
 		string fmask;
@@ -358,11 +401,11 @@ public class Service : Gtk.ListStore {
 		string fmime = info.get_content_type ();
 		DateTime d;
 		int64 t = (int64) info.get_modification_time ().tv_sec;
-		//info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
 		Results? results = null;
 		if (!query.apply_masks) {
 			results = new Results ();
 			results.display_name = info.get_name ();
+			results.path = path;
 			results.time_modified = info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
 			results.size = fsize;
 			results.mime = fmime;
@@ -515,6 +558,7 @@ public class Service : Gtk.ListStore {
 		if (results == null)
 			results = new Results ();
 		results.display_name = info.get_name ();//.get_display_name ();
+		results.path = path;
 		//results.parse_name = info.get_parse_name ();
 		results.time_modified = info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
 		results.size = fsize;
@@ -640,7 +684,7 @@ public class Service : Gtk.ListStore {
 	}
 
 	[Compact]
-	class Results {
+	public class Results {
 		internal int64 position = -1;
 		internal string display_name;
 		internal uint64 size;

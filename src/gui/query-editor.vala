@@ -66,11 +66,23 @@ public class QueryEditor : Gtk.Box {
 	}
 
 	public void add_file (string path) {
-		QueryRow row = new QueryRow ();
-		row.row_type = types.FILES;
+		QueryRow row = null;
+		foreach (QueryRow p in rows) {
+			if (p.row_type == types.FILES) {
+				row = p;
+				break;
+			}
+		}
+		if (row == null) {
+			row = new QueryRow ();
+			row.row_type = types.FILES;
+			add_row (row);
+		}
 		row.files.add (path);
 		row.files_btn.label = path;
-		add_row (row);
+		if (row.files.files.length () > 1)
+			row.files_btn.label += " ... (%u selected items)".printf (
+				row.files.files.length());	
 	}
 }
 

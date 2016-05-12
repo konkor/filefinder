@@ -19,10 +19,14 @@
 using Gtk;
 
 public class ResultsView : Gtk.TreeView {
+	public signal void changed_selection ();
+
 	private Gtk.Menu menu;
 	private Gtk.Menu menu_columns;
 
 	public ResultsView () {
+		results_selection = new Service.Results ();
+
 		can_focus = true;
 		headers_clickable = true;
 		get_selection ().mode = Gtk.SelectionMode.MULTIPLE;
@@ -31,6 +35,7 @@ public class ResultsView : Gtk.TreeView {
 		build_menus ();
 
 		button_press_event.connect (on_tree_button);
+		get_selection ().changed.connect (on_selection_changed);
 	}
 
 	private void build_columns () {
@@ -153,6 +158,7 @@ public class ResultsView : Gtk.TreeView {
 		mi = new Gtk.MenuItem.with_label ("Properties");
 		menu.add (mi);
 		mi.activate.connect (()=>{
+			on_show_properties ();
 		});
 		menu.show_all ();
 		menu.show.connect (()=>{
@@ -208,29 +214,7 @@ public class ResultsView : Gtk.TreeView {
 				break;
 			case Columns.TYPE:
 				model.get_value (iter, Columns.TYPE, out v);
-				switch (v.get_int()) {
-					case 0:
-						(cell as Gtk.CellRendererText).text = "Unknown";
-						break;
-					case 1:
-						(cell as Gtk.CellRendererText).text = "Regular";
-						break;
-					case 2:
-						(cell as Gtk.CellRendererText).text = "Directory";
-						break;
-					case 3:
-						(cell as Gtk.CellRendererText).text = "Symlink";
-						break;
-					case 4:
-						(cell as Gtk.CellRendererText).text = "Special";
-						break;
-					case 5:
-						(cell as Gtk.CellRendererText).text = "Shortcut";
-						break;
-					case 6:
-						(cell as Gtk.CellRendererText).text = "Mountable";
-						break;
-				}
+				(cell as Gtk.CellRendererText).text = get_filetype_string (v.get_int());
 				break;
 			case Columns.TIME_MODIFIED:
 				model.get_value (iter, Columns.TIME_MODIFIED, out v);
@@ -256,6 +240,18 @@ public class ResultsView : Gtk.TreeView {
 		}
 	}
 
+	private string get_filetype_string (int filetype) {
+		switch (filetype) {
+			case 0: return "Unknown";
+			case 1: return "Regular";
+			case 2: return "Directory";
+			case 3: return "Symlink";
+			case 4: return "Special";
+			case 5: return "Shortcut";
+			case 6: return "Mountable";
+		}
+		return "";
+	}
 	protected override bool button_press_event (Gdk.EventButton event) {
 		if (event.type == Gdk.EventType.BUTTON_PRESS && event.button == 3) {
 			return true;
@@ -277,7 +273,84 @@ public class ResultsView : Gtk.TreeView {
 		return false;
 	}
 
-	private string get_bin_size (uint64 i) {
+	public Service.Results results_selection;
+	private void on_selection_changed () {
+		results_selection = new Service.Results ();
+		results_selection.position = 0;
+		Gtk.TreeIter iter;
+		GLib.Value val;
+		int t;
+		foreach (TreePath p in get_selection ().get_selected_rows (null)) {
+			if (model.get_iter (out iter, p)) {
+				if (results_selection.position == 0) {
+					model.get_value (iter, Columns.DISPLAY_NAME, out val);
+					results_selection.display_name = (string) val;
+					model.get_value (iter, Columns.TIME_MODIFIED, out val);
+					results_selection.time_modified = (uint64) val;
+					model.get_value (iter, Columns.SIZE, out val);
+					results_selection.size = (uint64) val;
+					model.get_value (iter, Columns.MIME, out val);
+					results_selection.mime = (string) val;
+					model.get_value (iter, Columns.TYPE, out val);
+					t = (int) val;
+					results_selection.type = (GLib.FileType) t;
+					model.get_value (iter, Columns.PATH, out val);
+					results_selection.path = (string) val;
+					results_selection.position = 1;
+				} else {
+					model.get_value (iter, Columns.DISPLAY_NAME, out val);
+					if (results_selection.display_name != (string) val)
+						results_selection.display_name = "--";
+					model.get_value (iter, Columns.PATH, out val);
+					if (results_selection.path != (string) val)
+						results_selection.path = "--";
+					model.get_value (iter, Columns.TYPE, out val);
+					if (((int)results_selection.type) != (int) val)
+						results_selection.type = (FileType) 0;
+					model.get_value (iter, Columns.MIME, out val);
+					if (results_selection.mime != (string) val)
+						results_selection.mime = "--";
+					model.get_value (iter, Columns.TIME_MODIFIED, out val);
+					if (results_selection.time_modified != (uint64) val)
+						results_selection.time_modified = 0;
+					model.get_value (iter, Columns.SIZE, out val);
+					results_selection.size += (uint64) val;
+					results_selection.position++;
+				}
+			}
+		}
+		changed_selection ();
+	}
+
+	private void on_show_properties () {
+		if (results_selection.position == 0) return;
+		string msg = "" +
+			"<b>Selected %ju files</b>\n\n" +
+			"<b>File Name:</b> %s\n" +
+			"<b>MIME Type:</b> %s\n" +
+			"<b>Size:</b> %s (%ju bytes)\n\n" +
+			"<b>Location:</b> %s\n\n" +
+			"<b>File Type:</b> %s\n";
+		msg = msg.printf (results_selection.position,
+						  results_selection.display_name,
+						  results_selection.mime,
+						  get_bin_size (results_selection.size),
+						  results_selection.size,
+						  results_selection.path,
+						  get_filetype_string (results_selection.type).down ());
+		if (results_selection.time_modified != 0) {
+			DateTime d = new DateTime.from_unix_local ((int64)results_selection.time_modified);
+			msg += "<b>Modified:</b> %s\n".printf (d.format ("%F %T"));
+		}
+		var dlg = new Gtk.MessageDialog.with_markup (Filefinder.window, 0,
+					Gtk.MessageType.INFO, Gtk.ButtonsType.CLOSE,
+					msg);
+		dlg.run ();
+		dlg.destroy ();
+		
+	}
+
+	public string get_bin_size (uint64 i) {
 		string s = i.to_string ();
 		int len = s.length;
 		if (len > 9) {

@@ -66,7 +66,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 		button_plus = new Button.from_icon_name ("list-add-symbolic", IconSize.BUTTON);
 		button_plus.use_underline = true;
-		button_plus.tooltip_text = "Add Query";
+		button_plus.tooltip_text = "Add Query <Insert>";
 		button_plus.add_accelerator ("clicked", accel_group,
 									Gdk.keyval_from_name("Insert"), 0,
 									AccelFlags.VISIBLE);
@@ -104,11 +104,12 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		editor.expand = true;
 		scrolledwindow.add (editor);
 		button_plus.clicked.connect ( ()=>{
+			int h1, h2;
 			paned.visible = true;
-			if (paned.position < 200) {
-				paned.position += 24;
-			}
 			editor.add_row (new QueryRow ());
+			(editor.rows.nth_data(0) as QueryRow).get_preferred_height (out h1, out h2); 
+			if (editor.rows.length() * h1 < 200)
+				paned.position = (int) editor.rows.length() * h1 + 8;
 		});
 
 		scrolledwindow = new Gtk.ScrolledWindow (null, null);
@@ -120,6 +121,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		scrolledwindow.add (result_view);
 
 		set_default_size (800, 512);
+		if (Filefinder.preferences.first_run) {
+			show_info (Text.first_run);
+			Filefinder.preferences.first_run = false;
+		}
 	}
 
 	private void initialize () {
@@ -128,7 +133,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			empty_box.visible = !paned.visible;
 			return false;
 		});
-		//GLib.Timeout.add (2000, refresh_ui);
+		result_view.changed_selection.connect (()=>{set_subtitle ();});
 	}
 
 	public void post_init () {
@@ -137,18 +142,25 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	public void add_locations (List<string> uris) {
 		File file;
+		int dir_count = 0, file_count = 0, h1, h2;
 		foreach (string s in uris) {
 			file = File.new_for_path (s);
 			paned.visible = true;
 			if (file.query_file_type (FileQueryInfoFlags.NONE) == FileType.DIRECTORY) {
 				editor.add_folder (s);
+				dir_count++;
 			} else {
 				editor.add_file (s);
-			}
-			if (paned.position < 200) {
-				paned.position += 24;
+				if (file_count == 0)
+					file_count = 1;
 			}
 		}
+		dir_count += file_count;
+		(editor.rows.nth_data(0) as QueryRow).get_preferred_height (out h1, out h2); 
+		if (dir_count * h1 < 200)
+			paned.position = dir_count * h1 + 8;
+		else
+			paned.position = 200;
 	}
 
 	private void on_go_clicked () {
@@ -164,11 +176,26 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
 	public void set_subtitle () {
-		int n = result_view.model.iter_n_children (null);
-		if (n > -1)
-			hb.subtitle = "(%d items)".printf (n);
-		else
+		if (Filefinder.service == null) {
 			hb.subtitle = "";
+			return;
+		}
+		if (Filefinder.service.results_all == null) {
+			hb.subtitle = "";
+			return;
+		}
+		int n = result_view.model.iter_n_children (null);
+		if (n > 0)
+			if (result_view.results_selection.position == 0)
+				hb.subtitle = "(%d items in %s)".printf (n,
+					result_view.get_bin_size (Filefinder.service.results_all.size));
+			else
+				hb.subtitle = "(selected %jd items in %s of the %d items in %s)".printf (
+					result_view.results_selection.position,
+					result_view.get_bin_size (result_view.results_selection.size),
+					n, result_view.get_bin_size (Filefinder.service.results_all.size));
+		else
+			hb.subtitle = "(No items found)";
 		//if ((n%1000) == 0) while (Gtk.events_pending ()) Gtk.main_iteration ();
 	}
 

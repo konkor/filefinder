@@ -141,7 +141,7 @@ public class Filefinder : Gtk.Application
 		return file.query_exists ();
 	}
 
-	public static GenericSet<File> get_excluded_locations () {
+	public static GenericSet<File>   get_excluded_locations () {
 		var excluded_locations = new GenericSet<File> (File.hash, File.equal);
 		excluded_locations.add (File.new_for_path ("/dev"));
 		excluded_locations.add (File.new_for_path ("/proc"));

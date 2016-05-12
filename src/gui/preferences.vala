@@ -44,7 +44,7 @@ public class Preferences : Gtk.Window {
 	};
 
 	public bool is_changed = false;
-	public bool first_run = false;
+	public bool first_run = true;
 
 	public Preferences () {
 		title = Text.app_name + " Preferences";
@@ -270,7 +270,7 @@ public class Preferences : Gtk.Window {
 			check_hidden = cb_hidden.active;
 			is_changed = true;
 		});
-		cb_hidden.active = false;
+		cb_hidden.active = true;
 
 		cb_backup = new Gtk.CheckButton.with_label ("Exclude backups");
 		box.add (cb_backup);
