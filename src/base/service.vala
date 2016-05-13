@@ -547,11 +547,23 @@ public class Service : Gtk.ListStore {
 
 		if (query.texts.length () > 0) {
 			flag = false;
-			results = get_text_pos (info, path);
+			results = get_text_result (info, path);
 			if (results == null) {
 				return null;
 			} else {
 				flag = true;
+			}
+		}
+
+		if (results == null) {
+			if (query.bins.length () > 0) {
+				flag = false;
+				results = get_bin_result (info, path);
+				if (results == null) {
+					return null;
+				} else {
+					flag = true;
+				}
 			}
 		}
 
@@ -569,6 +581,125 @@ public class Service : Gtk.ListStore {
 			results.type = info.get_file_type();
 
 		return results;
+	}
+
+	Results? get_text_result (FileInfo info, string? path) {
+		Results? res = null;
+		if ((path == null) || (info == null)) return res;
+		File file = File.new_for_path (GLib.Path.build_filename (path, info.get_name ()));
+		if (!file.query_exists ()) return res;
+		uint64[] rows = {};
+		Tokens[] tokens = {};
+		string mask;
+		foreach (FilterText f in query.texts) {
+			if (f.text.length == 0) continue;
+			Tokens t = new Tokens ();
+			t.sensetive = f.case_sensetive;
+			if (!f.case_sensetive) {
+				mask = f.text.up ();
+			} else {
+				mask = f.text;
+			}
+			if (!f.is_utf8)
+				t.encoding = f.encoding;
+			t.data = mask.data;
+			tokens += (owned) t;
+		}
+		if (tokens.length == 0) return res;
+
+		uint8[] buffer = new uint8[8192];
+		uint8[] upper = new uint8[8192];
+		ssize_t	 count = 8192;
+		//int64 pos = 0;
+		uint64 ind = 0;
+		try {
+			FileInputStream ios = file.read ();
+			DataInputStream dis = new DataInputStream (ios);
+			do {
+				count = dis.read (buffer, cancellable);
+				for (uint64 i = 0; i < count; i++) {
+					foreach (unowned Tokens t in tokens) {
+						if (buffer[i] == 10)
+							rows += (ind + i);
+						if (t.data[t.cursor] == buffer[i])
+							t.cursor++;
+						else
+							t.cursor = 0;
+						if (t.cursor == t.data.length) {
+							//we have found token
+							res = new Results ();
+							res.position = rows.length + 1;
+							//res.row = convert_to (line, f.encoding);
+							return res;
+						}
+					}
+				}
+				ind += count;
+				//set next pos
+				//ios.seek (pos, SeekType.SET);
+			} while (count == 8192);
+		} catch (Error err) {
+			return null;
+		}
+		return res;
+	}
+
+	Results? get_bin_result (FileInfo info, string? path) {
+		Results? res = null;
+		if ((path == null) || (info == null)) return res;
+		File file = File.new_for_path (GLib.Path.build_filename (path, info.get_name ()));
+		if (!file.query_exists ()) return res;
+		Tokens[] tokens = {};
+		foreach (FilterBin f in query.bins) {
+			if (f.bin.length == 0) continue;
+			Tokens t = new Tokens ();
+			var data = f.bin.data;
+			for (int i = 0; i < data.length; i+=2) {
+				char c = (char) data[i];
+				int val1 = c.xdigit_value() << 4;
+				c = (char) data[i+1];
+				val1+= c.xdigit_value();
+				t.data += (uint8) val1;
+			}
+			tokens += (owned) t;
+		}
+		if (tokens.length == 0) return res;
+
+		uint8[] buffer = new uint8[65536];
+		ssize_t	 count = 65536;
+		uint64 ind = 0;
+		try {
+			FileInputStream ios = file.read ();
+			DataInputStream dis = new DataInputStream (ios);
+			do {
+				count = dis.read (buffer, cancellable);
+				for (uint64 i = 0; i < count; i++) {
+					foreach (unowned Tokens t in tokens) {
+						if (t.data[t.cursor] == buffer[i])
+							t.cursor++;
+						else
+							t.cursor = 0;
+						if (t.cursor == t.data.length) {
+							//we have found token
+							res = new Results ();
+							res.position = (int64) (ind + i);
+							var sb = new StringBuilder();
+							foreach (uint8 u in t.data) {
+								var str = "%02x".printf (u);
+								sb.append (str);
+							}
+							res.row = (string) sb.data;
+							res.row = "0x" + res.row.up();
+							return res;
+						}
+					}
+				}
+				ind += count;
+			} while (count == 65536);
+		} catch (Error err) {
+			return null;
+		}
+		return res;
 	}
 
 	Results? get_text_pos (FileInfo info, string? path) {
@@ -605,7 +736,7 @@ public class Service : Gtk.ListStore {
 						if (s.contains (mask)) {
 							res = new Results ();
 							res.position = pos;
-							res.row = convert_to (line, f.encoding);;
+							res.row = convert_to (line, f.encoding);
 							return res;
 						}
 					}
@@ -675,6 +806,16 @@ public class Service : Gtk.ListStore {
 			return s;
 		}
 		return s;
+	}
+
+	[Compact]
+	class Tokens {
+		internal uint64 cursor = 0;
+		internal int64 position = -1;
+		internal int64 row = -1;
+		internal string encoding;
+		internal bool sensetive;
+		internal uint8[] data;
 	}
 
 	[Compact]

@@ -312,6 +312,11 @@ public class QueryRow : Gtk.Box {
 					bin_entry.text = check_hex (bin_entry.text);
 					bin.bin = bin_entry.text;
 				});
+				bin_entry.focus_out_event.connect (()=>{
+					if (bin_entry.text.length % 2 == 1)
+						bin_entry.text = "0" + bin_entry.text;
+					return false;
+				});
 				break;
 			default:
 				_filter.filter_type = types.NONE;
