@@ -590,28 +590,35 @@ public class Service : Gtk.ListStore {
 		if (!file.query_exists ()) return res;
 		uint64[] rows = {};
 		Tokens[] tokens = {};
-		string mask;
 		foreach (FilterText f in query.texts) {
 			if (f.text.length == 0) continue;
 			Tokens t = new Tokens ();
 			t.sensetive = f.case_sensetive;
-			if (!f.case_sensetive) {
-				mask = f.text.up ();
+			t.encoding = f.encoding;
+			if (!f.is_utf8) {
+				try {
+					t.data = convert_to (f.text, f.encoding).data;
+					t.data_up = convert_to (f.text.up(), f.encoding).data;
+					t.data_down = convert_to (f.text.down (), f.encoding).data;
+				} catch (ConvertError err) {
+					Debug.error ("get_text_result", err.message);
+					continue;
+				}
 			} else {
-				mask = f.text;
+				t.data = f.text.data;
+				t.data_up = f.text.up ().data;
+				t.data_down = f.text.down ().data;
 			}
-			if (!f.is_utf8)
-				t.encoding = f.encoding;
-			t.data = mask.data;
 			tokens += (owned) t;
 		}
 		if (tokens.length == 0) return res;
 
 		uint8[] buffer = new uint8[8192];
-		uint8[] upper = new uint8[8192];
 		ssize_t	 count = 8192;
-		//int64 pos = 0;
-		uint64 ind = 0;
+		bool sensetive;
+		uint64 ind = 0, row_start, row_end;
+		uint8[] row;
+		string s;
 		try {
 			FileInputStream ios = file.read ();
 			DataInputStream dis = new DataInputStream (ios);
@@ -620,8 +627,13 @@ public class Service : Gtk.ListStore {
 				for (uint64 i = 0; i < count; i++) {
 					foreach (unowned Tokens t in tokens) {
 						if (buffer[i] == 10)
-							rows += (ind + i);
-						if (t.data[t.cursor] == buffer[i])
+							rows += (ind + i + 1);
+						if (t.sensetive)
+							sensetive = t.data[t.cursor] == buffer[i];
+						else
+							sensetive = (t.data_up[t.cursor] == buffer[i]) ||
+										(t.data_down[t.cursor] == buffer[i]);
+						if (sensetive)
 							t.cursor++;
 						else
 							t.cursor = 0;
@@ -629,14 +641,46 @@ public class Service : Gtk.ListStore {
 							//we have found token
 							res = new Results ();
 							res.position = rows.length + 1;
-							//res.row = convert_to (line, f.encoding);
+							row_end = i + 1;
+							if (rows.length == 0) {
+								row_start = 0;
+							} else {
+								if (rows[rows.length-1] < ind) {
+									row_start = 0;
+								} else {
+									row_start = rows[rows.length-1] - ind;
+								}
+							}
+							if ((row_end - row_start) < 100) {
+								uint64 j = 0;
+								for (j = 0; j < 100; j++) {
+									if ((i + j) < count) {
+										if (buffer[i + j] == 10) break;
+									} else {
+										break;
+									}
+								}
+								row_end += j - 1;
+							}
+							row = buffer[row_start:row_end];
+							row += 0;
+							s = (string) row;
+							try {
+								s = convert_to (s, "UTF-8", t.encoding);
+							} catch (ConvertError e) {
+								Debug.error ("convert_to", e.message);
+							}
+							unichar c = 0;
+							int char_ind = 0;
+							res.row = "";
+							for (int cnt = 0; s.get_next_char (ref char_ind, out c); cnt++) {
+								if (c.isprint ()) res.row += c.to_string ();
+							}
 							return res;
 						}
 					}
 				}
 				ind += count;
-				//set next pos
-				//ios.seek (pos, SeekType.SET);
 			} while (count == 8192);
 		} catch (Error err) {
 			return null;
@@ -702,25 +746,18 @@ public class Service : Gtk.ListStore {
 		return res;
 	}
 
+	//this method is longer it's need to load whole file in memory before search
 	Results? get_text_pos (FileInfo info, string? path) {
 		Results? res = null;
-		if ((path == null) || (info == null))
-			return res;
+		if ((path == null) || (info == null)) return res;
 		File file = File.new_for_path (GLib.Path.build_filename (path, info.get_name ()));
-
-		if (!file.query_exists ()) {
-			return res;
-		}
-
+		if (!file.query_exists ()) {return res;}
 		try {
 			string contents, s, mask;
 			size_t length;
 			int pos = 1;
 			if (FileUtils.get_contents (GLib.Path.build_filename (path, info.get_name ()),
 							  out contents, out length)) {
-				/*if (line.length >= 4096) {
-					return null;
-				}*/
 				foreach (string line in contents.split_set ("\n")) {
 					foreach (FilterText f in query.texts) {
 						if (f.text.length > contents.length)
@@ -742,63 +779,19 @@ public class Service : Gtk.ListStore {
 					}
 					pos++;
 				}
-				/*foreach (FilterText f in query.texts) {
-					if (f.text.length > contents.length)
-						return null;
-					if (!f.case_sensetive) {
-						s = contents.up ();
-						mask = f.text.up ();
-					} else {
-						s = contents;
-						mask = f.text;
-					}
-					s = convert_to (s, f.encoding);
-					if (s.contains (mask)) {
-						res = new Results ();
-						pos = s.index_of (mask);
-						res.position = pos;
-						//res.row = s.substring (pos, s.index_of ("\0", pos));
-						return res;
-					}
-				}*/
 			}
-			/*DataInputStream dis = new DataInputStream (file.read ());
-			string line, s, enc, mask;
-			int64 pos = 0;
-			while ((line = dis.read_line (null)) != null) {
-				if (line.length >= 4096) {
-					return null;
-				}
-				foreach (FilterText f in query.texts) {
-					if (!f.case_sensetive) {
-						s = line.up ();
-						mask = f.text.up ();
-					} else {
-						s = line;
-						mask = f.text;
-					}
-					//enc = convert_to (s, f.encoding);
-					if (s.contains (mask)) {
-						res = new Results ();
-						res.position = pos;
-						res.row = line;
-						return res;
-					}
-				}
-				pos++;
-			}*/
 		} catch (Error err) {
 			return null;
 		}
 		return res;
 	}
 
-	public string convert_to (string str, string enc) throws ConvertError {
+	public string convert_to (string str, string enc, string enc_from = "UTF-8") throws ConvertError {
 		string s = str;
 		if (enc.length == 0) return s;
-		if (enc != "UTF-8") {
+		if (enc != enc_from) {
 			try {
-				s = convert (s, -1, enc, "UTF-8");
+				s = convert (s, -1, enc, enc_from);
 			} catch (ConvertError err) {
 				throw new ConvertError.FAILED ("Converting error");
 			}
@@ -811,11 +804,11 @@ public class Service : Gtk.ListStore {
 	[Compact]
 	class Tokens {
 		internal uint64 cursor = 0;
-		internal int64 position = -1;
-		internal int64 row = -1;
-		internal string encoding;
 		internal bool sensetive;
+		internal string encoding;
 		internal uint8[] data;
+		internal uint8[] data_up;
+		internal uint8[] data_down;
 	}
 
 	[Compact]

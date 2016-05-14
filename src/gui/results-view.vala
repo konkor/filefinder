@@ -43,15 +43,17 @@ public class ResultsView : Gtk.TreeView {
 		Gtk.CellRendererText colr;
 		int i = 0;
 		foreach (ViewColumn p in Filefinder.preferences.columns) {
-			Gtk.TreeViewColumn col = new Gtk.TreeViewColumn ();
-			col.title = p.title;
+			colr = new Gtk.CellRendererText ();
+			Gtk.TreeViewColumn col = new Gtk.TreeViewColumn.with_attributes (p.title, colr, markup:null);
+			col.add_attribute(colr, "markup", 0);
+			//col.title = p.title;
 			col.expand = false;
 			col.fixed_width = p.width;
 			col.resizable = true;
 			col.sizing = TreeViewColumnSizing.FIXED;
 			col.sort_column_id = i;
-			colr = new Gtk.CellRendererText ();
-			col.pack_start (colr, false);
+			
+			//col.pack_start (colr, false);
 			col.set_cell_data_func (colr, render_text);
 			col.visible = p.visible;
 			append_column (col);
