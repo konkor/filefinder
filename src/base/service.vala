@@ -53,7 +53,6 @@ public class Service : Gtk.ListStore {
 	Error? scan_error;
 
 	private Query query;
-	private bool threading;
 	private const int MAX_THREAD = 4;
 	private int thread_count;
 	private DateTime d;
@@ -61,8 +60,6 @@ public class Service : Gtk.ListStore {
 	public Results results_all;
 
 	public Service () {
-		threading = Thread.supported ();
-		threading = false;
 		cancellable = new Cancellable();
 		scan_error = null;
 		set_column_types (new Type[] {
@@ -545,9 +542,9 @@ public class Service : Gtk.ListStore {
 
 		if (!flag) return null;
 
-		if (query.texts.length () > 0) {
+		if (query.bins.length () > 0) {
 			flag = false;
-			results = get_text_result (info, path);
+			results = get_bin_result (info, path);
 			if (results == null) {
 				return null;
 			} else {
@@ -556,9 +553,9 @@ public class Service : Gtk.ListStore {
 		}
 
 		if (results == null) {
-			if (query.bins.length () > 0) {
+			if (query.texts.length () > 0) {
 				flag = false;
-				results = get_bin_result (info, path);
+				results = get_text_result (info, path);
 				if (results == null) {
 					return null;
 				} else {
@@ -795,8 +792,6 @@ public class Service : Gtk.ListStore {
 			} catch (ConvertError err) {
 				throw new ConvertError.FAILED ("Converting error");
 			}
-		} else {
-			return s;
 		}
 		return s;
 	}

@@ -1,4 +1,4 @@
-SUBDIRS = 
+SUBDIRS = icons
 
 # The desktop files
 desktopdir = $(datadir)/applications
