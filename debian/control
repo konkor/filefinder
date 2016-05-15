@@ -1,0 +1,12 @@
+Source: filefinder
+Maintainer: Kostiantyn Korienkov <kkorienkov@gmail.com>
+Section: misc
+Priority: optional
+Standards-Version: 3.9.2
+Build-Depends: debhelper (>= 9)
+
+Package: filefinder
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: advanced search tool with nautilus extention
+ File Finder is the advanced search tool with gtk3 user interface and the integration with nautilus file explorer. There is multiple search location support with treading, file masking, MIME types, modified dates, file sizes, text and binary patterns.
