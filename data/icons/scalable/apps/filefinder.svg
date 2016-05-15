@@ -30,10 +30,10 @@
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="960"
-     inkscape:window-height="1173"
-     inkscape:window-x="0"
-     inkscape:window-y="27"
+     inkscape:window-width="733"
+     inkscape:window-height="479"
+     inkscape:window-x="103"
+     inkscape:window-y="184"
      inkscape:window-maximized="0" />
   <metadata
      id="metadata7">
@@ -53,7 +53,7 @@
      id="layer1"
      transform="translate(0,-924.36218)">
     <path
-       style="fill:#16aaf8;fill-opacity:1;fill-rule:evenodd;stroke:none"
+       style="fill:#3bb7f9;fill-opacity:1;fill-rule:evenodd;stroke:none"
        d="m 32,932.36219 c -13.296,0 -24,10.704 -24,24 l 0,64.00001 c 0,13.296 10.704,24 24,24 l 64,0 c 13.296,0 24,-10.704 24,-24 l 0,-64.00001 c 0,-13.296 -10.704,-24 -24,-24 l -64,0 z m 36,16 c 19.88225,0 36,16.11775 36,36 0,19.88231 -16.11775,36.00001 -36,36.00001 -6.313,0 -12.24776,-1.6142 -17.40625,-4.4687 L 36.5,1029.9872 c -3.1339,3.1339 -8.1786,3.1339 -11.3125,0 l -2.84375,-2.8125 c -3.1339,-3.1339 -3.1339,-8.1786 0,-11.3125 l 14.125,-14.125 C 33.62239,996.58422 32,990.66553 32,984.36219 c 0,-19.88225 16.11775,-36 36,-36 z"
        id="rect2985-1"
        inkscape:connector-curvature="0" />

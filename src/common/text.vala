@@ -47,7 +47,7 @@ Copyright © 2016–2016 Kostiantyn Korienkov <kkorienkov@gmail.com>";
 
 	public const  string app_help				  =
 @"Usage:
-  filefinder [OPTIONS] [PATH] ...]
+  filefinder [OPTIONS] [[PATH] ...]
 
 Options:
   --help	   Show this help and exit

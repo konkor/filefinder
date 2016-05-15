@@ -53,4 +53,5 @@ src/Makefile
 src/nautilus/Makefile
 data/icons/Makefile
 data/Makefile
+man/Makefile
 ])
