@@ -36,12 +36,12 @@ AC_SUBST(NAUTILUS_LIBS)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 
-nautilusextensiondir='${libdir}/nautilus/extensions-3.0'
-#nautilusextensiondir=`$PKG_CONFIG --variable=extensiondir libnautilus-extension`
+#nautilusextensiondir='${libdir}/nautilus/extensions-3.0'
+nautilusextensiondir=`$PKG_CONFIG --variable=extensiondir libnautilus-extension`
 AC_ARG_WITH([nautilus-dir],
   [AS_HELP_STRING([--with-nautilus-dir=PATH],[Nautilus extensions directory])],
   [nautilusextensiondir="$withval"],
-  [nautilusextensiondir='${libdir}/nautilus/extensions-3.0'])
+  [nautilusextensiondir=`$PKG_CONFIG --variable=extensiondir libnautilus-extension`])
 AC_SUBST([nautilusextensiondir])
 
 AC_MSG_NOTICE([installing nautilus plugin in ${nautilusextensiondir}])

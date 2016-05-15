@@ -327,26 +327,20 @@ public class ResultsView : Gtk.TreeView {
 	private void on_show_properties () {
 		if (results_selection.position == 0) return;
 		string msg = "" +
-			"<b>Selected %ju files</b>\n\n" +
-			"<b>File Name:</b> %s\n" +
-			"<b>MIME Type:</b> %s\n" +
-			"<b>Size:</b> %s (%ju bytes)\n\n" +
-			"<b>Location:</b> %s\n\n" +
-			"<b>File Type:</b> %s\n";
-		msg = msg.printf (results_selection.position,
-						  results_selection.display_name,
-						  results_selection.mime,
-						  get_bin_size (results_selection.size),
-						  results_selection.size,
-						  results_selection.path,
-						  get_filetype_string (results_selection.type).down ());
+			"<b>Selected " + results_selection.position.to_string () + " files</b>\n\n" +
+			"<b>File Name:</b> " + results_selection.display_name + "\n" +
+			"<b>MIME Type:</b> " + results_selection.mime + "\n" +
+			"<b>Size:</b> " + get_bin_size (results_selection.size) +
+			" (" + results_selection.size.to_string () + " bytes)\n\n" +
+			"<b>Location:</b> " + results_selection.path + "\n\n" +
+			"<b>File Type:</b> " + get_filetype_string (results_selection.type).down () + "\n";
 		if (results_selection.time_modified != 0) {
 			DateTime d = new DateTime.from_unix_local ((int64)results_selection.time_modified);
 			msg += "<b>Modified:</b> %s\n".printf (d.format ("%F %T"));
 		}
 		var dlg = new Gtk.MessageDialog.with_markup (Filefinder.window, 0,
 					Gtk.MessageType.INFO, Gtk.ButtonsType.CLOSE,
-					msg);
+					msg, null);
 		dlg.run ();
 		dlg.destroy ();
 		
