@@ -25,6 +25,7 @@ filefinder_SOURCES = \
 	gui/results-view.vala \
 	gui/column-menu-item.vala \
 	gui/preferences.vala \
+	gui/dialog-mime-chooser.vala \
 	base/query.vala \
 	base/filter.vala \
 	base/filter-location.vala \

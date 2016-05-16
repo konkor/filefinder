@@ -45,6 +45,7 @@ public class QueryRow : Gtk.Box {
 		_filter = new Filter ();
 
 		combo_type = new Gtk.ComboBoxText ();
+		combo_type.tooltip_text = "Change Filter Type";
 		foreach (string s in type_names) {
 			combo_type.append_text (s.up ());
 		}
@@ -156,7 +157,7 @@ public class QueryRow : Gtk.Box {
 				mime = new FilterMime ();
 				_filter.filter_value = mime;
 				mime_group = new Gtk.ComboBoxText ();
-				foreach (MimeGroup s in mime_type_groups) {
+				foreach (MimeGroup s in Filefinder.preferences.mime_type_groups) {
 					mime_group.append_text (s.name);
 				}
 				mime_group.active = 0;
@@ -165,7 +166,7 @@ public class QueryRow : Gtk.Box {
 					mime.clear ();
 					mime_type.remove_all ();
 					mime_type.append_text ("Any");
-					foreach (string s in mime_type_groups[mime_group.active].mimes) {
+					foreach (string s in Filefinder.preferences.mime_type_groups[mime_group.active].mimes) {
 						mime_type.append_text (s);
 						mime.add (s);
 					}
@@ -174,7 +175,7 @@ public class QueryRow : Gtk.Box {
 
 				mime_type = new Gtk.ComboBoxText ();
 				mime_type.append_text ("Any");
-				foreach (string s in mime_type_groups[0].mimes) {
+				foreach (string s in Filefinder.preferences.mime_type_groups[0].mimes) {
 					mime_type.append_text (s);
 					mime.add (s);
 				}
@@ -182,7 +183,7 @@ public class QueryRow : Gtk.Box {
 				mime_type.changed.connect (() => {
 					mime.clear ();
 					if (mime_type.active == 0) {
-						foreach (string s in mime_type_groups[mime_group.active].mimes) {
+						foreach (string s in Filefinder.preferences.mime_type_groups[mime_group.active].mimes) {
 							mime.add (s);
 						}
 					} else {
@@ -344,192 +345,6 @@ public class QueryRow : Gtk.Box {
 		return res;
 	}
 
-	public MimeGroup[] mime_type_groups = {
-	MimeGroup (){ name = "Text File",
-	mimes = { "text/plain",
-		"text/x-authors",
-		"text/x-changelog",
-		"text/x-chdr",
-		"text/x-copying",
-		"text/x-csrc",
-		"text/x-gettext-translation",
-		"text/x-install",
-		"text/x-log",
-		"text/x-makefile",
-		"text/x-markdown",
-		"text/x-matlab",
-		"text/x-microdvd",
-		"text/x-tex",
-		"text/x-vala"
-	}
-	},
-	MimeGroup (){ name = "Archive",
-	mimes = { "application/x-compressed-tar",
-		"application/x-xz-compressed-tar"
-	}
-	},
-	MimeGroup (){ name = "Temporary",
-	mimes = { "application/x-trash"
-	}
-	},
-	MimeGroup (){ name = "Development",
-	mimes = { "application/x-anjuta",
-		"application/x-desktop",
-		"application/x-archive",
-		"application/x-executable",
-		"application/x-sharedlib",
-		"application/x-shared-library-la",
-		"application/x-gettext-translation",
-		"application/x-glade",
-		"application/x-gtk-builder",
-		"application/x-m4",
-		"application/xml",
-		"application/x-object",
-		"application/x-shellscript",
-		"application/x-sqlite3",
-		"text/x-authors",
-		"text/x-changelog",
-		"text/x-chdr",
-		"text/x-copying",
-		"text/x-csrc",
-		"text/x-gettext-translation",
-		"text/x-install",
-		"text/x-log",
-		"text/x-makefile",
-		"text/x-markdown",
-		"text/x-matlab",
-		"text/x-microdvd",
-		"text/x-tex",
-		"text/x-vala"
-	}
-	},
-	MimeGroup (){ name = "Documents",
-	mimes = { "application/rtf",
-		"application/msword",
-		"application/vnd.sun.xml.writer",
-		"application/vnd.sun.xml.writer.global",
-		"application/vnd.sun.xml.writer.template",
-		"application/vnd.oasis.opendocument.text",
-		"application/vnd.oasis.opendocument.text-template",
-		"application/x-abiword",
-		"application/x-applix-word",
-		"application/x-mswrite",
-		"application/docbook+xml",
-		"application/x-kword",
-		"application/x-kword-crypt",
-		"application/x-lyx",
-		"application/xml"
-	}
-	},
-	MimeGroup (){ name = "Music",
-	mimes = { "application/ogg",
-		"audio/x-vorbis+ogg",
-		"audio/ac3",
-		"audio/basic",
-		"audio/midi",
-		"audio/x-flac",
-		"audio/mp4",
-		"audio/mpeg",
-		"audio/x-mpeg",
-		"audio/x-ms-asx",
-		"audio/x-pn-realaudio",
-		"audio/x-mpegurl"
-	}
-	},
-	MimeGroup (){ name = "Video",
-	mimes = { "video/mp4",
-		"video/3gpp",
-		"video/mpeg",
-		"video/quicktime",
-		"video/vivo",
-		"video/x-avi",
-		"video/x-matroska",
-		"video/x-mng",
-		"video/x-ms-asf",
-		"video/x-ms-wmv",
-		"video/x-msvideo",
-		"video/x-nsv",
-		"video/x-real-video"
-	}
-	},
-	MimeGroup (){ name = "Subtitles",
-	mimes = { "application/x-subrip",
-		"text/x-ssa",
-		"text/x-microdvd"
-	}
-	},
-	MimeGroup (){ name = "Picture",
-	mimes = { "application/vnd.oasis.opendocument.image",
-		"application/x-krita",
-		"image/bmp",
-		"image/cgm",
-		"image/gif",
-		"image/jpeg",
-		"image/jpeg2000",
-		"image/png",
-		"image/svg+xml",
-		"image/tiff",
-		"image/x-compressed-xcf",
-		"image/x-pcx",
-		"image/x-photo-cd",
-		"image/x-psd",
-		"image/x-tga",
-		"image/x-xcf"
-	}
-	},
-	MimeGroup (){ name = "Raw Image",
-	mimes = { "image/x-canon-cr2",
-		"image/x-panasonic-raw2"
-	}
-	},
-	MimeGroup (){ name = "Illustration",
-	mimes = { "application/illustrator",
-		"application/vnd.corel-draw",
-		"application/vnd.stardivision.draw",
-		"application/vnd.oasis.opendocument.graphics",
-		"application/x-dia-diagram",
-		"application/x-karbon",
-		"application/x-killustrator",
-		"application/x-kivio",
-		"application/x-kontour",
-		"application/x-wpg"
-	}
-	},
-	MimeGroup (){ name = "Spreadsheet",
-	mimes = { "application/vnd.lotus-1-2-3",
-		"application/vnd.ms-excel",
-		"application/vnd.stardivision.calc",
-		"application/vnd.sun.xml.calc",
-		"application/vnd.oasis.opendocument.spreadsheet",
-		"application/x-applix-spreadsheet",
-		"application/x-gnumeric",
-		"application/x-kspread",
-		"application/x-kspread-crypt",
-		"application/x-quattropro",
-		"application/x-sc",
-		"application/x-siag"
-	}
-	},
-	MimeGroup (){ name = "Presentation",
-	mimes = { "application/vnd.ms-powerpoint",
-		"application/vnd.sun.xml.impress",
-		"application/vnd.oasis.opendocument.presentation",
-		"application/x-magicpoint",
-		"application/x-kpresenter"
-	}
-	},
-	MimeGroup (){ name = "PDF / PostScript",
-	mimes = { "application/pdf",
-		"application/postscript",
-		"application/x-dvi",
-		"image/x-eps"
-	}
-	}
-};
+	
 
-}
-
-public struct MimeGroup {
-	public string name;
-	public string[] mimes;
 }

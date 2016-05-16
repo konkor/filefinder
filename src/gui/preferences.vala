@@ -47,11 +47,13 @@ public class Preferences : Gtk.Window {
 	public bool first_run = true;
 
 	public Preferences () {
-		title = Text.app_name + " Preferences";
+		//title = Text.app_name + " Preferences";
+		_mime_count = _mime_type_groups.length;
 
 		build_gui ();
 		load ();
 		refresh_gui ();
+		refresh_groups ();
 
 		delete_event.connect (on_delete);
 		focus_in_event.connect (on_focus_in);
@@ -112,6 +114,10 @@ public class Preferences : Gtk.Window {
 				store_excluded.get_value (iter, 0, out val);
 				dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
 								"excluded", (string) val));
+			}
+			for (int i = _mime_count; i < _mime_type_groups.length; i++) {
+				dos.put_string ("%d %s %s\n".printf (PreferenceType.MIME,
+								_mime_type_groups[i].name.replace (" ", "%20"), _mime_type_groups[i].get_value ()));
 			}
 		} catch (Error e) {
 			Debug.error ("preferences", e.message);
@@ -175,6 +181,11 @@ public class Preferences : Gtk.Window {
 						bool vis = bool.parse(stringValues[2]);
 						columns [id].width = w;
 						columns [id].visible = vis;
+					} else if (t == PreferenceType.MIME) {
+						MimeGroup mg = MimeGroup();
+						mg.name = name.replace ("%20", " ");
+						mg.mimes = val.split(" ");
+						_mime_type_groups += mg;
 					}
 				}
 			}
@@ -190,6 +201,7 @@ public class Preferences : Gtk.Window {
 	private void refresh_gui () {
 		refresh_general ();
 		refresh_ui ();
+		//refresh_mime ();
 	}
 
 	private void refresh_general () {
@@ -201,6 +213,28 @@ public class Preferences : Gtk.Window {
 		foreach (ViewColumn p in columns) {
 			store.append (out it, null);
 			store.set (it, 0, p.visible, 1, p.title, -1);
+		}
+	}
+
+	private void refresh_groups (int index = 0) {
+		cb_group.remove_all ();
+		for (int i = _mime_count; i < _mime_type_groups.length; i++) {
+			cb_group.append_text (_mime_type_groups[i].name);
+		}
+		cb_group.active = index;
+		if (cb_group.active < 0) {
+			entry.text = "New Group";
+		}
+	}
+
+	private void refresh_mimes () {
+		Gtk.TreeIter it;
+		store_mimes.clear ();
+		if (cb_group.active > -1) {
+			foreach (string s in _mime_type_groups[_mime_count + cb_group.active].mimes) {
+				store_mimes.append (out it);
+				store_mimes.set (it, 0, s, -1);
+			}
 		}
 	}
 
@@ -226,6 +260,12 @@ public class Preferences : Gtk.Window {
 	private Gtk.TreeStore store_excluded;
 	private Gtk.TreeStore store;
 
+	private Gtk.ComboBoxText cb_group;
+	private Gtk.Entry entry;
+
+	private Gtk.TreeView view_mimes;
+	private Gtk.ListStore store_mimes;
+
 	private Gtk.CheckButton cb_vertical;
 
 	private void build_gui () {
@@ -233,8 +273,13 @@ public class Preferences : Gtk.Window {
 		Gtk.ScrolledWindow scroll;
 		Gtk.Box box, hbox, vbox;
 		Gtk.TreeView view;
-
 		Gtk.Button button;
+
+		Gtk.HeaderBar hb = new Gtk.HeaderBar ();
+		hb.has_subtitle = false;
+		hb.title = Text.app_name + " Preferences";
+		hb.set_show_close_button (true);
+		set_titlebar (hb);
 
 		notebook = new Gtk.Notebook ();
 		add (notebook);
@@ -299,6 +344,7 @@ public class Preferences : Gtk.Window {
 
 		vbox = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
 		hbox.pack_end (vbox, false, false, 0);
+
 		button = new Gtk.Button.with_label ("Add");
 		button.tooltip_text = "Add New Locations";
 		button.clicked.connect (()=>{
@@ -333,7 +379,7 @@ public class Preferences : Gtk.Window {
 		vbox.add (button);
 
 		button = new Gtk.Button.with_label ("Remove");
-		button.tooltip_text = "Remove Selected Locations";
+		button.tooltip_text = "Remove Selected Location";
 		button.clicked.connect (()=>{
 			Gtk.TreeIter iter;
 			Gtk.TreeSelection selection = view_excluded.get_selection ();
@@ -406,9 +452,114 @@ public class Preferences : Gtk.Window {
 		view.insert_column_with_attributes (-1, "Name", new Gtk.CellRendererText (), "text", 1, null);
 		scroll.add (view);
 
+		//MIME Groups
+		box = new Gtk.Box (Gtk.Orientation.VERTICAL, 6);
+		box.border_width = 6;
+		notebook.add (box);
+		label = new Label ("MIME Groups");
+		notebook.set_tab_label (box, label);
+
+		label = new Label ("<b>User defined MIME Groups.</b>");
+		label.use_markup = true;
+		label.xalign = 0;
+		box.add (label);
+
+		hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
+		box.pack_start (hbox, false, false, 0);
+
+		cb_group = new Gtk.ComboBoxText.with_entry ();
+		cb_group.margin_end = 6;
+		entry = (Entry)cb_group.get_child();
+		/*entry.changed.connect (()=>{
+			entry.text = entry.text.replace (" ", "");
+		});*/
+		hbox.pack_start (cb_group, true, true, 0);
+
+		button = new Button.from_icon_name ("list-add-symbolic", IconSize.BUTTON);
+		button.tooltip_text = "Add New MIME Group";
+		button.clicked.connect (()=>{
+			entry.text = entry.text.strip ();
+			if (entry.text.length == 0) return;
+			MimeGroup mg = MimeGroup ();
+			mg.name = entry.text;
+			_mime_type_groups += mg;
+			cb_group.append_text (mg.name);
+			cb_group.active = cb_group.model.iter_n_children (null) - 1;
+			is_changed = true;
+		});
+		hbox.pack_start (button, false, false, 0);
+
+		button = new Button.from_icon_name ("list-remove-symbolic", IconSize.BUTTON);
+		button.tooltip_text = "Remove Selected MIME Group";
+		button.clicked.connect (()=>{
+			if (cb_group.active < 0) return;
+			int ind = cb_group.active -1;
+			MimeGroup[] mg1 = _mime_type_groups[0:_mime_count + cb_group.active];
+			if (_mime_type_groups.length > (_mime_count + cb_group.active + 1)) {
+				for (int i = _mime_count + cb_group.active + 1; i < _mime_type_groups.length; i++) 
+					mg1 += _mime_type_groups[i];
+				ind++;
+			}
+			_mime_type_groups = mg1;
+			refresh_groups (ind);
+			is_changed = true;
+		});
+		hbox.pack_start (button, false, false, 0);
+
+		hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 6);
+		box.pack_start (hbox, true, true, 0);
+
+		scroll = new ScrolledWindow (null, null);
+		scroll.shadow_type = Gtk.ShadowType.OUT;
+		hbox.pack_start (scroll, true, true, 0);
+
+		view_mimes = new Gtk.TreeView ();
+		store_mimes = new Gtk.ListStore (1, typeof (string));
+		view_mimes.set_model (store_mimes);
+		view_mimes.insert_column_with_attributes (-1, "MIME Types", new Gtk.CellRendererText (), "text", 0, null);
+		scroll.add (view_mimes);
+
+		vbox = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
+		hbox.pack_start (vbox, false, false, 0);
+
+		button = new Gtk.Button.with_label ("Add");
+		button.tooltip_text = "Add New MIME Type";
+		button.clicked.connect (()=>{
+			if (cb_group.active == -1) return;
+			DialogMimeChooser c = new DialogMimeChooser (this);
+			if (c.run () == Gtk.ResponseType.ACCEPT) {
+				string[] ss = _mime_type_groups[_mime_count+cb_group.active].mimes;
+				foreach (string s in c.mimes.split (" ")) ss +=s;
+				if (c.mimes.split (" ").length > 0) {
+					_mime_type_groups[_mime_count+cb_group.active].mimes = ss;
+					is_changed = true;
+					refresh_mimes ();
+				}
+			}
+			c.dispose ();
+		});
+		vbox.add (button);
+
+		button = new Gtk.Button.with_label ("Remove");
+		button.tooltip_text = "Remove Selected MIME Types";
+		button.clicked.connect (()=>{
+			
+		});
+		vbox.add (button);
+
+		button = new Gtk.Button.with_label ("Clear");
+		button.tooltip_text = "Clear All Types Of The MIME Group";
+		button.clicked.connect (()=>{
+			
+		});
+		vbox.add (button);
+
+		cb_group.changed.connect (()=>{
+			refresh_mimes ();
+		});
 		set_default_size (640, 400);
 		show_all ();
-		hide ();
+		//hide ();
 	}
 
 	public bool check_mounts {get; protected set;}
@@ -441,12 +592,228 @@ public class Preferences : Gtk.Window {
 
 	public Gtk.Orientation split_orientation {get; protected set;}
 
+	public MimeGroup[] mime_type_groups {
+		get { return _mime_type_groups;}
+	}
+
+	private int _mime_count;
+	private MimeGroup[] _mime_type_groups = {
+	MimeGroup (){ name = "Text File",
+	mimes = { "text/plain",
+		"text/css",
+		"text/html",
+		"text/troff",
+		"text/x-authors",
+		"text/x-changelog",
+		"text/x-chdr",
+		"text/x-c++hdr",
+		"text/x-copying",
+		"text/x-csrc",
+		"text/x-c++src",
+		"text/x-csharp",
+		"text/x-fortran",
+		"text/x-gettext-translation",
+		"text/x-go",
+		"text/x-java",
+		"text/x-install",
+		"text/x-log",
+		"text/x-makefile",
+		"text/x-markdown",
+		"text/x-matlab",
+		"text/x-microdvd",
+		"text/x-tex",
+		"text/x-vala"}
+	},
+	MimeGroup (){ name = "Archive",
+	mimes = { "application/x-7z-compressed",
+		"application/x-compressed-tar",
+		"application/x-bzip-compressed-tar",
+		"application/x-xz-compressed-tar",
+		"application/x-bzip",
+		"application/x-rar",
+		"application/x-tarz",
+		"application/gzip",
+		"application/zip"}
+	},
+	MimeGroup (){ name = "Temporary",
+	mimes = { "application/x-trash"}
+	},
+	MimeGroup (){ name = "Executable",
+	mimes = { "application/x-executable"}
+	},
+	MimeGroup (){ name = "Development",
+	mimes = { "application/javascript",
+		"application/json",
+		"application/x-anjuta",
+		"application/x-archive",
+		"application/x-desktop",
+		"application/x-designer",
+		"application/x-gettext-translation",
+		"application/x-glade",
+		"application/x-gtk-builder",
+		"application/x-m4",
+		"application/x-object",
+		"application/x-sharedlib",
+		"application/x-shared-library-la",
+		"application/x-shellscript",
+		"application/x-sqlite3",
+		"application/xml",
+		"text/css",
+		"text/html",
+		"text/troff",
+		"text/vnd.trolltech.linguist",
+		"text/x-authors",
+		"text/x-changelog",
+		"text/x-chdr",
+		"text/x-c++hdr",
+		"text/x-copying",
+		"text/x-csrc",
+		"text/x-c++src",
+		"text/x-csharp",
+		"text/x-fortran",
+		"text/x-gettext-translation",
+		"text/x-gettext-translation-template",
+		"text/x-go",
+		"text/x-java",
+		"text/x-install",
+		"text/x-log",
+		"text/x-makefile",
+		"text/x-markdown",
+		"text/x-matlab",
+		"text/x-microdvd",
+		"text/x-patch",
+		"text/x-python",
+		"text/x-rpm-spec",
+		"text/x-tex",
+		"text/x-vala"}
+	},
+	MimeGroup (){ name = "Documents",
+	mimes = { "application/rtf",
+		"application/msword",
+		"application/vnd.sun.xml.writer",
+		"application/vnd.sun.xml.writer.global",
+		"application/vnd.sun.xml.writer.template",
+		"application/vnd.oasis.opendocument.text",
+		"application/vnd.oasis.opendocument.text-template",
+		"application/x-abiword",
+		"application/x-applix-word",
+		"application/x-mswrite",
+		"application/docbook+xml",
+		"application/x-kword",
+		"application/x-kword-crypt",
+		"application/x-lyx",
+		"application/xml",
+		"application/illustrator",
+		"application/vnd.corel-draw",
+		"application/vnd.stardivision.draw",
+		"application/vnd.oasis.opendocument.graphics",
+		"application/x-dia-diagram",
+		"application/x-karbon",
+		"application/x-killustrator",
+		"application/x-kivio",
+		"application/x-kontour",
+		"application/x-wpg",
+		"application/vnd.lotus-1-2-3",
+		"application/vnd.ms-excel",
+		"application/vnd.stardivision.calc",
+		"application/vnd.sun.xml.calc",
+		"application/vnd.oasis.opendocument.spreadsheet",
+		"application/x-applix-spreadsheet",
+		"application/x-gnumeric",
+		"application/x-kspread",
+		"application/x-kspread-crypt",
+		"application/x-quattropro",
+		"application/x-sc",
+		"application/x-siag",
+		"application/vnd.ms-powerpoint",
+		"application/vnd.sun.xml.impress",
+		"application/vnd.oasis.opendocument.presentation",
+		"application/x-magicpoint",
+		"application/x-kpresenter",
+		"application/pdf",
+		"application/postscript",
+		"application/x-dvi",
+		"image/x-eps",
+		"image/vnd.djvu"}
+	},
+	MimeGroup (){ name = "Music",
+	mimes = { "application/ogg",
+		"audio/x-vorbis+ogg",
+		"audio/ac3",
+		"audio/basic",
+		"audio/midi",
+		"audio/x-flac",
+		"audio/mp4",
+		"audio/mpeg",
+		"audio/x-mpeg",
+		"audio/x-ms-asx",
+		"audio/x-pn-realaudio",
+		"audio/x-mpegurl"}
+	},
+	MimeGroup (){ name = "Video",
+	mimes = { "video/mp4",
+		"video/3gpp",
+		"video/mpeg",
+		"video/quicktime",
+		"video/vivo",
+		"video/x-avi",
+		"video/x-matroska",
+		"video/x-mng",
+		"video/x-ms-asf",
+		"video/x-ms-wmv",
+		"video/x-msvideo",
+		"video/x-nsv",
+		"video/x-real-video"}
+	},
+	MimeGroup (){ name = "Picture",
+	mimes = { "application/vnd.oasis.opendocument.image",
+		"application/x-krita",
+		"image/bmp",
+		"image/cgm",
+		"image/gif",
+		"image/jpeg",
+		"image/jpeg2000",
+		"image/png",
+		"image/svg+xml",
+		"image/tiff",
+		"image/x-compressed-xcf",
+		"image/x-pcx",
+		"image/x-photo-cd",
+		"image/x-psd",
+		"image/x-tga",
+		"image/x-xcf",
+		"image/vnd.djvu",
+		"image/vnd.microsoft.icon"}
+	},
+	MimeGroup (){ name = "Raw Image",
+	mimes = { "image/x-adobe-dng",
+		"image/x-canon-cr2",
+		"image/x-canon-crw",
+		"image/x-dcraw",
+		"image/x-fuji-raf",
+		"image/x-hdr",
+		"image/x-kde-raw",
+		"image/x-kodak-dcr",
+		"image/x-kodak-k25",
+		"image/x-kodak-kdc",
+		"image/x-minolta-mrw",
+		"image/x-nikon-nef",
+		"image/x-olympus-orf",
+		"image/x-panasonic-raw",
+		"image/x-panasonic-raw2",
+		"image/x-pentax-pef",
+		"image/x-sigma-x3f",
+		"image/x-sony-arw",
+		"image/x-sony-sr2",
+		"image/x-sony-srf"}
+	}
+};
 }
 
 public enum PreferenceType {
 	GENERAL,
 	COLUMN,
-	PRESETS
+	MIME
 }
 
 public struct ViewColumn {
@@ -463,4 +830,21 @@ public struct ViewColumn {
 	public string to_string () {
 		return "%s;%d;%s".printf (name , width, visible.to_string ());
 	}
+}
+
+public struct MimeGroup {
+	public string name;
+	public string[] mimes;
+
+	public string get_value () {
+		string res = "";
+		int i = 0;
+		foreach (string s in mimes) {
+			if (i > 0) res += " ";
+			res += s;
+			i++;
+		}
+		return res;
+	}
+
 }
