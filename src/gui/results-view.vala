@@ -118,6 +118,9 @@ public class ResultsView : Gtk.TreeView {
 			}
 		});
 		menu.add (new Gtk.SeparatorMenuItem ());
+		mi = new Gtk.MenuItem.with_label ("Add To MIME's Group");
+		menu.add (mi);
+		menu.add (new Gtk.SeparatorMenuItem ());
 		mi = new Gtk.MenuItem.with_label ("Move to...");
 		menu.add (mi);
 		mi.activate.connect (()=>{
@@ -191,7 +194,23 @@ public class ResultsView : Gtk.TreeView {
 			} else {
 				item.sensitive = false;
 			}
-			return ;
+			Gtk.Menu sm = new Gtk.Menu ();
+			((Gtk.MenuItem) menu.get_children ().nth_data (3)).submenu = sm;
+			item = new Gtk.MenuItem.with_label ("New Group");
+			sm.add (item);
+			item.activate.connect (()=>{
+				add_mimes (-1);
+			});
+			sm.add (new Gtk.SeparatorMenuItem ());
+			foreach (ViewColumn p in Filefinder.preferences.custom_mime_type_groups) {
+				var ci = new MenuItemIndex (p.id, p.name);
+				sm.add (ci);
+				ci.activate.connect (()=>{
+					add_mimes (ci.id);
+				});
+			}
+			sm.show_all ();
+			return;
 		});
 	}
 
@@ -357,6 +376,22 @@ public class ResultsView : Gtk.TreeView {
 			return "%.1f KiB".printf ((double) i / 1024.0);
 		}
 		return s;
+	}
+
+	private void add_mimes (int group_index) {
+		Gtk.TreeIter iter;
+		GLib.Value val;
+		string[] mimes = {};
+		foreach (TreePath p in get_selection ().get_selected_rows (null)) {
+			if (model.get_iter (out iter, p)) {
+				model.get_value (iter, Columns.MIME, out val);
+				if (!(((string) val) in mimes)) {
+					mimes += (string) val;
+				}
+			}
+		}
+		if (mimes.length > 0)
+			Filefinder.preferences.add_mimes (group_index, mimes);
 	}
 
 	private GLib.List<GLib.File>? get_selected_dirs () {

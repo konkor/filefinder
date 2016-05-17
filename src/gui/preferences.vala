@@ -514,6 +514,7 @@ public class Preferences : Gtk.Window {
 		hbox.pack_start (scroll, true, true, 0);
 
 		view_mimes = new Gtk.TreeView ();
+		view_mimes.get_selection().mode = SelectionMode.MULTIPLE;
 		store_mimes = new Gtk.ListStore (1, typeof (string));
 		view_mimes.set_model (store_mimes);
 		view_mimes.insert_column_with_attributes (-1, "MIME Types", new Gtk.CellRendererText (), "text", 0, null);
@@ -543,14 +544,33 @@ public class Preferences : Gtk.Window {
 		button = new Gtk.Button.with_label ("Remove");
 		button.tooltip_text = "Remove Selected MIME Types";
 		button.clicked.connect (()=>{
-			
+			if (cb_group.active == -1) return;
+			List<TreePath> paths = view_mimes.get_selection ().get_selected_rows (null);
+			if (paths.length () == 0) return;
+			string[] ss = {};
+			bool f;
+			int i = 0;
+			foreach (string s in _mime_type_groups[_mime_count + cb_group.active].mimes) {
+				f = true;
+				foreach (TreePath p in paths)
+					if (p.get_indices ()[0] == i)
+						f = false;
+				if (f) ss += s;
+				i++;
+			}
+			_mime_type_groups[_mime_count + cb_group.active].mimes = ss;
+			refresh_mimes ();
+			is_changed = true;
 		});
 		vbox.add (button);
 
 		button = new Gtk.Button.with_label ("Clear");
 		button.tooltip_text = "Clear All Types Of The MIME Group";
 		button.clicked.connect (()=>{
-			
+			if (cb_group.active == -1) return;
+			_mime_type_groups[_mime_count + cb_group.active].mimes = {};
+			refresh_mimes ();
+			is_changed = true;
 		});
 		vbox.add (button);
 
@@ -559,7 +579,7 @@ public class Preferences : Gtk.Window {
 		});
 		set_default_size (640, 400);
 		show_all ();
-		//hide ();
+		hide ();
 	}
 
 	public bool check_mounts {get; protected set;}
@@ -591,6 +611,40 @@ public class Preferences : Gtk.Window {
 	}
 
 	public Gtk.Orientation split_orientation {get; protected set;}
+
+	public void add_mimes (int group_index, string[] mimes) {
+		MimeGroup mg;
+		if (group_index == -1) {
+			mg = MimeGroup ();
+			mg.name = "New Group";
+		} else {
+			mg = _mime_type_groups[_mime_count + group_index];
+		}
+		string[] ss = mg.mimes;
+		foreach (string s in mimes) ss +=s;
+		if (mimes.length > 0) {
+			if (group_index == -1) {
+				mg.mimes = ss;
+				_mime_type_groups += mg;
+				cb_group.append_text (mg.name);
+			} else {
+				_mime_type_groups[_mime_count + group_index].mimes = ss;
+			}
+			refresh_mimes ();
+		}
+		is_changed = true;
+	}
+
+	private ViewColumn[] _custom;
+	public ViewColumn[] custom_mime_type_groups {
+		get {
+			_custom = {};
+			for (int i = _mime_count; i < _mime_type_groups.length; i++) {
+				_custom += ViewColumn () {id = i - _mime_count, name = _mime_type_groups[i].name};
+			}
+			return _custom;
+		}
+	}
 
 	public MimeGroup[] mime_type_groups {
 		get { return _mime_type_groups;}
@@ -640,52 +694,6 @@ public class Preferences : Gtk.Window {
 	},
 	MimeGroup (){ name = "Executable",
 	mimes = { "application/x-executable"}
-	},
-	MimeGroup (){ name = "Development",
-	mimes = { "application/javascript",
-		"application/json",
-		"application/x-anjuta",
-		"application/x-archive",
-		"application/x-desktop",
-		"application/x-designer",
-		"application/x-gettext-translation",
-		"application/x-glade",
-		"application/x-gtk-builder",
-		"application/x-m4",
-		"application/x-object",
-		"application/x-sharedlib",
-		"application/x-shared-library-la",
-		"application/x-shellscript",
-		"application/x-sqlite3",
-		"application/xml",
-		"text/css",
-		"text/html",
-		"text/troff",
-		"text/vnd.trolltech.linguist",
-		"text/x-authors",
-		"text/x-changelog",
-		"text/x-chdr",
-		"text/x-c++hdr",
-		"text/x-copying",
-		"text/x-csrc",
-		"text/x-c++src",
-		"text/x-csharp",
-		"text/x-fortran",
-		"text/x-gettext-translation",
-		"text/x-gettext-translation-template",
-		"text/x-go",
-		"text/x-java",
-		"text/x-install",
-		"text/x-log",
-		"text/x-makefile",
-		"text/x-markdown",
-		"text/x-matlab",
-		"text/x-microdvd",
-		"text/x-patch",
-		"text/x-python",
-		"text/x-rpm-spec",
-		"text/x-tex",
-		"text/x-vala"}
 	},
 	MimeGroup (){ name = "Documents",
 	mimes = { "application/rtf",
@@ -753,17 +761,27 @@ public class Preferences : Gtk.Window {
 	MimeGroup (){ name = "Video",
 	mimes = { "video/mp4",
 		"video/3gpp",
+		"video/3gpp2",
+		"video/dv",
+		"video/mp2t",
 		"video/mpeg",
+		"video/ogg",
 		"video/quicktime",
 		"video/vivo",
+		"video/webm",
 		"video/x-avi",
+		"video/x-flv",
 		"video/x-matroska",
+		"video/x-matroska-3d",
 		"video/x-mng",
 		"video/x-ms-asf",
+		"video/x-ms-wmp",
 		"video/x-ms-wmv",
 		"video/x-msvideo",
 		"video/x-nsv",
-		"video/x-real-video"}
+		"video/x-ogm+ogg",
+		"video/x-theora+ogg",
+		"video/x-vnd.rn-realvideo"}
 	},
 	MimeGroup (){ name = "Picture",
 	mimes = { "application/vnd.oasis.opendocument.image",

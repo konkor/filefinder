@@ -17,6 +17,8 @@
  */
 
 public class QueryEditor : Gtk.Box {
+	public signal void changed_rows ();
+
 	public GLib.List<QueryRow> rows;
 	
 	public QueryEditor () {
@@ -34,11 +36,13 @@ public class QueryEditor : Gtk.Box {
 		rows.append (row);
 		//row.label.label = "Query " + rows.length().to_string ();
 		//Debug.log (this.name, "added row");
+		changed_rows ();
 	}
 
 	 private void on_row_close (QueryRow row) {
 		rows.remove (row);
 		row.dispose ();
+		changed_rows ();
 	}
 
 	private Query _q;

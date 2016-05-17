@@ -63,7 +63,7 @@ Examples:
 
 " + app_info + "\n";
 
-public const  string first_run = "Press 'Insert' or click '+' to begin build search query.";
+public const  string first_run = "Press 'Insert' or click '+' to start build search query.";
 
 public const string[] encodings = {
 "ARMSCII-8", "BIG-5", "BIG5-HKSCS", "CP868", "CP932", "EUC-JP-MS", "EUC-JP",

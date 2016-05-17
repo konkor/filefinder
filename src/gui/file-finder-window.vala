@@ -35,6 +35,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	private Gtk.ToggleButton button_go;
 	private Gtk.Button button_plus;
 	private Gtk.Paned paned;
+	private Gtk.ScrolledWindow scrolledwindow;
 	private Gtk.AccelGroup accel_group;
 
 	private Gtk.Box empty_box;
@@ -84,18 +85,18 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 		Gtk.Image image = new Gtk.Image.from_icon_name ("folder-documents-symbolic", Gtk.IconSize.DIALOG);
 		empty_box.add (image);
-		empty_box.add (new Label("No search results."));
+		empty_box.add (new Label("\t\t\t   No search results.\n"+Text.first_run));
 
 		paned = new Gtk.Paned (Filefinder.preferences.split_orientation);
 		paned.events |= Gdk.EventMask.VISIBILITY_NOTIFY_MASK;
 		paned.can_focus = true;
 		if (Filefinder.preferences.split_orientation == Gtk.Orientation.VERTICAL)
-			paned.position = paned.min_position;
+			paned.position = 1;// paned.min_position;
 		else
 			paned.position = 480;
 		vbox1.add (paned);
 
-		Gtk.ScrolledWindow scrolledwindow = new Gtk.ScrolledWindow (null, null);
+		scrolledwindow = new Gtk.ScrolledWindow (null, null);
 		scrolledwindow.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
 		scrolledwindow.shadow_type = Gtk.ShadowType.OUT;
 		paned.pack1 (scrolledwindow, false, true);
@@ -103,21 +104,22 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		editor = new QueryEditor ();
 		editor.expand = true;
 		scrolledwindow.add (editor);
+		editor.changed_rows.connect (()=>{check_paned_position ();});
 		button_plus.clicked.connect ( ()=>{
-			int h1, h2;
 			paned.visible = true;
 			editor.add_row (new QueryRow ());
-			if (Filefinder.preferences.split_orientation == Gtk.Orientation.VERTICAL) {
-				(editor.rows.nth_data(0) as QueryRow).get_preferred_height (out h1, out h2); 
-				if (editor.rows.length() * h1 < 200)
-					paned.position = (int) editor.rows.length() * h1 + 8;
-			}
+			
 		});
 
+		//vbox1 = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
+		//paned.pack2 (vbox1, true, false);
+		//vbox1.pack_start (empty_box, true, true, 0);
+		
 		scrolledwindow = new Gtk.ScrolledWindow (null, null);
 		scrolledwindow.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
 		scrolledwindow.shadow_type = Gtk.ShadowType.OUT;
 		paned.pack2 (scrolledwindow, true, false);
+		//vbox1.pack_start (scrolledwindow, true, true, 0);
 
 		result_view = new ResultsView ();
 		scrolledwindow.add (result_view);
@@ -142,27 +144,33 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		paned.visible = false;
 	}
 
+	private void check_paned_position () {
+		int h1, h2;
+		if (Filefinder.preferences.split_orientation == Gtk.Orientation.VERTICAL) {
+			if (editor.rows.length() == 0) {
+				paned.position = 1;
+				return;
+			}
+			(editor.rows.nth_data(0) as QueryRow).get_preferred_height (out h1, out h2); 
+			if (editor.rows.length() * h1 < 200)
+				paned.position = (int) editor.rows.length() * h1 + 8;
+			if (editor.rows.length() < 2)
+				paned.position += 12;
+		}
+	}
+
 	public void add_locations (List<string> uris) {
 		File file;
-		int dir_count = 0, file_count = 0, h1, h2;
 		foreach (string s in uris) {
 			file = File.new_for_path (s);
 			paned.visible = true;
 			if (file.query_file_type (FileQueryInfoFlags.NONE) == FileType.DIRECTORY) {
 				editor.add_folder (s);
-				dir_count++;
 			} else {
 				editor.add_file (s);
-				if (file_count == 0)
-					file_count = 1;
 			}
 		}
-		dir_count += file_count;
-		(editor.rows.nth_data(0) as QueryRow).get_preferred_height (out h1, out h2); 
-		if (dir_count * h1 < 200)
-			paned.position = dir_count * h1 + 8;
-		else
-			paned.position = 200;
+		//check_paned_position ();
 	}
 
 	private void on_go_clicked () {
