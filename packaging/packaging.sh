@@ -2,9 +2,9 @@
 
 VERSION="0.1"
 
-rm -rf debian
-mkdir debian
-cd debian
+rm -rf debs
+mkdir debs
+cd debs
 ln -s ../../filefinder-$VERSION.tar.gz filefinder_$VERSION.orig.tar.gz
 tar xf filefinder_$VERSION.orig.tar.gz
 cd filefinder-$VERSION
