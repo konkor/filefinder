@@ -796,6 +796,61 @@ public class Service : Gtk.ListStore {
 		return s;
 	}
 
+	public void find_duplicates () {
+		if (iter_n_children (null) == 0) return;
+		Checksum checksum;
+		string[] hashes = {};
+		Gtk.TreeIter iter;
+		GLib.File file;
+		DataInputStream dis;
+		uint8 fbuf[8192];
+		size_t bsize;
+		string path, fname;
+		uint64 fsize, ind = 0, count;
+		int ftype;
+		Debug.info ("find_duplicates", "started...");
+		for (bool next = get_iter_first (out iter); next; next = iter_next (ref iter)) {
+			get (iter, Columns.DISPLAY_NAME, out fname, Columns.PATH, out path, Columns.SIZE, out fsize, Columns.TYPE, out ftype, -1);
+			file = File.new_for_path (Path.build_filename (path, fname));
+			if ((ftype == 3) || (file.query_exists () == false)) {
+				hashes += ind.to_string ();
+			} else if (fsize == 0) {
+				hashes += "";
+			} else {
+				checksum = new Checksum (ChecksumType.MD5);
+				try {
+					dis = new DataInputStream (file.read ());
+					while ((bsize = dis.read (fbuf)) > 0) {
+						checksum.update (fbuf, bsize);
+					}
+				} catch (Error e) {
+					Debug.error ("", e.message);
+					hashes += ind.to_string ();
+					continue;
+				}
+				hashes += checksum.get_string ();
+			}
+			ind++;
+		}
+		for (ind = hashes.length; ind > 0; ind--) {
+			count = 0;
+			foreach (string s in hashes) {
+				if (s == hashes[ind - 1])
+					count++;
+			}
+			if (count < 2) {
+				if (get_iter (out iter, new Gtk.TreePath.from_indices (ind - 1))) {
+					get (iter, Columns.SIZE, out fsize, -1);
+					results_all.size -= fsize;
+					remove (iter);
+				}
+			}
+		}
+		Debug.info ("find_duplicates", "finished...");
+		set_sort_column_id (Columns.SIZE, Gtk.SortType.ASCENDING);
+		Filefinder.window.show_info ("Search for duplicates has finished.");
+	}
+
 	[Compact]
 	class Tokens {
 		internal uint64 cursor = 0;

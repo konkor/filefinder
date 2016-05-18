@@ -21,7 +21,7 @@ using Gtk;
 
 static int main (string[] args) {
 
-	Filefinder.debugging = true;
+	Filefinder.debugging = false;
 	string[] files = {};
 
 	foreach (string s in args) {

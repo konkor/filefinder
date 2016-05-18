@@ -160,12 +160,36 @@ public class ResultsView : Gtk.TreeView {
 			move_to_trash (get_selected_files ());
 		});
 		menu.add (new Gtk.SeparatorMenuItem ());
+		mi = new Gtk.MenuItem.with_label ("Tools");
+		menu.add (mi);
+
+		Gtk.Menu tools = new Gtk.Menu ();
+		mi.submenu = tools;
+		mi = new Gtk.MenuItem.with_label ("Find Duplicates...");
+		tools.add (mi);
+		mi.activate.connect (()=>{
+			Filefinder.service.find_duplicates ();
+		});
+		tools.add (new Gtk.SeparatorMenuItem ());
+		mi = new Gtk.MenuItem.with_label ("Copy Filenames To Clipboard");
+		tools.add (mi);
+		mi.activate.connect (()=>{
+			copy_filenames ();
+		});
+		mi = new Gtk.MenuItem.with_label ("Copy Full Paths To Clipboard");
+		tools.add (mi);
+		mi.activate.connect (()=>{
+			copy_filenames (true);
+		});
+
+		menu.add (new Gtk.SeparatorMenuItem ());
 		mi = new Gtk.MenuItem.with_label ("Properties");
 		menu.add (mi);
 		mi.activate.connect (()=>{
 			on_show_properties ();
 		});
 		menu.show_all ();
+
 		menu.show.connect (()=>{
 			Gtk.TreeIter iter;
 			GLib.Value val;
@@ -440,6 +464,24 @@ public class ResultsView : Gtk.TreeView {
 		}
 		if (files.length() == 0) return null;
 		return files;
+	}
+
+	private void copy_filenames (bool full = false) {
+		GLib.List<GLib.File>? files = get_selected_files ();
+		if (files == null) return;
+		string s = "";
+		Gdk.Display display = Filefinder.window.get_display ();
+		Gtk.Clipboard clipboard = Gtk.Clipboard.get_for_display (display, Gdk.SELECTION_CLIPBOARD);
+		foreach (File p in files) {
+			if (full) {
+				s += p.get_path () + "\n";
+			} else {
+				s += p.get_basename () + "\n";
+			}
+		}
+		if (s.length > 0) s = s.substring (0, s.length -1);
+		if (s.length > 0) clipboard.set_text (s, -1);
+		
 	}
 
 	private void remove_selected_file (File file) {

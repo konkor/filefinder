@@ -35,7 +35,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	private Gtk.ToggleButton button_go;
 	private Gtk.Button button_plus;
 	private Gtk.Paned paned;
-	private Gtk.ScrolledWindow scrolledwindow;
+	private Gtk.ScrolledWindow scrolledwindow1;
 	private Gtk.AccelGroup accel_group;
 
 	private Gtk.Box empty_box;
@@ -96,14 +96,14 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			paned.position = 480;
 		vbox1.add (paned);
 
-		scrolledwindow = new Gtk.ScrolledWindow (null, null);
-		scrolledwindow.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
-		scrolledwindow.shadow_type = Gtk.ShadowType.OUT;
-		paned.pack1 (scrolledwindow, false, true);
+		scrolledwindow1 = new Gtk.ScrolledWindow (null, null);
+		scrolledwindow1.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
+		scrolledwindow1.shadow_type = Gtk.ShadowType.NONE;
+		paned.pack1 (scrolledwindow1, false, true);
 
 		editor = new QueryEditor ();
 		editor.expand = true;
-		scrolledwindow.add (editor);
+		scrolledwindow1.add (editor);
 		editor.changed_rows.connect (()=>{check_paned_position ();});
 		button_plus.clicked.connect ( ()=>{
 			paned.visible = true;
@@ -115,7 +115,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		//paned.pack2 (vbox1, true, false);
 		//vbox1.pack_start (empty_box, true, true, 0);
 		
-		scrolledwindow = new Gtk.ScrolledWindow (null, null);
+		Gtk.ScrolledWindow scrolledwindow = new Gtk.ScrolledWindow (null, null);
 		scrolledwindow.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
 		scrolledwindow.shadow_type = Gtk.ShadowType.OUT;
 		paned.pack2 (scrolledwindow, true, false);
@@ -145,17 +145,18 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
 	private void check_paned_position () {
-		int h1, h2;
+		int h1, h2 , count;
 		if (Filefinder.preferences.split_orientation == Gtk.Orientation.VERTICAL) {
-			if (editor.rows.length() == 0) {
+			count = (int) editor.rows.length ();
+			if (count == 0) {
 				paned.position = 1;
-				return;
+			} else if (count == 1) {
+				scrolledwindow1.get_preferred_height (out h1, out h2);
+				paned.position = h1;
+			} else {
+				(editor.rows.nth_data(0) as QueryRow).get_preferred_height (out h1, out h2);
+				if (editor.rows.length() * h1 < 200) paned.position = (int) editor.rows.length() * h1 + 4;
 			}
-			(editor.rows.nth_data(0) as QueryRow).get_preferred_height (out h1, out h2); 
-			if (editor.rows.length() * h1 < 200)
-				paned.position = (int) editor.rows.length() * h1 + 8;
-			if (editor.rows.length() < 2)
-				paned.position += 12;
 		}
 	}
 

@@ -77,6 +77,7 @@ public class Preferences : Gtk.Window {
 	}
 
 	public bool save () {
+		if (is_changed == false) return true;
 		Debug.info ("preferences", "save");
 		File file;
 		DataOutputStream dos = null;
@@ -124,6 +125,7 @@ public class Preferences : Gtk.Window {
 			return false;
 		}
 
+		is_changed = false;
 		return true;
 	}
 
