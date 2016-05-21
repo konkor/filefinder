@@ -65,7 +65,7 @@ public class FilterSize : GLib.Object, iFilter {
 
 	}
 
-	private date_operator _op = date_operator.MORE_EQUAL;
+	private date_operator _op = date_operator.MORE;
 	public date_operator operator {
 		get {
 			return _op;

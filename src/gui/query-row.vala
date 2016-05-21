@@ -92,6 +92,7 @@ public class QueryRow : Gtk.Box {
 	private Gtk.Entry text_entry;
 	private Gtk.Label text_enc;
 	private Gtk.CheckButton text_case;
+	Gtk.Popover tpop;
 
 	private FilterBin bin;
 	private Gtk.Entry bin_entry;
@@ -304,25 +305,24 @@ public class QueryRow : Gtk.Box {
 						text_combo.active = i;
 					i++;
 				}
-				text_combo.changed.connect (() => {
-					text.encoding = text_combo.get_active_text ();
-				});
 				text_combo.wrap_width = 4;
-				//hbox.pack_start (text_combo, false, false, 0);
-
 
 				var ebox = new Gtk.EventBox();
 				hbox.pack_start (ebox, false, false, 0);
 				text_enc = new Gtk.Label ("UTF-8");
 				text.encoding = text_enc.tooltip_text = text_enc.label;
 				ebox.add (text_enc);
+				tpop = new Gtk.Popover (ebox);
+				tpop.add (text_combo);
 				ebox.button_press_event.connect (()=>{
-					Gtk.Popover pop = new Gtk.Popover (ebox);
-					
-					pop.add (text_combo);
-					pop.show_all ();
+					tpop.show_all ();
 					return true;
 				});
+				text_combo.changed.connect (() => {
+					text.encoding = text_combo.get_active_text ();
+					text_enc.tooltip_text = text_enc.label = text.encoding;
+				});
+				
 
 				text_case = new Gtk.CheckButton ();
 				text_case.tooltip_text = "Case sensitive";
