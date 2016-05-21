@@ -9,6 +9,8 @@
 .deps/
 autom4te.cache/
 Debug/
+art/
+packaging/debs/
 .anjuta/
 .anjuta_sym_db.db
 aclocal.m4

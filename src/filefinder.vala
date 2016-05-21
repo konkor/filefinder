@@ -31,7 +31,8 @@ public class Filefinder : Gtk.Application
 	private const GLib.ActionEntry[] action_entries = {
 		{"preferences", preferences_cb},
 		{"about", about_cb},
-		{"quit", quit_cb}
+		{"quit", quit_cb},
+		{"add_location", add_location_cb}
 	};
 
 	public Filefinder (string[] args)
@@ -65,7 +66,9 @@ public class Filefinder : Gtk.Application
 		GLib.Menu menu = new GLib.Menu ();
 		menu.append_section (null, section);
 		this.set_app_menu ((GLib.MenuModel) menu);
+
 		set_accels_for_action ("app.quit", {"<Primary>q"});
+		set_accels_for_action ("app.add_location", {"Insert"});
 
 		Environment.set_application_name (Text.app_name);
 
@@ -112,6 +115,10 @@ public class Filefinder : Gtk.Application
 			preferences.show ();
 		else
 			preferences.present ();
+	}
+
+	private void add_location_cb () {
+		window.add_filter ();
 	}
 
 	protected override void shutdown() {

@@ -61,16 +61,20 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		button_go.can_default = true;
 		this.set_default (button_go);
 		button_go.label = "Search";
-		button_go.tooltip_text = "Start Search";
+		button_go.tooltip_text = "Start Search <Control+Return>";
 		button_go.get_style_context ().add_class ("suggested-action");
 		hb.pack_end (button_go);
+		button_go.add_accelerator ("clicked", accel_group,
+									Gdk.keyval_from_name("Return"),
+									Gdk.ModifierType.CONTROL_MASK,
+									AccelFlags.VISIBLE);
 
 		button_plus = new Button.from_icon_name ("list-add-symbolic", IconSize.BUTTON);
+		button_plus.always_show_image = true;
 		button_plus.use_underline = true;
-		button_plus.tooltip_text = "Add Query <Insert>";
-		button_plus.add_accelerator ("clicked", accel_group,
-									Gdk.keyval_from_name("Insert"), 0,
-									AccelFlags.VISIBLE);
+		button_plus.xalign = 0;
+		//button_plus.label = "Add Filter";
+		button_plus.tooltip_text = "Add Filter <Insert>";
 		hb.pack_start (button_plus);
 
 		vbox1 = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
@@ -99,17 +103,13 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		scrolledwindow1 = new Gtk.ScrolledWindow (null, null);
 		scrolledwindow1.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
 		scrolledwindow1.shadow_type = Gtk.ShadowType.NONE;
+		scrolledwindow1.get_style_context ().add_class ("search-bar");
 		paned.pack1 (scrolledwindow1, false, true);
 
 		editor = new QueryEditor ();
 		editor.expand = true;
 		scrolledwindow1.add (editor);
 		editor.changed_rows.connect (()=>{check_paned_position ();});
-		button_plus.clicked.connect ( ()=>{
-			paned.visible = true;
-			editor.add_row (new QueryRow ());
-			
-		});
 
 		//vbox1 = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
 		//paned.pack2 (vbox1, true, false);
@@ -133,6 +133,19 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	private void initialize () {
 		button_go.clicked.connect (on_go_clicked);
+		button_plus.clicked.connect ( ()=>{
+			Gtk.Popover pop = new Gtk.Popover (button_plus);
+			vbox1 = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
+			pop.add (vbox1);
+			for (int i = 0; i < types.NONE; i++) {
+				var b = new ButtonType ((types) i, type_names[i]);
+				b.clicked.connect ((o)=>{
+					add_filter ((o as ButtonType).filter_type);
+				});
+				vbox1.add (b);
+			}
+			pop.show_all ();
+		});
 		paned.visibility_notify_event.connect (()=>{
 			empty_box.visible = !paned.visible;
 			return false;
@@ -158,6 +171,11 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 				if (editor.rows.length() * h1 < 200) paned.position = (int) editor.rows.length() * h1 + 4;
 			}
 		}
+	}
+
+	public void add_filter (types filter_type = types.LOCATION) {
+		paned.visible = true;
+		editor.add_filter (filter_type);
 	}
 
 	public void add_locations (List<string> uris) {

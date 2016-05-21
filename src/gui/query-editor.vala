@@ -62,6 +62,12 @@ public class QueryEditor : Gtk.Box {
 		}
 	}
 
+	public void add_filter (types filter_type = types.LOCATION) {
+		QueryRow row = new QueryRow ();
+		row.row_type = filter_type;
+		add_row (row);
+	}
+
 	public void add_folder (string path) {
 		QueryRow row = new QueryRow ();
 		row.chooser.select_filename (path);
@@ -83,7 +89,10 @@ public class QueryEditor : Gtk.Box {
 			add_row (row);
 		}
 		row.files.add (path);
-		row.files_btn.label = path;
+		if (path.index_of ("/") > -1)
+			row.files_btn.label = path.substring (path.last_index_of ("/"));
+		else
+			row.files_btn.label = path;
 		if (row.files.files.length () > 1)
 			row.files_btn.label += " ... (%u selected items)".printf (
 				row.files.files.length());	

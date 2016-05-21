@@ -118,6 +118,7 @@ public class Query : GLib.Object {
 	}
 
 	private bool text_exist (FilterText f) {
+		if (f.text.length == 0) return true;
 		foreach (FilterText p in texts) {
 			if (p.text == null) return true;
 			if (p.text.length == 0) return true;

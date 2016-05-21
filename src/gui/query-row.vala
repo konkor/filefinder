@@ -52,8 +52,8 @@ public class QueryRow : Gtk.Box {
 		combo_type.active = 0;
 		add (combo_type);
 		combo_type.changed.connect (() => {
-			changed_type (this);
 			create_type_widgets ();
+			changed_type (this);
 		});
 
 		create_type_widgets ();
@@ -90,6 +90,7 @@ public class QueryRow : Gtk.Box {
 
 	private FilterText text;
 	private Gtk.Entry text_entry;
+	private Gtk.Label text_enc;
 	private Gtk.CheckButton text_case;
 
 	private FilterBin bin;
@@ -127,11 +128,14 @@ public class QueryRow : Gtk.Box {
 				files = new FilterFiles ();
 				_filter.filter_value = files;
 				files_btn = new Gtk.Button.from_icon_name ("document-open-symbolic", Gtk.IconSize.BUTTON);
-				files_btn.label = "NONE";
+				files_btn.label = " None selected";
+				files_btn.tooltip_text = files_btn.label;
 				files_btn.always_show_image = true;
 				files_btn.xalign = 0;
 				hbox.pack_start (files_btn, true, true, 0);
 				files_btn.clicked.connect (()=>{
+					int tt = 0;
+					string l, t;
 					Gtk.FileChooserDialog c = new Gtk.FileChooserDialog ("Select files",
 																		Filefinder.window,
 																		Gtk.FileChooserAction.OPEN,
@@ -143,12 +147,22 @@ public class QueryRow : Gtk.Box {
 					if (c.run () == Gtk.ResponseType.ACCEPT) {
 						SList<string> uris = c.get_filenames ();
 						files.clear ();
+						t = "";
 						foreach (unowned string uri in uris) {
 							files.add (uri);
+							if (tt < 10)
+								t += uri + "\n";
+							tt++;
 						}
-						files_btn.label = uris.nth(0).data;
+						t += " ...\n(%u selected items)".printf (uris.length());
+						l = uris.nth(0).data;
+						if (l.index_of ("/") > -1)
+							files_btn.label = l.substring (l.last_index_of ("/") + 1);
+						else
+							files_btn.label = l;
 						if (uris.length() > 1)
 							files_btn.label += " ... (%u selected items)".printf (uris.length());
+						files_btn.tooltip_text = t;
 					}
 					c.close ();
 				});
@@ -294,7 +308,21 @@ public class QueryRow : Gtk.Box {
 					text.encoding = text_combo.get_active_text ();
 				});
 				text_combo.wrap_width = 4;
-				hbox.pack_start (text_combo, false, false, 0);
+				//hbox.pack_start (text_combo, false, false, 0);
+
+
+				var ebox = new Gtk.EventBox();
+				hbox.pack_start (ebox, false, false, 0);
+				text_enc = new Gtk.Label ("UTF-8");
+				text.encoding = text_enc.tooltip_text = text_enc.label;
+				ebox.add (text_enc);
+				ebox.button_press_event.connect (()=>{
+					Gtk.Popover pop = new Gtk.Popover (ebox);
+					
+					pop.add (text_combo);
+					pop.show_all ();
+					return true;
+				});
 
 				text_case = new Gtk.CheckButton ();
 				text_case.tooltip_text = "Case sensitive";
