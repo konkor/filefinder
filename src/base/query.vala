@@ -142,6 +142,7 @@ public class Query : GLib.Object {
 	}
 
 	private bool bin_exist (FilterBin f) {
+		if (f.bin.length == 0) return true;
 		foreach (FilterBin p in bins) {
 			if (p.bin == f.bin){
 				return true;

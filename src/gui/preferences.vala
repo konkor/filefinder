@@ -60,6 +60,13 @@ public class Preferences : Gtk.Window {
 		destroy_event.connect (on_destroy);
 	}
 
+	public void show_window () {
+		if (!visible)
+			show ();
+		else
+			present ();
+	}
+
 	private bool on_delete () {
 		hide();
 		save ();
@@ -107,6 +114,10 @@ public class Preferences : Gtk.Window {
 												"check_backup", check_backup.to_string ()));
 			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
 												"split_orientation", cb_vertical.active.to_string ()));
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+												"check_autohide", check_autohide.to_string ()));
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+												"cb_dark", cb_dark.active.to_string ()));
 			foreach (ViewColumn p in columns) {
 				dos.put_string ("%d %s %s\n".printf (PreferenceType.COLUMN,
 								p.name, p.get_value ()));
@@ -175,6 +186,13 @@ public class Preferences : Gtk.Window {
 						case "split_orientation":
 							cb_vertical.active = bool.parse (val);
 							break;
+						case "check_autohide":
+							cb_autohide.active = bool.parse (val);
+							break;
+						case "cb_dark":
+							cb_dark.active = bool.parse (val);
+							Gtk.Settings.get_default().set ("gtk-application-prefer-dark-theme", cb_dark.active);
+							break;
 					}
 					} else if (t == PreferenceType.COLUMN) {
 						string[] stringValues = val.split(":");
@@ -216,6 +234,7 @@ public class Preferences : Gtk.Window {
 			store.append (out it, null);
 			store.set (it, 0, p.visible, 1, p.title, -1);
 		}
+		//cb_vertical.active
 	}
 
 	private void refresh_groups (int index = 0) {
@@ -269,6 +288,8 @@ public class Preferences : Gtk.Window {
 	private Gtk.ListStore store_mimes;
 
 	private Gtk.CheckButton cb_vertical;
+	private Gtk.CheckButton cb_autohide;
+	private Gtk.CheckButton cb_dark;
 
 	private void build_gui () {
 		Gtk.Label label;
@@ -422,6 +443,24 @@ public class Preferences : Gtk.Window {
 			is_changed = true;
 		});
 		cb_vertical.active = true;
+
+		cb_autohide = new Gtk.CheckButton.with_label ("Autohide The Filter Panel On Results");
+		cb_autohide.tooltip_text = "Autohide The Filter Panel On Results";
+		box.add (cb_autohide);
+		cb_autohide.toggled.connect (()=>{
+			check_autohide = cb_autohide.active;
+			is_changed = true;
+		});
+		cb_autohide.active = false;
+
+		cb_dark = new Gtk.CheckButton.with_label ("Dark Theme");
+		cb_dark.tooltip_text = "Prefer Dark Theme";
+		box.add (cb_dark);
+		cb_dark.toggled.connect (()=>{
+			Gtk.Settings.get_default().set ("gtk-application-prefer-dark-theme", cb_dark.active);
+			is_changed = true;
+		});
+		cb_dark.active = true;
 
 		label = new Label ("<b>Choose the information to appear in the result view.</b>");
 		label.use_markup = true;
@@ -579,7 +618,7 @@ public class Preferences : Gtk.Window {
 		cb_group.changed.connect (()=>{
 			refresh_mimes ();
 		});
-		set_default_size (640, 400);
+		set_default_size (640, 480);
 		show_all ();
 		hide ();
 	}
@@ -613,6 +652,18 @@ public class Preferences : Gtk.Window {
 	}
 
 	public Gtk.Orientation split_orientation {get; protected set;}
+
+	public bool split_verticaly {
+		get {return cb_vertical.active;}
+		set {cb_vertical.active = value;}
+	}
+
+	public bool check_autohide {get; set;}
+
+	public void set_autohide (bool enable) {
+		if (check_autohide != enable)
+			cb_autohide.active = enable;
+	}
 
 	public void add_mimes (int group_index, string[] mimes) {
 		MimeGroup mg;

@@ -33,10 +33,13 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	private Gtk.Box infoBox;
 	private Gtk.HeaderBar hb;
 	private Gtk.ToggleButton button_go;
-	private Gtk.Button button_plus;
+	private Gtk.MenuButton button_plus;
+	private Gtk.MenuButton button_menu;
+	private Gtk.Menu mmenu;
 	private Gtk.Paned paned;
 	private Gtk.ScrolledWindow scrolledwindow1;
 	private Gtk.AccelGroup accel_group;
+	public Gtk.Spinner spinner;
 
 	private Gtk.Box empty_box;
 
@@ -51,10 +54,58 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		this.add_accel_group (accel_group);
 
 		hb = new Gtk.HeaderBar ();
-		//hb.has_subtitle = false;
 		hb.title = Text.app_name;
 		hb.set_show_close_button (true);
 		set_titlebar (hb);
+
+		mmenu = new Gtk.Menu ();
+		Gtk.MenuItem mi = new Gtk.MenuItem.with_label ("Toggle Panel");
+		mi.tooltip_text = "Toggle Visiblity Of The Filter Panel";
+		mmenu.add (mi);
+		mi.activate.connect (()=>{
+			toggle_paned ();
+		});
+		Gtk.CheckMenuItem cmi = new Gtk.CheckMenuItem.with_label ("Autohide Panel");
+		cmi.tooltip_text = "Autohide The Filter Panel On Results";
+		cmi.active = Filefinder.preferences.check_autohide;
+		mmenu.add (cmi);
+		cmi.toggled.connect (()=>{
+			Filefinder.preferences.set_autohide (cmi.active);
+		});
+		mmenu.add (new Gtk.SeparatorMenuItem ());
+		var rmi = new Gtk.RadioMenuItem.with_label (null, "Split Vertical");
+		unowned SList<Gtk.RadioMenuItem> rgroup = rmi.get_group ();
+		rmi.set_active (Filefinder.preferences.split_verticaly);
+		mmenu.add (rmi);
+		rmi.toggled.connect (()=>{
+			Filefinder.preferences.split_verticaly = !rmi.active;
+		});
+		rmi = new Gtk.RadioMenuItem.with_label (rgroup, "Split Horizontal");
+		rmi.set_active (!Filefinder.preferences.split_verticaly);
+		mmenu.add (rmi);
+		mmenu.add (new Gtk.SeparatorMenuItem ());
+		mi = new Gtk.MenuItem.with_label ("Preferences");
+		mmenu.add (mi);
+		mi.activate.connect (()=>{
+			Filefinder.preferences.show_window ();
+		});
+		mmenu.add (new Gtk.SeparatorMenuItem ());
+		mi = new Gtk.MenuItem.with_label ("About");
+		mmenu.add (mi);
+		mi.activate.connect (()=>{
+			Filefinder.about ();
+		});
+		mmenu.show_all ();
+
+		Gtk.Image image = new Gtk.Image.from_icon_name ("open-menu-symbolic",
+														Gtk.IconSize.SMALL_TOOLBAR);
+		button_menu = new MenuButton ();
+		button_menu.use_underline = true;
+		button_menu.tooltip_text = "Options";
+		button_menu.image = image;
+		button_menu.menu_model = (mmenu as MenuModel);
+		button_menu.set_popup (mmenu);
+		hb.pack_end (button_menu);
 
 		button_go = new Gtk.ToggleButton ( );
 		button_go.use_underline = true;
@@ -69,12 +120,26 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 									Gdk.ModifierType.CONTROL_MASK,
 									AccelFlags.VISIBLE);
 
-		button_plus = new Button.from_icon_name ("list-add-symbolic", IconSize.BUTTON);
-		button_plus.always_show_image = true;
+		spinner = new Gtk.Spinner ();
+		hb.pack_end (spinner);
+
+		Gtk.Menu menu = new Gtk.Menu ();
+		MenuItemIndex mii;
+		for (int i = 0; i < types.NONE; i++) {
+			mii = new MenuItemIndex (i, type_names[i]);
+			mii.activate.connect ((o)=>{
+				add_filter ((types)(o as MenuItemIndex).id);
+			});
+			menu.add (mii);
+		}
+		menu.show_all ();
+		image = new Gtk.Image.from_icon_name ("list-add-symbolic", Gtk.IconSize.SMALL_TOOLBAR);
+		button_plus = new MenuButton ();
 		button_plus.use_underline = true;
-		button_plus.xalign = 0;
-		//button_plus.label = "Add Filter";
 		button_plus.tooltip_text = "Add Filter <Insert>";
+		button_plus.image = image;
+		button_plus.menu_model = (menu as MenuModel);
+		button_plus.set_popup (menu);
 		hb.pack_start (button_plus);
 
 		vbox1 = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
@@ -87,7 +152,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		empty_box.margin = 80;
 		vbox1.pack_start (empty_box, true, true, 0);
 
-		Gtk.Image image = new Gtk.Image.from_icon_name ("folder-documents-symbolic", Gtk.IconSize.DIALOG);
+		image = new Gtk.Image.from_icon_name ("folder-documents-symbolic", Gtk.IconSize.DIALOG);
 		empty_box.add (image);
 		empty_box.add (new Label("\t\t\t   No search results.\n"+Text.first_run));
 
@@ -111,15 +176,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		scrolledwindow1.add (editor);
 		editor.changed_rows.connect (()=>{check_paned_position ();});
 
-		//vbox1 = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
-		//paned.pack2 (vbox1, true, false);
-		//vbox1.pack_start (empty_box, true, true, 0);
-		
 		Gtk.ScrolledWindow scrolledwindow = new Gtk.ScrolledWindow (null, null);
 		scrolledwindow.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
 		scrolledwindow.shadow_type = Gtk.ShadowType.OUT;
 		paned.pack2 (scrolledwindow, true, false);
-		//vbox1.pack_start (scrolledwindow, true, true, 0);
 
 		result_view = new ResultsView ();
 		scrolledwindow.add (result_view);
@@ -133,19 +193,6 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	private void initialize () {
 		button_go.clicked.connect (on_go_clicked);
-		button_plus.clicked.connect ( ()=>{
-			Gtk.Popover pop = new Gtk.Popover (button_plus);
-			vbox1 = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
-			pop.add (vbox1);
-			for (int i = 0; i < types.NONE; i++) {
-				var b = new ButtonType ((types) i, type_names[i]);
-				b.clicked.connect ((o)=>{
-					add_filter ((o as ButtonType).filter_type);
-				});
-				vbox1.add (b);
-			}
-			pop.show_all ();
-		});
 		paned.visibility_notify_event.connect (()=>{
 			empty_box.visible = !paned.visible;
 			return false;
@@ -155,6 +202,18 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	public void post_init () {
 		paned.visible = false;
+	}
+
+	private int _paned_pos = 0;
+	private void toggle_paned () {
+		if (paned.visible) {
+			if ((paned.position < 4) && (paned.position < _paned_pos)) {
+				paned.position = _paned_pos;
+			} else {
+				_paned_pos = paned.position;
+				paned.position = 1;
+			}
+		}
 	}
 
 	private void check_paned_position () {
@@ -170,6 +229,8 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 				(editor.rows.nth_data(0) as QueryRow).get_preferred_height (out h1, out h2);
 				if (editor.rows.length() * h1 < 200) paned.position = (int) editor.rows.length() * h1 + 4;
 			}
+		} else {
+			paned.position = 400;
 		}
 	}
 
@@ -189,17 +250,20 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 				editor.add_file (s);
 			}
 		}
-		//check_paned_position ();
 	}
 
 	private void on_go_clicked () {
 		if (button_go.active) {
+			spinner.start ();
 			button_go.label = "Stop";
 			go_clicked (query);
+			if (Filefinder.preferences.check_autohide)
+				toggle_paned ();
 			//result_view.disconnect_model ();
 		} else {
 			button_go.label = "Search";
 			canceled ();
+			spinner.stop ();
 			//result_view.connect_model ();
 		}
 	}
@@ -214,7 +278,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			return;
 		}
 		int n = result_view.model.iter_n_children (null);
-		if (n > 0)
+		if (n > 0) {
 			if (result_view.results_selection.position == 0)
 				hb.subtitle = "(%d items in %s)".printf (n,
 					result_view.get_bin_size (Filefinder.service.results_all.size));
@@ -223,13 +287,17 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 					result_view.results_selection.position,
 					result_view.get_bin_size (result_view.results_selection.size),
 					n, result_view.get_bin_size (Filefinder.service.results_all.size));
-		else
+		} else {
 			hb.subtitle = "(No items found)";
+			if (Filefinder.preferences.check_autohide)
+				toggle_paned ();
+		}
 		//if ((n%1000) == 0) while (Gtk.events_pending ()) Gtk.main_iteration ();
 	}
 
 	public void split_orientation (Gtk.Orientation orientation) {
 		paned.orientation = orientation;
+		check_paned_position ();
 	}
 
 	public void set_column_visiblity (int column, bool visible) {
@@ -267,6 +335,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		infoBox.add (infoBar);
 		infoBar.response.connect (() => {
 			infoBar.destroy ();
+			info_timeout_id = 0;
 			//hide();
 		});
 		if (info_timeout_id > 0) {
@@ -279,6 +348,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	private bool on_info_timeout () {
 		if (infoBar != null)
 			infoBar.destroy ();
+		info_timeout_id = 0;
 		return false;
 	}
 

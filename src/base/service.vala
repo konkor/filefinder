@@ -75,7 +75,6 @@ public class Service : Gtk.ListStore {
 		});
 		this.finished_thread.connect (()=>{
 			this.thread_count--;
-			print ("thread_count %d\n", thread_count);
 			if (this.thread_count < 1) {
 				finished_search ();
 			}
@@ -803,7 +802,7 @@ public class Service : Gtk.ListStore {
 		Gtk.TreeIter iter;
 		GLib.File file;
 		DataInputStream dis;
-		uint8 fbuf[8192];
+		uint8 fbuf[65536];
 		size_t bsize;
 		string path, fname;
 		uint64 fsize, ind = 0, count;
@@ -831,6 +830,7 @@ public class Service : Gtk.ListStore {
 				hashes += checksum.get_string ();
 			}
 			ind++;
+			if (ind % 10 == 0) while (Gtk.events_pending ()) Gtk.main_iteration ();
 		}
 		for (ind = hashes.length; ind > 0; ind--) {
 			count = 0;

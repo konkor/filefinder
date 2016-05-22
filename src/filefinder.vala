@@ -107,14 +107,15 @@ public class Filefinder : Gtk.Application
 	}
 
 	private void quit_cb () {
+		exit ();
+	}
+
+	public static void exit () {
 		window.destroy ();
 	}
 
 	private void preferences_cb () {
-		if (!preferences.visible)
-			preferences.show ();
-		else
-			preferences.present ();
+		preferences.show_window ();
 	}
 
 	private void add_location_cb () {
@@ -127,6 +128,10 @@ public class Filefinder : Gtk.Application
 	}
 
 	private void about_cb () {
+		about ();
+	}
+
+	public static void about () {
 		string[] authors = {
 		  "Kostiantyn Korienkov",
 		  null
@@ -139,7 +144,7 @@ public class Filefinder : Gtk.Application
 							"website", Text.app_website,
 							"website-label", Text.app_name,
 							"version", Text.app_version,
-							"logo_icon_name", "system-search",
+							"logo_icon_name", "filefinder",
 							null);
 	}
 

@@ -168,7 +168,10 @@ public class ResultsView : Gtk.TreeView {
 		mi = new Gtk.MenuItem.with_label ("Find Duplicates...");
 		tools.add (mi);
 		mi.activate.connect (()=>{
+			Filefinder.window.spinner.start ();
+			while (Gtk.events_pending ()) Gtk.main_iteration ();
 			Filefinder.service.find_duplicates ();
+			Filefinder.window.spinner.stop ();
 		});
 		tools.add (new Gtk.SeparatorMenuItem ());
 		mi = new Gtk.MenuItem.with_label ("Copy Filenames To Clipboard");
@@ -629,6 +632,7 @@ public class ResultsView : Gtk.TreeView {
 					lock (files_count_ready) {
 						last_info = new DateTime.now_local ();
 						Filefinder.window.show_info ("%s of %s copied.".printf (get_bin_size (current_num_bytes), get_bin_size(total_num_bytes)));
+						Filefinder.window.spinner.start ();
 					}
 				}
 				}, (obj, res) => {
@@ -644,7 +648,9 @@ public class ResultsView : Gtk.TreeView {
 						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 						Filefinder.window.show_error (e.message);
 					}
+					Filefinder.window.spinner.stop ();
 				});
+			
 		}
 	}
 
@@ -665,6 +671,7 @@ public class ResultsView : Gtk.TreeView {
 	private void move_to (GLib.List<GLib.File>? files, string destination) {
 		if ((files == null) || (destination == null)) return;
 		File file;
+		Filefinder.window.spinner.start ();
 		while (files_count != 0) {
 			GLib.Thread.usleep (2500);
 		}
@@ -741,6 +748,7 @@ public class ResultsView : Gtk.TreeView {
 				Filefinder.window.show_error (e.message);
 			}
 		}
+		Filefinder.window.spinner.stop ();
 		Filefinder.window.show_info ("File(s) moved %d of the %u".printf (files_count_ready, files_count));
 		files_count = files_processed = files_count_ready = 0;
 	}
@@ -762,6 +770,7 @@ public class ResultsView : Gtk.TreeView {
 		files_count_ready = 0;
 		files_count = files.length ();
 		last_info = new DateTime.now_local ();
+		Filefinder.window.spinner.start ();
 		foreach (File f in files) {
 			files_processed++;
 			try {
@@ -779,6 +788,7 @@ public class ResultsView : Gtk.TreeView {
 				Filefinder.window.show_error (e.message);
 			}
 		}
+		Filefinder.window.spinner.stop ();
 		files_count = files_processed = files_count_ready = 0;
 	}
 }
