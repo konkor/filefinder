@@ -230,7 +230,8 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 				if (editor.rows.length() * h1 < 200) paned.position = (int) editor.rows.length() * h1 + 4;
 			}
 		} else {
-			paned.position = 400;
+			if (paned.position < 200)
+				paned.position = 400;
 		}
 	}
 
@@ -302,6 +303,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	public void set_column_visiblity (int column, bool visible) {
 		result_view.get_column (column).visible = visible;
+	}
+
+	public void set_max_filters (int count) {
+		editor.max_children_per_line = count;
 	}
 
 	private uint info_timeout_id = 0;

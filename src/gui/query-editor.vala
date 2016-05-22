@@ -16,32 +16,55 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class QueryEditor : Gtk.Box {
+public class QueryEditor : Gtk.FlowBox {
 	public signal void changed_rows ();
 
 	public GLib.List<QueryRow> rows;
 	
 	public QueryEditor () {
-		GLib.Object (orientation:Gtk.Orientation.VERTICAL, spacing:0);
+		//GLib.Object (orientation:Gtk.Orientation.VERTICAL, spacing:0);
 		this.homogeneous = false;
 		this.get_style_context ().add_class ("search-bar");
 		this.margin = 0;
+		selection_mode = Gtk.SelectionMode.NONE;
+		max_children_per_line = Filefinder.preferences.filter_count;
+		valign = Gtk.Align.START;
+		set_sort_func (sort_boxes);
+		
 		rows = new GLib.List<QueryRow> ();
+	}
+
+	private int sort_boxes (Gtk.FlowBoxChild child1, Gtk.FlowBoxChild child2) {
+		var row1 = child1.get_child ();
+		var row2 = child2.get_child ();
+
+		if (row1 == null) return 1;
+		if (row2 == null) return -1;
+
+		return sort_rows ((row1 as QueryRow).filter, (row2 as QueryRow).filter);
+	}
+
+	private int sort_rows (Filter row1, Filter row2) {
+		if (row1.filter_type == row2.filter_type) return 0;
+		if (row1.filter_type < row2.filter_type)
+			return -1;
+		return 1;
 	}
 
 	public void add_row (QueryRow row) {
 		//pack_start (row, false, true, 0);
 		add (row);
 		row.closed.connect (on_row_close);
+		row.changed_type.connect (()=>{invalidate_sort ();});
 		rows.append (row);
-		//row.label.label = "Query " + rows.length().to_string ();
-		//Debug.log (this.name, "added row");
+		invalidate_sort ();
 		changed_rows ();
 	}
 
 	 private void on_row_close (QueryRow row) {
 		rows.remove (row);
-		row.dispose ();
+		row.get_parent().dispose ();
+		invalidate_sort ();
 		changed_rows ();
 	}
 

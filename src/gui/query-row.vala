@@ -237,11 +237,11 @@ public class QueryRow : Gtk.Box {
 				});
 				hbox.pack_start (size_combo, false, false, 0);
 
-				Gtk.SpinButton size_btn = new Gtk.SpinButton.with_range (0, uint64.MAX, 1024);
+				Gtk.SpinButton size_btn = new Gtk.SpinButton.with_range (0, 1000000000000, 1024);
 				hbox.pack_start (size_btn, true, true, 0);
 
 				Gtk.ComboBoxText w_combo = new Gtk.ComboBoxText ();
-				foreach (string s in new string[] {"Bytes", "KiB", "MiB", "GiB"}) {
+				foreach (string s in new string[] {" ", "KiB", "MiB", "GiB"}) {
 					w_combo.append_text (s);
 				}
 				w_combo.active = 0;

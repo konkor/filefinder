@@ -118,6 +118,10 @@ public class Preferences : Gtk.Window {
 												"check_autohide", check_autohide.to_string ()));
 			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
 												"cb_dark", cb_dark.active.to_string ()));
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+												"cb_single", cb_single.active.to_string ()));
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+												"spin_rows", ((int) spin_rows.get_value()).to_string ()));
 			foreach (ViewColumn p in columns) {
 				dos.put_string ("%d %s %s\n".printf (PreferenceType.COLUMN,
 								p.name, p.get_value ()));
@@ -192,6 +196,12 @@ public class Preferences : Gtk.Window {
 						case "cb_dark":
 							cb_dark.active = bool.parse (val);
 							Gtk.Settings.get_default().set ("gtk-application-prefer-dark-theme", cb_dark.active);
+							break;
+						case "cb_single":
+							cb_single.active = bool.parse (val);
+							break;
+						case "spin_rows":
+							spin_rows.set_value (int.parse (val));
 							break;
 					}
 					} else if (t == PreferenceType.COLUMN) {
@@ -290,6 +300,8 @@ public class Preferences : Gtk.Window {
 	private Gtk.CheckButton cb_vertical;
 	private Gtk.CheckButton cb_autohide;
 	private Gtk.CheckButton cb_dark;
+	private Gtk.CheckButton cb_single;
+	private Gtk.SpinButton spin_rows;
 
 	private void build_gui () {
 		Gtk.Label label;
@@ -460,7 +472,28 @@ public class Preferences : Gtk.Window {
 			Gtk.Settings.get_default().set ("gtk-application-prefer-dark-theme", cb_dark.active);
 			is_changed = true;
 		});
-		cb_dark.active = true;
+		cb_dark.active = false;
+
+		hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 6);
+		box.pack_start (hbox, false, false, 0);
+
+		cb_single = new Gtk.CheckButton.with_label ("Single Filter Per Row");
+		cb_single.tooltip_text = "There is one filter per line";
+		hbox.add (cb_single);
+		cb_single.active = true;
+		spin_rows = new Gtk.SpinButton.with_range (1, 50, 1);
+		spin_rows.value_changed.connect (()=>{
+			Filefinder.window.set_max_filters ((int)spin_rows.get_value ());
+			is_changed = true;
+		});
+		spin_rows.sensitive = !cb_single.active;
+		hbox.pack_end (spin_rows, false, false, 0);
+		hbox.pack_end (new Label ("Maximum filters per row "), false, false, 0);
+		cb_single.toggled.connect (()=>{
+			spin_rows.sensitive = !cb_single.active;
+			if (cb_single.active) spin_rows.set_value (1);
+			is_changed = true;
+		});
 
 		label = new Label ("<b>Choose the information to appear in the result view.</b>");
 		label.use_markup = true;
@@ -663,6 +696,12 @@ public class Preferences : Gtk.Window {
 	public void set_autohide (bool enable) {
 		if (check_autohide != enable)
 			cb_autohide.active = enable;
+	}
+
+	public int filter_count {
+		get {
+			return (int) spin_rows.get_value ();
+		}
 	}
 
 	public void add_mimes (int group_index, string[] mimes) {
