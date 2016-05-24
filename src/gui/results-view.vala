@@ -186,6 +186,39 @@ public class ResultsView : Gtk.TreeView {
 		});
 
 		menu.add (new Gtk.SeparatorMenuItem ());
+		mi = new Gtk.MenuItem.with_label ("Extensions");
+		menu.add (mi);
+		tools = new Gtk.Menu ();
+		mi.submenu = tools;
+
+		Filefinder.preferences.load_plugs ();
+		int i = 0;
+		foreach (Plugin p in Filefinder.preferences.plugins) {
+			var mii = new MenuItemIndex (i, p.label);
+			mii.tooltip_text = p.description;
+			tools.add (mii);
+			mii.activate.connect (()=>{
+				string path = (Filefinder.preferences.plugins.nth_data(mii.id) as Plugin).uri;
+				path += " " + get_filenames (true);
+				print ("%s\n%d\n", path, path.length);
+				try {
+					AppInfo appinfo = GLib.AppInfo.create_from_commandline (path,
+													null, AppInfoCreateFlags.NONE);
+					if (appinfo == null) return;
+					appinfo.launch (null, null);
+				} catch (Error e) {
+					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+						Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
+						e.message);
+					dlg.run ();
+					dlg.destroy ();
+				}
+			});
+			i++;
+		}
+		tools.show_all ();
+
+		menu.add (new Gtk.SeparatorMenuItem ());
 		mi = new Gtk.MenuItem.with_label ("Properties");
 		menu.add (mi);
 		mi.activate.connect (()=>{
@@ -485,6 +518,21 @@ public class ResultsView : Gtk.TreeView {
 		if (s.length > 0) s = s.substring (0, s.length -1);
 		if (s.length > 0) clipboard.set_text (s, -1);
 		
+	}
+
+	private string get_filenames (bool full = false) {
+		GLib.List<GLib.File>? files = get_selected_files ();
+		string s = "";
+		if (files == null) return s;
+		foreach (File p in files) {
+			if (full) {
+				s += "\"" + p.get_path () + "\" ";
+			} else {
+				s += "\"" + p.get_basename () + "\" ";
+			}
+		}
+		if (s.length > 0) s = s.substring (0, s.length -1);
+		return s;
 	}
 
 	private void remove_selected_file (File file) {

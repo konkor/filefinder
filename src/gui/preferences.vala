@@ -46,6 +46,9 @@ public class Preferences : Gtk.Window {
 	public bool is_changed = false;
 	public bool first_run = true;
 
+	public List<Plugin> plugins;
+	public string default_plugin = "";
+
 	public Preferences () {
 		//title = Text.app_name + " Preferences";
 		_mime_count = _mime_type_groups.length;
@@ -93,6 +96,11 @@ public class Preferences : Gtk.Window {
 		string config = Path.build_filename (Environment.get_user_data_dir (),"filefinder");
 		if (!FileUtils.test (config, FileTest.IS_REGULAR))
 			DirUtils.create (config, 0744);
+		file = File.new_for_path (Path.build_filename (
+									Environment.get_user_data_dir (),
+									"filefinder", "extensions"));
+		if (!file.query_exists ())
+			create_plugs ();
 		config = Path.build_filename (config, "filefinder.conf");
 		file = File.new_for_path (config);
 		try {
@@ -146,14 +154,16 @@ public class Preferences : Gtk.Window {
 
 	public bool load () {
 		int i;
-		string line, name, val;;
+		string line, name, val;
 		PreferenceType t;
 		Gtk.TreeIter iter;
 		string config = Path.build_filename (Environment.get_user_data_dir (),
 											"filefinder", "filefinder.conf");
 		File file = File.new_for_path (config);
-		if (!file.query_exists ())
+		if (!file.query_exists ()) {
+			save ();
 			return false;
+		}
 		try {
 		DataInputStream dis = new DataInputStream (file.read ());
 		while ((line = dis.read_line (null)) != null) {
@@ -226,6 +236,112 @@ public class Preferences : Gtk.Window {
 		}
 		is_changed = false;
 		return true;
+	}
+
+	private void create_plugs () {
+		File file;
+		string path = Path.build_filename (Environment.get_user_data_dir (),
+											"filefinder", "extensions");
+		file = File.new_for_path (path);
+		if (!file.query_exists ())
+			DirUtils.create (path, 0744);
+		path = Path.build_filename (path, "compress");
+		try {
+			FileUtils.set_contents (path,
+			"#!/bin/bash\n\n" +
+			"#PLUGNAME Compress...\n" +
+			"#PLUGDESC Compress selected files\n\n" +
+			"exec file-roller --notify --add \"$@\"\n");
+			FileUtils.chmod (path, 0755);
+		} catch (Error e) {
+			Debug.error ("create_plugs", e.message);
+		}
+	}
+
+	public bool load_plugs () {
+		File dir = File.new_for_path (Path.build_filename (
+									Environment.get_user_data_dir (),
+									"filefinder", "extensions"));
+		plugins = new List<Plugin>();
+		if (!dir.query_exists ()) {
+			is_changed=true;
+			save ();
+		}
+		read_plugs (dir);
+		return true;
+	}
+
+	private void read_plugs (File dir) {
+		FileInfo info;
+		if (!dir.query_exists ()) return;
+		try {
+			info = dir.query_info ("*", 0);
+			if (!info.get_attribute_boolean (FileAttribute.ACCESS_CAN_READ)){
+				return;
+			}
+			var e = dir.enumerate_children ("*", FileQueryInfoFlags.NONE, null);
+			while ((info = e.next_file (null)) != null) {
+				if (info.get_name ().has_prefix (".")) continue;
+				if (info.get_is_backup ()) continue;
+				switch (info.get_file_type ()) {
+					case FileType.DIRECTORY:
+						read_plugs (dir.get_child (info.get_name ()));
+						break;
+					case FileType.REGULAR:
+						string mime = info.get_content_type ();
+						if ((mime != "application/x-shellscript")) {
+							continue;
+						}
+						if (!info.get_attribute_boolean (FileAttribute.ACCESS_CAN_READ)){
+							continue;
+						}
+						if (!info.get_attribute_boolean (FileAttribute.ACCESS_CAN_EXECUTE)){
+							continue;
+						}
+						parse_plug (dir.get_child (info.get_name ()));
+						break;
+					default:
+						break;
+				}
+			}
+		} catch (Error err) {
+			Debug.error ("read_plugs", err.message);
+		}
+		return;
+	}
+
+	private void parse_plug (File file) {
+		int i = 0, count = 0;
+		string name = file.get_basename(), desc = "", line;
+		try {
+			DataInputStream dis = new DataInputStream (file.read ());
+			while ((line = dis.read_line (null)) != null) {
+				i = line.index_of (" ");
+				if ((i > 0) && (line.length > i)) {
+					if (line.substring (0, i).up() == "#PLUGNAME") {
+						line = line.substring (i + 1).strip ();
+						if (line.length > 0) {
+							name = line;
+							count++;
+							if (count == 2) break;
+						}
+					} else if (line.substring (0, i).up() == "#PLUGDESC") {
+						line = line.substring (i + 1).strip ();
+						if (line.length > 0) {
+							desc = line;
+							count++;
+							if (count == 2) break;
+						}
+					}
+				}
+			}
+			//we need at least one tag to identify pluging 
+			if (count > 0)
+				plugins.append (new Plugin (name, desc, file.get_path(),
+											file.get_uri() == default_plugin));
+		} catch (Error err) {
+			Debug.error ("parse_plug", err.message);
+		}
 	}
 
 	private void refresh_gui () {
@@ -772,15 +888,55 @@ public class Preferences : Gtk.Window {
 		"text/x-vala"}
 	},
 	MimeGroup (){ name = "Archives",
-	mimes = { "application/x-7z-compressed",
-		"application/x-compressed-tar",
-		"application/x-bzip-compressed-tar",
-		"application/x-xz-compressed-tar",
+	mimes = {"application/x-7z-compressed",
+		"application/x-7z-compressed-tar",
+		"application/x-ace",
+		"application/x-alz",
+		"application/x-ar",
+		"application/x-arj",
 		"application/x-bzip",
+		"application/x-bzip-compressed-tar",
+		"application/x-bzip1",
+		"application/x-bzip1-compressed-tar",
+		"application/vnd.ms-cab-compressed",
+		"application/x-cbr",
+		"application/x-cbz",
+		"application/x-cd-image",
+		"application/x-compress",
+		"application/x-compressed-tar",
+		"application/x-cpio",
+		"application/x-deb",
+		"application/vnd.debian.binary-package",
+		"application/x-ear",
+		"application/x-ms-dos-executable",
+		"application/x-gtar",
+		"application/x-gzip",
+		"application/x-gzpostscript",
+		"application/x-java-archive",
+		"application/x-lha",
+		"application/x-lhz",
+		"application/x-lzip",
+		"application/x-lzip-compressed-tar",
+		"application/x-lzma",
+		"application/x-lzma-compressed-tar",
+		"application/x-lzop",
+		"application/x-lzop-compressed-tar",
+		"application/x-ms-wim",
 		"application/x-rar",
+		"application/x-rar-compressed",
+		"application/x-rpm",
+		"application/x-rzip",
+		"application/x-tar",
 		"application/x-tarz",
-		"application/gzip",
-		"application/zip"}
+		"application/x-stuffit",
+		"application/x-war",
+		"application/x-xz",
+		"application/x-xz-compressed-tar",
+		"application/x-zip",
+		"application/x-zip-compressed",
+		"application/x-zoo",
+		"application/zip",
+		"multipart/x-zip"}
 	},
 	MimeGroup (){ name = "Temporary",
 	mimes = { "application/x-trash"}

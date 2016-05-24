@@ -39,7 +39,8 @@ filefinder_SOURCES = \
 	base/filter-files.vala \
 	base/filter-size.vala \
 	gui/menu-item-id.vala \
-	gui/mime-button.vala
+	gui/mime-button.vala \
+	base/plugin.vala
 
 #config.vapi 
 
