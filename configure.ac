@@ -25,27 +25,39 @@ PKG_CHECK_MODULES(FILEFINDER, [
   gio-2.0
   gio-unix-2.0])
 
-PKG_CHECK_MODULES([NAUTILUS],[
+# Make dependency CFLAGS and LIBS available
+AC_SUBST(GLIB_CFLAGS)
+AC_SUBST(GLIB_LIBS)
+
+AC_ARG_WITH([nautilus-extension],
+  [AS_HELP_STRING([--without-nautilus-extension],[Disable nautilus extension])],
+  [],
+  [with_nautilus_extension=yes])
+
+if test "$with_nautilus_extension" = "yes"; then
+  NAUTILUS_REQUIRED=3.0.0
+
+  PKG_CHECK_MODULES([NAUTILUS],[
   libnautilus-extension >= $NAUTILUS_REQUIRED
   gio-2.0
   gio-unix-2.0])
 
-# Make dependency CFLAGS and LIBS available
-AC_SUBST(NAUTILUS_CFLAGS)
-AC_SUBST(NAUTILUS_LIBS)
-AC_SUBST(GLIB_CFLAGS)
-AC_SUBST(GLIB_LIBS)
+  AC_SUBST(NAUTILUS_CFLAGS)
+  AC_SUBST(NAUTILUS_LIBS)
 
-#nautilusextensiondir='${libdir}/nautilus/extensions-3.0'
-nautilusextensiondir=`$PKG_CONFIG --variable=extensiondir libnautilus-extension`
-AC_ARG_WITH([nautilus-dir],
-  [AS_HELP_STRING([--with-nautilus-dir=PATH],[Nautilus extensions directory])],
-  [nautilusextensiondir="$withval"],
-  [nautilusextensiondir=`$PKG_CONFIG --variable=extensiondir libnautilus-extension`])
-AC_SUBST([nautilusextensiondir])
+  nautilusextensiondir=`$PKG_CONFIG --variable=extensiondir libnautilus-extension`
+  AC_ARG_WITH([nautilus-dir],
+    [AS_HELP_STRING([--with-nautilus-dir=PATH],[Nautilus extensions directory])],
+    [nautilusextensiondir="$withval"],
+    [nautilusextensiondir=`$PKG_CONFIG --variable=extensiondir libnautilus-extension`])
+  AC_SUBST([nautilusextensiondir])
 
-AC_MSG_NOTICE([installing nautilus plugin in ${nautilusextensiondir}])
-AC_SUBST([NAUTILUS_EXTENSION_DIR],[${nautilusextensiondir}])
+  AC_MSG_NOTICE([installing nautilus plugin in ${nautilusextensiondir}])
+  AC_SUBST([NAUTILUS_EXTENSION_DIR],[${nautilusextensiondir}])
+  
+fi
+
+AM_CONDITIONAL([WITH_NAUTILUS_EXTENSION],[test "$with_nautilus_extension" = "yes"])
 
 AC_OUTPUT([
 Makefile

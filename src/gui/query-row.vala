@@ -78,8 +78,7 @@ public class QueryRow : Gtk.Box {
 	public Gtk.Button files_btn;
 
 	private FilterMime mime;
-	private Gtk.ComboBoxText mime_group;
-	private Gtk.ComboBoxText mime_type;
+	private MimeButton mime_menu;
 
 	private FilterMask mask;
 	private Gtk.Entry mask_entry;
@@ -171,42 +170,13 @@ public class QueryRow : Gtk.Box {
 			case types.MIMETYPE:
 				mime = new FilterMime ();
 				_filter.filter_value = mime;
-				mime_group = new Gtk.ComboBoxText ();
-				foreach (MimeGroup s in Filefinder.preferences.mime_type_groups) {
-					mime_group.append_text (s.name);
-				}
-				mime_group.active = 0;
-				hbox.add (mime_group);
-				mime_group.changed.connect (() => {
-					mime.clear ();
-					mime_type.remove_all ();
-					mime_type.append_text ("Any");
-					foreach (string s in Filefinder.preferences.mime_type_groups[mime_group.active].mimes) {
-						mime_type.append_text (s);
-						mime.add (s);
-					}
-					mime_type.active = 0;
-				});
-
-				mime_type = new Gtk.ComboBoxText ();
-				mime_type.append_text ("Any");
+				mime.name = Filefinder.preferences.mime_type_groups[0].name;
 				foreach (string s in Filefinder.preferences.mime_type_groups[0].mimes) {
-					mime_type.append_text (s);
 					mime.add (s);
 				}
-				mime_type.active = 0;
-				mime_type.changed.connect (() => {
-					mime.clear ();
-					if (mime_type.active == 0) {
-						foreach (string s in Filefinder.preferences.mime_type_groups[mime_group.active].mimes) {
-							mime.add (s);
-						}
-					} else {
-						mime.add (mime_type.get_active_text ());
-					}
-				});
-				hbox.pack_start (mime_type, true, true, 6);
-				mime_type.expand = false;
+
+				mime_menu = new MimeButton (mime);
+				hbox.pack_start (mime_menu, true, true, 0);
 				break;
 			case types.FILEMASK:
 				mask = new FilterMask ();
@@ -237,22 +207,25 @@ public class QueryRow : Gtk.Box {
 				});
 				hbox.pack_start (size_combo, false, false, 0);
 
-				Gtk.SpinButton size_btn = new Gtk.SpinButton.with_range (0, 1000000000000, 1024);
+				Gtk.Entry size_btn = new Gtk.Entry();
+				size_btn.text = "0";
+				size_btn.width_chars = 1;
+				size_btn.max_width_chars = 2;
 				hbox.pack_start (size_btn, true, true, 0);
 
 				Gtk.ComboBoxText w_combo = new Gtk.ComboBoxText ();
-				foreach (string s in new string[] {" ", "KiB", "MiB", "GiB"}) {
+				foreach (string s in new string[] {"B", "KiB", "MiB", "GiB"}) {
 					w_combo.append_text (s);
 				}
-				w_combo.active = 0;
+				w_combo.active = 2;
 				hbox.pack_start (w_combo, false, false, 0);
 				w_combo.changed.connect (() => {
-					size.size = (uint64) size_btn.get_value () *
+					size.size = uint64.parse (size_btn.text) *
 										size.WEIGHT[w_combo.active];
 				});
-
-				size_btn.value_changed.connect (()=>{
-					size.size = (uint64) size_btn.get_value () *
+				size_btn.changed.connect (()=>{
+					size_btn.text = check_dec (size_btn.text);
+					size.size = uint64.parse (size_btn.text) *
 										size.WEIGHT[w_combo.active];
 				});
 				break;
@@ -270,10 +243,11 @@ public class QueryRow : Gtk.Box {
 				hbox.pack_start (mod_combo, false, false, 0);
 
 				mod_btn = new Gtk.Button ();
+				mod_btn.xalign = 0;
 				mod_btn.label = "%04d-%02d-%02d".printf (modified.date.get_year(),
 														modified.date.get_month(),
 														modified.date.get_day_of_month());
-				hbox.pack_start (mod_btn, false, true, 6);
+				hbox.pack_start (mod_btn, true, true, 6);
 				mod_btn.clicked.connect (()=>{
 					Gtk.Popover pop = new Gtk.Popover (mod_btn);
 					Gtk.Calendar cal = new Gtk.Calendar ();
@@ -373,6 +347,23 @@ public class QueryRow : Gtk.Box {
 		return res;
 	}
 
-	
+	private string check_dec (string txt) {
+		string res = "";
+		if (txt == null) return res;
+		if (txt.length == 0) return res;
+		string symb = "0123456789";
+		unichar c = 0;
+		int index = 0;
+		for (int i = 0; txt.get_next_char (ref index, out c); i++) {
+			if (symb.index_of (c.to_string ()) == -1) {
+				return res;
+			}
+			res += c.to_string ().up ();
+		}
+		if (res.length > 1)
+			if (res.get_char ().to_string () == "0")
+				res = res.substring (1);
+		return res;
+	}
 
 }

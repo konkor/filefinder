@@ -3,6 +3,10 @@
 
 SUBDIRS = man data src 
 
+DISTCHECK_CONFIGURE_FLAGS = \
+	--without-nautilus-extension \
+	$(NULL)
+
 dist_doc_DATA = \
 	README \
 	README.md \

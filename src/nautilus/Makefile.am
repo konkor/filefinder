@@ -1,5 +1,10 @@
 ## Process this file with automake to produce Makefile.in
 
+if WITH_NAUTILUS_EXTENSION
+nautilus_extension_LTLIBRARIES = libnautilus-filefinder.la
+nautilus_extensiondir = $(NAUTILUS_EXTENSION_DIR)
+endif # WITH_NAUTILUS_EXTENSION
+
 AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
@@ -9,10 +14,6 @@ AM_CPPFLAGS = \
 AM_CFLAGS =\
 	 -Wall\
 	 -g
-
-
-nautilus_extensiondir = $(NAUTILUS_EXTENSION_DIR)
-nautilus_extension_LTLIBRARIES = libnautilus-filefinder.la
 
 libnautilus_filefinder_la_SOURCES = nautilus-extension.c
 libnautilus_filefinder_la_VALAFLAGS = \

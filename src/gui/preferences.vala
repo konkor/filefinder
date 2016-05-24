@@ -483,6 +483,7 @@ public class Preferences : Gtk.Window {
 		cb_single.active = true;
 		spin_rows = new Gtk.SpinButton.with_range (1, 50, 1);
 		spin_rows.value_changed.connect (()=>{
+			if (Filefinder.window == null) return;
 			Filefinder.window.set_max_filters ((int)spin_rows.get_value ());
 			is_changed = true;
 		});
@@ -744,7 +745,7 @@ public class Preferences : Gtk.Window {
 
 	private int _mime_count;
 	private MimeGroup[] _mime_type_groups = {
-	MimeGroup (){ name = "Text File",
+	MimeGroup (){ name = "Text Files",
 	mimes = { "text/plain",
 		"text/css",
 		"text/html",
@@ -770,7 +771,7 @@ public class Preferences : Gtk.Window {
 		"text/x-tex",
 		"text/x-vala"}
 	},
-	MimeGroup (){ name = "Archive",
+	MimeGroup (){ name = "Archives",
 	mimes = { "application/x-7z-compressed",
 		"application/x-compressed-tar",
 		"application/x-bzip-compressed-tar",
@@ -784,7 +785,7 @@ public class Preferences : Gtk.Window {
 	MimeGroup (){ name = "Temporary",
 	mimes = { "application/x-trash"}
 	},
-	MimeGroup (){ name = "Executable",
+	MimeGroup (){ name = "Executables",
 	mimes = { "application/x-executable"}
 	},
 	MimeGroup (){ name = "Documents",
@@ -850,7 +851,7 @@ public class Preferences : Gtk.Window {
 		"audio/x-pn-realaudio",
 		"audio/x-mpegurl"}
 	},
-	MimeGroup (){ name = "Video",
+	MimeGroup (){ name = "Videos",
 	mimes = { "video/mp4",
 		"video/3gpp",
 		"video/3gpp2",
@@ -875,7 +876,7 @@ public class Preferences : Gtk.Window {
 		"video/x-theora+ogg",
 		"video/x-vnd.rn-realvideo"}
 	},
-	MimeGroup (){ name = "Picture",
+	MimeGroup (){ name = "Pictures",
 	mimes = { "application/vnd.oasis.opendocument.image",
 		"application/x-krita",
 		"image/bmp",
@@ -895,7 +896,7 @@ public class Preferences : Gtk.Window {
 		"image/vnd.djvu",
 		"image/vnd.microsoft.icon"}
 	},
-	MimeGroup (){ name = "Raw Image",
+	MimeGroup (){ name = "Raw Images",
 	mimes = { "image/x-adobe-dng",
 		"image/x-canon-cr2",
 		"image/x-canon-crw",

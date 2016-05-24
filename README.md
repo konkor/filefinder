@@ -59,6 +59,16 @@ cd filefinder
 make
 sudo make install
 ```
+After `sudo make install` you should copy/move nautilus extension from _/usr/local/lib_ to _/usr/lib_
+```
+sudo cp /usr/local/lib/nautilus/extensions-3.0/* /usr/lib/nautilus/extensions-3.0/
+```
+To disable Nautilus extension pass `--without-nautilus-extension` to _autogen.sh_ or _configure_:
+```
+./configure --without-nautilus-extension
+make
+sudo make install
+```
 
 ### Source and packages
 * [GitHub](https://github.com/konkor/filefinder.git)

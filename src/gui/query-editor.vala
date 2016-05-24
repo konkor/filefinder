@@ -20,7 +20,7 @@ public class QueryEditor : Gtk.FlowBox {
 	public signal void changed_rows ();
 
 	public GLib.List<QueryRow> rows;
-	
+
 	public QueryEditor () {
 		//GLib.Object (orientation:Gtk.Orientation.VERTICAL, spacing:0);
 		this.homogeneous = false;
@@ -52,10 +52,12 @@ public class QueryEditor : Gtk.FlowBox {
 	}
 
 	public void add_row (QueryRow row) {
-		//pack_start (row, false, true, 0);
 		add (row);
 		row.closed.connect (on_row_close);
-		row.changed_type.connect (()=>{invalidate_sort ();});
+		row.changed_type.connect (()=>{
+			invalidate_sort ();
+			changed_rows ();
+		});
 		rows.append (row);
 		invalidate_sort ();
 		changed_rows ();

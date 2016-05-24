@@ -34,6 +34,8 @@ public class FilterMime : GLib.Object, iFilter {
 		}
 	}
 
+	public string name {get;set;}
+
 	public void add (string? mimetype) {
 		if (mimetype == null) return;
 		_mime.append (mimetype);

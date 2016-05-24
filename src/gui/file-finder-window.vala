@@ -211,26 +211,22 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 				paned.position = _paned_pos;
 			} else {
 				_paned_pos = paned.position;
-				paned.position = 1;
+				paned.position = 0;
 			}
 		}
 	}
 
 	private void check_paned_position () {
-		int h1, h2 , count;
+		int h1, h2;
 		if (Filefinder.preferences.split_orientation == Gtk.Orientation.VERTICAL) {
-			count = (int) editor.rows.length ();
-			if (count == 0) {
+			if (editor.rows.length () == 0) {
 				paned.position = 1;
-			} else if (count == 1) {
-				scrolledwindow1.get_preferred_height (out h1, out h2);
-				paned.position = h1;
 			} else {
-				(editor.rows.nth_data(0) as QueryRow).get_preferred_height (out h1, out h2);
-				if (editor.rows.length() * h1 < 200) paned.position = (int) editor.rows.length() * h1 + 4;
+				editor.get_preferred_height_for_width (editor.get_allocated_width(), out h1, out h2);
+				if (h2 < 400) paned.position = h2 + 6;
 			}
 		} else {
-			if (paned.position < 200)
+			if (paned.position < 400)
 				paned.position = 400;
 		}
 	}
@@ -293,7 +289,6 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			if (Filefinder.preferences.check_autohide)
 				toggle_paned ();
 		}
-		//if ((n%1000) == 0) while (Gtk.events_pending ()) Gtk.main_iteration ();
 	}
 
 	public void split_orientation (Gtk.Orientation orientation) {
@@ -341,7 +336,6 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		infoBar.response.connect (() => {
 			infoBar.destroy ();
 			info_timeout_id = 0;
-			//hide();
 		});
 		if (info_timeout_id > 0) {
 			GLib.Source.remove (info_timeout_id);
