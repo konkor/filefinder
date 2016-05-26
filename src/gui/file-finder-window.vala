@@ -59,10 +59,11 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		set_titlebar (hb);
 
 		mmenu = new Gtk.Menu ();
-		Gtk.MenuItem mi = new Gtk.MenuItem.with_label ("Toggle Panel");
-		mi.tooltip_text = "Toggle Visiblity Of The Filter Panel";
-		mmenu.add (mi);
-		mi.activate.connect (()=>{
+		MenuItemIndex mii = new MenuItemIndex (0, "Toggle Panel");
+		mii.tooltip_text = "Toggle Visiblity Of The Filter Panel";
+		mii.set_accel ("<Ctrl>N");
+		mmenu.add (mii);
+		mii.activate.connect (()=>{
 			toggle_paned ();
 		});
 		Gtk.CheckMenuItem cmi = new Gtk.CheckMenuItem.with_label ("Autohide Panel");
@@ -84,7 +85,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		rmi.set_active (!Filefinder.preferences.split_verticaly);
 		mmenu.add (rmi);
 		mmenu.add (new Gtk.SeparatorMenuItem ());
-		mi = new Gtk.MenuItem.with_label ("Preferences");
+		Gtk.MenuItem mi = new Gtk.MenuItem.with_label ("Preferences");
 		mmenu.add (mi);
 		mi.activate.connect (()=>{
 			Filefinder.preferences.show_window ();
@@ -124,7 +125,6 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		hb.pack_end (spinner);
 
 		Gtk.Menu menu = new Gtk.Menu ();
-		MenuItemIndex mii;
 		for (int i = 0; i < types.NONE; i++) {
 			mii = new MenuItemIndex (i, type_names[i]);
 			mii.activate.connect ((o)=>{
@@ -205,7 +205,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
 	private int _paned_pos = 0;
-	private void toggle_paned () {
+	public void toggle_paned () {
 		if (paned.visible) {
 			if ((paned.position < 4) && (paned.position < _paned_pos)) {
 				paned.position = _paned_pos;
@@ -213,6 +213,16 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 				_paned_pos = paned.position;
 				paned.position = 0;
 			}
+		}
+	}
+
+	public void off_paned (bool off = true) {
+		if (off) {
+			if (paned.position > 0)
+				_paned_pos = paned.position;
+			paned.position = 0;
+		} else {
+			paned.position = _paned_pos;
 		}
 	}
 
@@ -255,7 +265,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			button_go.label = "Stop";
 			go_clicked (query);
 			if (Filefinder.preferences.check_autohide)
-				toggle_paned ();
+				off_paned ();
 			//result_view.disconnect_model ();
 		} else {
 			button_go.label = "Search";
@@ -287,7 +297,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		} else {
 			hb.subtitle = "(No items found)";
 			if (Filefinder.preferences.check_autohide)
-				toggle_paned ();
+				off_paned (false);
 		}
 	}
 

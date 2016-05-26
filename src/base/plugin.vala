@@ -18,17 +18,49 @@
  */
 
 public class Plugin : GLib.Object {
-
-	public Plugin (string name, string desc, string plug_uri, bool def) {
+	private string _uuid;
+	public Plugin (string name, string desc, string plug_uri, string key, bool def) {
+		_uuid = "";
+		
 		label = name;
 		description = desc;
+		hotkey = key;
 		uri = plug_uri;
 		default_action = def;
+
+		if (key.length > 0) {
+			_uuid = ((uint)this).to_string ();
+			SimpleAction simple_action = new SimpleAction (_uuid, null);
+			simple_action.activate.connect (hotkey_cb);
+			Filefinder.self.add_action (simple_action);
+			Filefinder.self.set_accels_for_action ("app." + _uuid, {hotkey});
+		}
 	}
 
 	public string label {get;set;}
-	public string description {get;set;}
-	public string uri {get;set;}
-	public bool default_action {get;set;}
-}
 
+	public string description {get;set;}
+
+	public string uri {get;set;}
+
+	public bool default_action {get;set;}
+
+	public bool sync {get;set;default=false;}
+
+	public string hotkey {get;set;default="";}
+
+	private void hotkey_cb (SimpleAction action, Variant? parameter) {
+		if (Filefinder.window == null) return;
+		try {
+			Filefinder.window.result_view.launch (this);
+		} catch (Error e) {
+			Debug.error (label, e.message);
+		}
+	}
+
+	protected override void dispose () {
+		if (_uuid.length > 0)
+			Filefinder.self.remove_action (_uuid);
+		base.dispose ();
+	}
+}

@@ -26,13 +26,15 @@ public class Filefinder : Gtk.Application
 	public static FileFinderWindow window;
 	public static Preferences preferences;
 	public static Service service;
+	public static Filefinder self;
 	private List<string> uris;
 
 	private const GLib.ActionEntry[] action_entries = {
 		{"preferences", preferences_cb},
 		{"about", about_cb},
 		{"quit", quit_cb},
-		{"add_location", add_location_cb}
+		{"add_location", add_location_cb},
+		{"toggle_paned", toggle_paned_cb}
 	};
 
 	public Filefinder (string[] args)
@@ -54,6 +56,7 @@ public class Filefinder : Gtk.Application
 					break;
 			}
 		}
+		self = this;
 	}
 
 	protected override void startup () {
@@ -69,6 +72,7 @@ public class Filefinder : Gtk.Application
 
 		set_accels_for_action ("app.quit", {"<Primary>q"});
 		set_accels_for_action ("app.add_location", {"Insert"});
+		set_accels_for_action ("app.toggle_paned", {"<Primary>n"});
 
 		Environment.set_application_name (Text.app_name);
 
@@ -100,6 +104,7 @@ public class Filefinder : Gtk.Application
 		});
 		//window.add_locations (uris);
 		open.connect (()=>{window.add_locations (uris);});
+		preferences.load_plugs ();
 	}
 
 	protected override void activate () {
@@ -120,6 +125,11 @@ public class Filefinder : Gtk.Application
 
 	private void add_location_cb () {
 		window.add_filter ();
+	}
+
+	private void toggle_paned_cb () {
+		if (window == null) return;
+		window.toggle_paned ();
 	}
 
 	protected override void shutdown() {

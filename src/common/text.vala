@@ -79,4 +79,9 @@ public const string[] encodings = {
 "WINDOWS-1257", "WINDOWS-1258"
 };
 
+public const string extension = "#!/bin/bash\n\n" +
+			"#PLUGNAME Compress...\n" +
+			"#PLUGDESC Compress selected files\n" +
+			"#PLUGKEYS <Ctrl>F1\n\n" +
+			"exec file-roller --notify --add \"$@\"\n";
 }

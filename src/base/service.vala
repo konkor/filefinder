@@ -24,6 +24,7 @@ public class Service : Gtk.ListStore {
 	static const string ATTRIBUTES = "standard," +
 		FileAttribute.TIME_MODIFIED + "," +
 		FileAttribute.UNIX_NLINK + "," +
+		FileAttribute.UNIX_MODE + "," +
 		FileAttribute.UNIX_INODE + "," +
 		FileAttribute.UNIX_DEVICE + "," +
 		FileAttribute.ACCESS_CAN_READ;
@@ -67,7 +68,7 @@ public class Service : Gtk.ListStore {
 			typeof (uint64), // SIZE
 			typeof (int),	// TYPE
 			typeof (uint64), // TIME_MODIFIED
-			typeof (string), // PERMISSIONS
+			typeof (uint32), // PERMISSIONS
 			typeof (string), // MIME
 			typeof (string), // PATH
 			typeof (int64),  // OFFSET/ROW
@@ -215,6 +216,7 @@ public class Service : Gtk.ListStore {
 		set (results.iter,
 			Columns.DISPLAY_NAME, results.display_name,
 			Columns.SIZE, results.size,
+			Columns.PERMISSIONS, results.permission,
 			Columns.TIME_MODIFIED,results.time_modified,
 			Columns.PATH,results.path,
 			Columns.POSITION,results.position,
@@ -227,6 +229,7 @@ public class Service : Gtk.ListStore {
 		if (results_all.position == 0) {
 			results_all.display_name = results.display_name;
 			results_all.time_modified = results.time_modified;
+			results_all.permission = results.permission;
 			results_all.size = results.size;
 			results_all.mime = results.mime;
 			results_all.type = results.type;
@@ -243,6 +246,8 @@ public class Service : Gtk.ListStore {
 				results_all.mime = "--";
 			if (results_all.time_modified != results.time_modified)
 				results_all.time_modified = 0;
+			if (results_all.permission != results.permission)
+				results_all.permission = 0;
 			results_all.size += results.size;
 			results_all.position++;
 		}
@@ -403,6 +408,7 @@ public class Service : Gtk.ListStore {
 			results.display_name = info.get_name ();
 			results.path = path;
 			results.time_modified = info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
+			results.permission = info.get_attribute_uint32 (FileAttribute.UNIX_MODE);
 			results.size = fsize;
 			results.mime = fmime;
 			if (info.get_is_symlink())
@@ -569,6 +575,7 @@ public class Service : Gtk.ListStore {
 		results.path = path;
 		//results.parse_name = info.get_parse_name ();
 		results.time_modified = info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
+		results.permission = info.get_attribute_uint32 (FileAttribute.UNIX_MODE);
 		results.size = fsize;
 		results.mime = fmime;
 		if (info.get_is_symlink())
@@ -874,7 +881,7 @@ public class Service : Gtk.ListStore {
 		internal uint64 size;
 		internal FileType type;
 		internal uint64 time_modified;
-		//internal string permission;
+		internal uint32 permission;
 		internal string mime;
 		internal string path;
 		internal string row;

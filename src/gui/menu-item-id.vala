@@ -31,5 +31,20 @@ public class MenuItemIndex : Gtk.MenuItem {
 		}
 	}
 
+	public void set_accel (string hotkey) {
+		uint key;
+		Gdk.ModifierType mods;
+		if (hotkey.length == 0) return;
+		Gtk.accelerator_parse (hotkey, out key, out mods); 
+		var child = get_child ();
+		(child as Gtk.AccelLabel).set_accel (key, mods);
+	}
+
+	public void set_markup (string text) {
+		if (text.length == 0) return;
+		var child = get_child ();
+		(child as Gtk.Label).set_markup (text);
+	}
+
 }
 

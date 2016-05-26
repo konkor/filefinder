@@ -100,7 +100,7 @@ public class Preferences : Gtk.Window {
 									Environment.get_user_data_dir (),
 									"filefinder", "extensions"));
 		if (!file.query_exists ())
-			create_plugs ();
+			create_plug ();
 		config = Path.build_filename (config, "filefinder.conf");
 		file = File.new_for_path (config);
 		try {
@@ -130,6 +130,9 @@ public class Preferences : Gtk.Window {
 												"cb_single", cb_single.active.to_string ()));
 			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
 												"spin_rows", ((int) spin_rows.get_value()).to_string ()));
+			if (default_plugin.length > 0)
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+												"default_plugin", default_plugin));
 			foreach (ViewColumn p in columns) {
 				dos.put_string ("%d %s %s\n".printf (PreferenceType.COLUMN,
 								p.name, p.get_value ()));
@@ -213,6 +216,9 @@ public class Preferences : Gtk.Window {
 						case "spin_rows":
 							spin_rows.set_value (int.parse (val));
 							break;
+						case "default_plugin":
+							default_plugin = val;
+							break;
 					}
 					} else if (t == PreferenceType.COLUMN) {
 						string[] stringValues = val.split(":");
@@ -238,24 +244,33 @@ public class Preferences : Gtk.Window {
 		return true;
 	}
 
-	private void create_plugs () {
+	public Plugin? get_default () {
+		if (default_plugin.length == 0) return null;
+		foreach (Plugin p in plugins) {
+			if (p.default_action) return p;
+		}
+		return null;
+	}
+
+	public File? create_plug (string name = "compress") {
 		File file;
 		string path = Path.build_filename (Environment.get_user_data_dir (),
 											"filefinder", "extensions");
 		file = File.new_for_path (path);
 		if (!file.query_exists ())
 			DirUtils.create (path, 0744);
-		path = Path.build_filename (path, "compress");
+		path = Path.build_filename (path, name);
+		file = File.new_for_path (path);
+		if (file.query_exists ())
+			return file;
 		try {
-			FileUtils.set_contents (path,
-			"#!/bin/bash\n\n" +
-			"#PLUGNAME Compress...\n" +
-			"#PLUGDESC Compress selected files\n\n" +
-			"exec file-roller --notify --add \"$@\"\n");
+			FileUtils.set_contents (path, Text.extension);
 			FileUtils.chmod (path, 0755);
 		} catch (Error e) {
 			Debug.error ("create_plugs", e.message);
+			return null;
 		}
+		return file;
 	}
 
 	public bool load_plugs () {
@@ -312,7 +327,7 @@ public class Preferences : Gtk.Window {
 
 	private void parse_plug (File file) {
 		int i = 0, count = 0;
-		string name = file.get_basename(), desc = "", line;
+		string name = file.get_basename(), desc = "", keys = "", line;
 		try {
 			DataInputStream dis = new DataInputStream (file.read ());
 			while ((line = dis.read_line (null)) != null) {
@@ -323,21 +338,28 @@ public class Preferences : Gtk.Window {
 						if (line.length > 0) {
 							name = line;
 							count++;
-							if (count == 2) break;
+							if (count == 3) break;
 						}
 					} else if (line.substring (0, i).up() == "#PLUGDESC") {
 						line = line.substring (i + 1).strip ();
 						if (line.length > 0) {
 							desc = line;
 							count++;
-							if (count == 2) break;
+							if (count == 3) break;
+						}
+					} else if (line.substring (0, i).up() == "#PLUGKEYS") {
+						line = line.substring (i + 1).strip ();
+						if (line.length > 0) {
+							keys = line;
+							count++;
+							if (count == 3) break;
 						}
 					}
 				}
 			}
 			//we need at least one tag to identify pluging 
 			if (count > 0)
-				plugins.append (new Plugin (name, desc, file.get_path(),
+				plugins.append (new Plugin (name, desc, file.get_path(), keys,
 											file.get_uri() == default_plugin));
 		} catch (Error err) {
 			Debug.error ("parse_plug", err.message);
@@ -348,6 +370,7 @@ public class Preferences : Gtk.Window {
 		refresh_general ();
 		refresh_ui ();
 		//refresh_mime ();
+		page_plug.reload ();
 	}
 
 	private void refresh_general () {
@@ -418,6 +441,8 @@ public class Preferences : Gtk.Window {
 	private Gtk.CheckButton cb_dark;
 	private Gtk.CheckButton cb_single;
 	private Gtk.SpinButton spin_rows;
+
+	private PagePlugin page_plug;
 
 	private void build_gui () {
 		Gtk.Label label;
@@ -764,10 +789,16 @@ public class Preferences : Gtk.Window {
 			is_changed = true;
 		});
 		vbox.add (button);
-
 		cb_group.changed.connect (()=>{
 			refresh_mimes ();
 		});
+
+		//Excluded locations
+		page_plug = new PagePlugin ();
+		notebook.add (page_plug);
+		label = new Label ("Extensions");
+		notebook.set_tab_label (page_plug, label);
+		
 		set_default_size (640, 480);
 		show_all ();
 		hide ();

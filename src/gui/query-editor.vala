@@ -63,7 +63,7 @@ public class QueryEditor : Gtk.FlowBox {
 		changed_rows ();
 	}
 
-	 private void on_row_close (QueryRow row) {
+	private void on_row_close (QueryRow row) {
 		rows.remove (row);
 		row.get_parent().dispose ();
 		invalidate_sort ();
