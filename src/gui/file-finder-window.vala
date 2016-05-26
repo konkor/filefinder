@@ -184,7 +184,9 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		result_view = new ResultsView ();
 		scrolledwindow.add (result_view);
 
-		set_default_size (800, 512);
+		set_default_size (Filefinder.preferences.rect.width, Filefinder.preferences.rect.height);
+		if (Filefinder.preferences.is_maximized)
+			maximize ();
 		if (Filefinder.preferences.first_run) {
 			show_info (Text.first_run);
 			Filefinder.preferences.first_run = false;
@@ -198,6 +200,15 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			return false;
 		});
 		result_view.changed_selection.connect (()=>{set_subtitle ();});
+		size_allocate.connect (()=>{
+			Filefinder.preferences.save_geometry ();
+		});
+		window_state_event.connect (()=>{
+			Filefinder.preferences.save_geometry ();
+			return false;
+			
+		});
+		paned.position = _paned_pos = Filefinder.preferences.paned_pos;
 	}
 
 	public void post_init () {
@@ -212,14 +223,17 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			} else {
 				_paned_pos = paned.position;
 				paned.position = 0;
+				Filefinder.preferences.paned_pos = _paned_pos;
 			}
 		}
 	}
 
 	public void off_paned (bool off = true) {
 		if (off) {
-			if (paned.position > 0)
+			if (paned.position > 0) {
 				_paned_pos = paned.position;
+				Filefinder.preferences.paned_pos = _paned_pos;
+			}
 			paned.position = 0;
 		} else {
 			paned.position = _paned_pos;
@@ -234,6 +248,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			} else {
 				editor.get_preferred_height_for_width (editor.get_allocated_width(), out h1, out h2);
 				if (h2 < 400) paned.position = h2 + 6;
+				if (editor.rows.length() == 1) paned.position += 6;
 			}
 		} else {
 			if (paned.position < 400)

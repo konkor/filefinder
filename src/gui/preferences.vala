@@ -49,6 +49,10 @@ public class Preferences : Gtk.Window {
 	public List<Plugin> plugins;
 	public string default_plugin = "";
 
+	public Cairo.RectangleInt rect = Cairo.RectangleInt()
+									{x=0,y=0,width=800,height=512};
+	public bool is_maximized = false;
+
 	public Preferences () {
 		//title = Text.app_name + " Preferences";
 		_mime_count = _mime_type_groups.length;
@@ -133,6 +137,10 @@ public class Preferences : Gtk.Window {
 			if (default_plugin.length > 0)
 			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
 												"default_plugin", default_plugin));
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+												"geometry", 
+												"%d %d %d %d %s %d".printf(rect.x, rect.y, rect.width, rect.height,
+												is_maximized.to_string(), paned_pos)));
 			foreach (ViewColumn p in columns) {
 				dos.put_string ("%d %s %s\n".printf (PreferenceType.COLUMN,
 								p.name, p.get_value ()));
@@ -155,9 +163,35 @@ public class Preferences : Gtk.Window {
 		return true;
 	}
 
+	public int paned_pos;
+
+	public void save_geometry () {
+		if (Filefinder.window == null) return;
+		Gdk.Window gdk_window = Filefinder.window.get_window ();
+		if (gdk_window == null) return;
+		Gdk.WindowState ws = gdk_window.get_state();
+		int x, y;
+
+		if ((Gdk.WindowState.WITHDRAWN in ws) ||
+			(Gdk.WindowState.ICONIFIED in ws) ||
+			(Gdk.WindowState.MAXIMIZED in ws) ||
+			(Gdk.WindowState.TILED in ws)) {
+			if (Gdk.WindowState.MAXIMIZED in ws) is_maximized = true;
+			else is_maximized = false;
+		} else {
+			is_maximized = false;
+			Filefinder.window.get_position (out x, out y);
+			rect.x = x; rect.y = y;
+			Filefinder.window.get_size (out x, out y);
+			rect.width = x; rect.height = y;
+		}
+		is_changed = true;
+	}
+
 	public bool load () {
 		int i;
 		string line, name, val;
+		string[] strs;
 		PreferenceType t;
 		Gtk.TreeIter iter;
 		string config = Path.build_filename (Environment.get_user_data_dir (),
@@ -219,12 +253,22 @@ public class Preferences : Gtk.Window {
 						case "default_plugin":
 							default_plugin = val;
 							break;
+						case "geometry":
+							strs = val.split(" ");
+							if (strs.length != 6) break;
+							rect.x = int.parse(strs[0]);
+							rect.y = int.parse(strs[1]);
+							rect.width = int.parse(strs[2]);
+							rect.height = int.parse(strs[3]);
+							is_maximized = bool.parse(strs[4]);
+							paned_pos = int.parse(strs[5]);
+							break;
 					}
 					} else if (t == PreferenceType.COLUMN) {
-						string[] stringValues = val.split(":");
-						int id = int.parse(stringValues[0]);
-						int w = int.parse(stringValues[1]);
-						bool vis = bool.parse(stringValues[2]);
+						strs = val.split(":");
+						int id = int.parse(strs[0]);
+						int w = int.parse(strs[1]);
+						bool vis = bool.parse(strs[2]);
 						columns [id].width = w;
 						columns [id].visible = vis;
 					} else if (t == PreferenceType.MIME) {

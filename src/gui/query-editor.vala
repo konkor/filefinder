@@ -54,13 +54,14 @@ public class QueryEditor : Gtk.FlowBox {
 	public void add_row (QueryRow row) {
 		add (row);
 		row.closed.connect (on_row_close);
-		row.changed_type.connect (()=>{
+		row.changed_type.connect ((r)=>{
 			invalidate_sort ();
 			changed_rows ();
 		});
 		rows.append (row);
 		invalidate_sort ();
 		changed_rows ();
+		//row.parent.grab_focus ();
 	}
 
 	private void on_row_close (QueryRow row) {

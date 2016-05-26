@@ -295,7 +295,7 @@ public class ResultsView : Gtk.TreeView {
 			case Columns.TIME_MODIFIED:
 				model.get_value (iter, Columns.TIME_MODIFIED, out v);
 				DateTime d = new DateTime.from_unix_local ((int64) v.get_uint64());
-				(cell as Gtk.CellRendererText).text = d.format ("%F %T");
+				(cell as Gtk.CellRendererText).text = d.format ("%F  %T");
 				break;
 			case Columns.PERMISSIONS:
 				model.get_value (iter, Columns.PERMISSIONS, out v);
@@ -374,6 +374,8 @@ public class ResultsView : Gtk.TreeView {
 					results_selection.display_name = (string) val;
 					model.get_value (iter, Columns.TIME_MODIFIED, out val);
 					results_selection.time_modified = (uint64) val;
+					model.get_value (iter, Columns.PERMISSIONS, out val);
+					results_selection.permission = (uint32) val;
 					model.get_value (iter, Columns.SIZE, out val);
 					results_selection.size = (uint64) val;
 					model.get_value (iter, Columns.MIME, out val);
@@ -400,6 +402,9 @@ public class ResultsView : Gtk.TreeView {
 					model.get_value (iter, Columns.TIME_MODIFIED, out val);
 					if (results_selection.time_modified != (uint64) val)
 						results_selection.time_modified = 0;
+					model.get_value (iter, Columns.PERMISSIONS, out val);
+					if (results_selection.permission != (uint32) val)
+						results_selection.permission = 0;
 					model.get_value (iter, Columns.SIZE, out val);
 					results_selection.size += (uint64) val;
 					results_selection.position++;
@@ -422,6 +427,9 @@ public class ResultsView : Gtk.TreeView {
 		if (results_selection.time_modified != 0) {
 			DateTime d = new DateTime.from_unix_local ((int64)results_selection.time_modified);
 			msg += "<b>Modified:</b> %s\n".printf (d.format ("%F %T"));
+		}
+		if (results_selection.permission != 0) {
+			msg += "<b>Permissions:</b> %o\n".printf (results_selection.permission);
 		}
 		var dlg = new Gtk.MessageDialog.with_markup (Filefinder.window, 0,
 					Gtk.MessageType.INFO, Gtk.ButtonsType.CLOSE,

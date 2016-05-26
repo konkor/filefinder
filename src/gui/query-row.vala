@@ -38,6 +38,7 @@ public class QueryRow : Gtk.Box {
 			combo_type.active = value;
 		}
 	}
+
 	public QueryRow () {
 		GLib.Object (orientation:Gtk.Orientation.HORIZONTAL, spacing:6);
 		this.margin = 2;
