@@ -374,6 +374,20 @@ public class Service : Gtk.ListStore {
 							l.recursive = true;
 							list_dir (l, false);
 						}
+						/*Results d = new Results ();
+						d.display_name = ".";
+						d.path = GLib.Path.build_filename (loc.folder, info.get_name ());
+						d.time_modified = info.get_attribute_uint64 (FileAttribute.TIME_MODIFIED);
+						d.permission = info.get_attribute_uint32 (FileAttribute.UNIX_MODE);
+						//d.size = info.get_size ();
+						d.mime = info.get_content_type ();
+						if (info.get_is_symlink())
+							d.type = (FileType) 3;
+						else
+							d.type = info.get_file_type();
+						if (d != null) {
+							results_array.results += (owned) d;
+						}*/
 						break;
 					case FileType.REGULAR:
 						Results res = apply_masks (info, loc.folder);

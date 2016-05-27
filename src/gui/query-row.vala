@@ -42,7 +42,6 @@ public class QueryRow : Gtk.Box {
 	public QueryRow () {
 		GLib.Object (orientation:Gtk.Orientation.HORIZONTAL, spacing:6);
 		this.margin = 2;
-		this.get_style_context ().add_class ("search-bar");
 		_filter = new Filter ();
 
 		combo_type = new Gtk.ComboBoxText ();

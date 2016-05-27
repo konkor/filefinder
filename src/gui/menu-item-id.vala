@@ -17,7 +17,7 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class MenuItemIndex : Gtk.MenuItem {
+public class MenuItemIndex : Gtk.ImageMenuItem {
 	private int _id = -1;
 
 	public MenuItemIndex (int index = -1, string text = "") {

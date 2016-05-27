@@ -102,6 +102,8 @@ public class ResultsView : Gtk.TreeView {
 		mi.activate.connect (()=>{
 			open_selected ();
 		});
+		mi = new Gtk.MenuItem.with_label ("Open With");
+		menu.add (mi);
 		//menu.add (new Gtk.SeparatorMenuItem ());
 		mi = new Gtk.MenuItem.with_label ("Open Location");
 		menu.add (mi);
@@ -209,9 +211,11 @@ public class ResultsView : Gtk.TreeView {
 			if (count == 0) {
 				return;
 			}
+			List<string>? types = get_selected_types ();
 			Gtk.MenuItem item = (Gtk.MenuItem) menu.get_children ().nth_data (0);
 			item.label = "Open";
-			if (count == 1) {
+			item.visible = true;
+			if (types.length () == 1) {
 				if (model.get_iter (out iter, get_selection ().get_selected_rows(null).nth_data (0))) {
 					model.get_value (iter, Columns.MIME, out val);
 					if (((string)val) != "application/x-executable") {
@@ -224,10 +228,10 @@ public class ResultsView : Gtk.TreeView {
 					}
 				}
 			} else {
-				item.sensitive = false;
+				item.visible = false;
 			}
 			Gtk.Menu sm = new Gtk.Menu ();
-			((Gtk.MenuItem) menu.get_children ().nth_data (3)).submenu = sm;
+			((Gtk.MenuItem) menu.get_children ().nth_data (4)).submenu = sm;
 			item = new Gtk.MenuItem.with_label ("New Group");
 			sm.add (item);
 			item.activate.connect (()=>{
@@ -244,7 +248,7 @@ public class ResultsView : Gtk.TreeView {
 			sm.show_all ();
 
 			sm = new Gtk.Menu ();
-			((Gtk.MenuItem) menu.get_children ().nth_data (12)).submenu = sm;
+			((Gtk.MenuItem) menu.get_children ().nth_data (13)).submenu = sm;
 
 			Filefinder.preferences.load_plugs ();
 			int i = 0;
@@ -263,6 +267,38 @@ public class ResultsView : Gtk.TreeView {
 				});
 				i++;
 			}
+			sm.show_all ();
+
+			sm = new Gtk.Menu ();
+			((Gtk.MenuItem) menu.get_children ().nth_data (1)).submenu = sm;
+			if (types == null) return;
+			i = 0;
+			if (types.length () == 1) {
+				List<AppInfo> apps = AppInfo.get_all_for_type (types.nth_data (0));
+				foreach (AppInfo p in apps) {
+					var mii = new MenuItemIndex (i, p.get_name ());
+					mii.image = new Image.from_gicon (p.get_icon(), IconSize.MENU);
+					mii.always_show_image = true;
+					sm.add (mii);
+					mii.activate.connect (()=>{
+						open_with (p);
+					});
+					i++;
+				}
+				sm.add (new Gtk.SeparatorMenuItem ());
+			}
+			item = new Gtk.MenuItem.with_label ("Select Application...");
+			item.activate.connect (()=>{
+				var dlg = new Gtk.AppChooserDialog.for_content_type (Filefinder.window, 0, types.nth_data (0));
+				if (dlg.run () == Gtk.ResponseType.OK) {
+					var info = dlg.get_app_info ();
+					if (info != null) {
+						open_with (info);
+					}
+				}
+				dlg.dispose ();
+			});
+			sm.add (item);
 			sm.show_all ();
 
 			return;
@@ -516,6 +552,25 @@ public class ResultsView : Gtk.TreeView {
 		return files;
 	}
 
+	private GLib.List<string>? get_selected_types () {
+		GLib.List<string> types = new GLib.List<string> ();
+		Gtk.TreeIter iter;
+		GLib.Value val;
+		string[] mimes = {};
+		foreach (TreePath p in get_selection ().get_selected_rows (null)) {
+			if (model.get_iter (out iter, p)) {
+				model.get_value (iter, Columns.MIME, out val);
+				if (!(((string) val) in mimes)) {
+					types.append ((string) val);
+					mimes += (string) val;
+				}
+			}
+		}
+		if (types.length() == 0)
+			return null;
+		return types;
+	}
+
 	private void copy_filenames (bool full = false) {
 		GLib.List<GLib.File>? files = get_selected_files ();
 		if (files == null) return;
@@ -580,48 +635,32 @@ public class ResultsView : Gtk.TreeView {
 		}
 	}
 
-	private void open_selected () {
-		Gtk.TreeIter iter;
-		GLib.Value val;
-		GLib.AppInfo app;
-		int count = get_selection ().count_selected_rows ();
-		if (count == 0) {
-			return;
+	private void open_with (AppInfo app, bool get_selected = true) {
+		try {
+			app.launch (get_selected_files (), null);
+		} catch (Error e) {
+			var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
+				Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
+				e.message);
+			dlg.run ();
+			dlg.destroy ();
 		}
-		if (count == 1) {
-			if (model.get_iter (out iter, get_selection ().get_selected_rows(null).nth_data (0))) {
-				model.get_value (iter, Columns.MIME, out val);
-				if (((string)val) != "application/x-executable") {
-					app = GLib.AppInfo.get_default_for_type ((string)val, false);
-					if (app != null) {
-						try {
-							app.launch (get_selected_files (), null);
-						} catch (Error e) {
-							var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
-								Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
-								e.message);
-							dlg.run ();
-							dlg.destroy ();
-						}
-					} else {
-						var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
-							Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "No registered application to file type to:\n%s",
-							(string)val);
-						dlg.run ();
-						dlg.destroy ();
-					}
-				} else {
-					try {
-						app = AppInfo.create_from_commandline (((File)get_selected_files ().nth_data(0)).get_path (), null, AppInfoCreateFlags.NONE);
-						app.launch (null, null);
-					} catch (Error e) {
-						var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
-							Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, "Failed to launch: %s",
-							e.message);
-						dlg.run ();
-						dlg.destroy ();
-					}
-				}
+	}
+
+	private void open_selected () {
+		GLib.AppInfo app;
+		List<string>? types = get_selected_types ();
+		if (types == null) return;
+		if (((string)types.nth_data(0)) != "application/x-executable") {
+			app = GLib.AppInfo.get_default_for_type ((string)types.nth_data(0), false);
+			if (app != null) {
+				open_with (app);
+			}
+		} else {
+			var apps = get_selected_files ();
+			foreach (File f in apps) {
+				app = AppInfo.create_from_commandline (f.get_path (), null, AppInfoCreateFlags.NONE);
+				open_with (app);
 			}
 		}
 	}
