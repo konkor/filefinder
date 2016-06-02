@@ -235,7 +235,18 @@ public class ResultsView : Gtk.TreeView {
 			item = new Gtk.MenuItem.with_label ("New Group");
 			sm.add (item);
 			item.activate.connect (()=>{
-				add_mimes (-1);
+				InputDialog d = new InputDialog (Filefinder.window);
+				d.label.label = "Input a new group's name";
+				d.entry.text = "New Group";
+				int r = d.run ();
+				string s = d.entry.text.strip ();
+				d.destroy ();
+				if (r == Gtk.ResponseType.ACCEPT) {
+					if (s.length > 0) {
+						add_mimes (-1, s);
+						Filefinder.window.show_info ("Created %s group...".printf (s));
+					}
+				}
 			});
 			sm.add (new Gtk.SeparatorMenuItem ());
 			foreach (ViewColumn p in Filefinder.preferences.custom_mime_type_groups) {
@@ -488,7 +499,7 @@ public class ResultsView : Gtk.TreeView {
 		return s;
 	}
 
-	private void add_mimes (int group_index) {
+	private void add_mimes (int group_index, string group_name = "New Group") {
 		Gtk.TreeIter iter;
 		GLib.Value val;
 		string[] mimes = {};
@@ -501,7 +512,7 @@ public class ResultsView : Gtk.TreeView {
 			}
 		}
 		if (mimes.length > 0)
-			Filefinder.preferences.add_mimes (group_index, mimes);
+			Filefinder.preferences.add_mimes (group_index, mimes, group_name);
 	}
 
 	private GLib.List<GLib.File>? get_selected_dirs () {
@@ -698,7 +709,9 @@ public class ResultsView : Gtk.TreeView {
 	private DateTime last_info;
 	private bool skip_all;
 	private bool replace_all;
+	private bool rename_all;
 	private void copy_to (GLib.List<GLib.File>? files, string destination) {
+		string new_name;
 		if ((files == null) || (destination == null)) return;
 		while (files_count != 0) {
 			GLib.Thread.usleep (2500);
@@ -707,8 +720,7 @@ public class ResultsView : Gtk.TreeView {
 		files_count_ready = files_processed = 0;
 		files_count = files.length ();
 		last_info = new DateTime.now_local ();
-		skip_all = false;
-		replace_all = false;
+		skip_all = replace_all = rename_all = false;
 		foreach (File f in files) {
 			file = File.new_for_path (Path.build_filename (destination, f.get_basename ()));
 			if (file.query_exists ()) {
@@ -717,14 +729,25 @@ public class ResultsView : Gtk.TreeView {
 					if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 					continue;
 				}
-				if (!replace_all) {
+				if (replace_all) {
+					if (!delete_file (file)) {
+						files_processed++;
+						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
+						continue;
+					}
+				} else if (rename_all) {
+					file = get_new_path (file);
+				} else {
 					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
 						Gtk.MessageType.WARNING, Gtk.ButtonsType.NONE,
-						"The destination file is exist.\nDo you want replace it?\n\n%s",
+						"<b>The destination file is exist. Do you want replace it?</b>\n\n%s",
 						file.get_path());
+					dlg.use_markup = true;
 					dlg.add_buttons ("Skip All", Gtk.ResponseType.CANCEL + 100,
+									 "Rename All", Gtk.ResponseType.ACCEPT + 201,
 									 "Replace All", Gtk.ResponseType.ACCEPT + 100,
 									 "Skip", Gtk.ResponseType.CANCEL,
+									 "Rename", Gtk.ResponseType.ACCEPT + 200,
 									 "Replace", Gtk.ResponseType.ACCEPT);
 					int r = dlg.run ();
 					dlg.destroy ();
@@ -748,18 +771,19 @@ public class ResultsView : Gtk.TreeView {
 							continue;
 						}
 						break;
+					case Gtk.ResponseType.ACCEPT + 200:
+						file = get_new_path (file);
+						break;
+					case Gtk.ResponseType.ACCEPT + 201:
+						rename_all = true;
+						file = get_new_path (file);
+						break;
 					case Gtk.ResponseType.CANCEL + 100:
 						skip_all = true;
 						files_processed++;
 						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 						continue;
 					default:
-						files_processed++;
-						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
-						continue;
-					}
-				} else {
-					if (!delete_file (file)) {
 						files_processed++;
 						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 						continue;
@@ -808,6 +832,25 @@ public class ResultsView : Gtk.TreeView {
 		}
 	}
 
+	private GLib.File get_new_path (GLib.File file) {
+		uint i = 0;
+		File? dir = file.get_parent ();
+		string name = file.get_basename ();
+		int e = name.last_index_of (".");
+		string s = file.get_path ();
+		string path = "";
+		string ext = "";
+		if (dir != null) path = dir.get_path ();
+		if (e > -1) {
+			ext = name.substring (e);
+			name = name.substring (0, e);
+		}
+		while (Filefinder.exist (s)) {
+			s = "%s(%u)%s".printf (Path.build_filename (path, name), ++i, ext);
+		}
+		return File.new_for_path (s);
+	}
+
 	private void move_to (GLib.List<GLib.File>? files, string destination) {
 		if ((files == null) || (destination == null)) return;
 		File file;
@@ -818,8 +861,7 @@ public class ResultsView : Gtk.TreeView {
 		files_count_ready = 0;
 		files_count = files.length ();
 		last_info = new DateTime.now_local ();
-		skip_all = false;
-		replace_all = false;
+		skip_all = replace_all = rename_all = false;
 		foreach (File f in files) {
 			files_processed++;
 			file = File.new_for_path (Path.build_filename (destination, f.get_basename ()));
@@ -828,18 +870,35 @@ public class ResultsView : Gtk.TreeView {
 					if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 					continue;
 				}
-				if (!replace_all) {
+				if (replace_all) {
+					if (!delete_file (file)) {
+						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
+						continue;
+					}
+				} else if (rename_all) {
+					file = get_new_path (file);
+				} else {
 					var dlg = new Gtk.MessageDialog (Filefinder.window, 0,
 						Gtk.MessageType.WARNING, Gtk.ButtonsType.NONE,
-						"The destination file is exist.\nDo you want replace it?\n\n%s",
+						"<b>The destination file is exist. Do you want replace it?</b>\n\n%s",
 						file.get_path());
+					dlg.use_markup = true;
 					dlg.add_buttons ("Skip All", Gtk.ResponseType.CANCEL + 100,
-									"Replace All", Gtk.ResponseType.ACCEPT + 100,
-									"Skip", Gtk.ResponseType.CANCEL,
-									"Replace", Gtk.ResponseType.ACCEPT);
+									 "Rename All", Gtk.ResponseType.ACCEPT + 201,
+									 "Replace All", Gtk.ResponseType.ACCEPT + 100,
+									 "Skip", Gtk.ResponseType.CANCEL,
+									 "Rename", Gtk.ResponseType.ACCEPT + 200,
+									 "Replace", Gtk.ResponseType.ACCEPT);
 					int r = dlg.run ();
 					dlg.destroy ();
 					switch (r) {
+					case Gtk.ResponseType.ACCEPT + 200:
+						file = get_new_path (file);
+						break;
+					case Gtk.ResponseType.ACCEPT + 201:
+						rename_all = true;
+						file = get_new_path (file);
+						break;
 					case Gtk.ResponseType.ACCEPT:
 						if (!delete_file (file)) {
 							if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
@@ -861,11 +920,6 @@ public class ResultsView : Gtk.TreeView {
 						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 						continue;
 					default:
-						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
-						continue;
-					}
-				} else {
-					if (!delete_file (file)) {
 						if (files_processed == files_count) files_count = files_processed = files_count_ready = 0;
 						continue;
 					}

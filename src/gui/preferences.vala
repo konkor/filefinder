@@ -730,22 +730,27 @@ public class Preferences : Gtk.Window {
 		cb_group = new Gtk.ComboBoxText.with_entry ();
 		cb_group.margin_end = 6;
 		entry = (Entry)cb_group.get_child();
-		/*entry.changed.connect (()=>{
-			entry.text = entry.text.replace (" ", "");
-		});*/
 		hbox.pack_start (cb_group, true, true, 0);
 
 		button = new Button.from_icon_name ("list-add-symbolic", IconSize.BUTTON);
 		button.tooltip_text = "Add New MIME Group";
 		button.clicked.connect (()=>{
-			entry.text = entry.text.strip ();
-			if (entry.text.length == 0) return;
-			MimeGroup mg = MimeGroup ();
-			mg.name = entry.text;
-			_mime_type_groups += mg;
-			cb_group.append_text (mg.name);
-			cb_group.active = cb_group.model.iter_n_children (null) - 1;
-			is_changed = true;
+			string s = entry.text.strip ();
+			InputDialog d = new InputDialog (Filefinder.preferences);
+			d.label.label = "Input a new group's name";
+			d.entry.text = s;
+			int r = d.run ();
+			s = d.entry.text.strip ();
+			d.destroy ();
+			if (r == Gtk.ResponseType.ACCEPT) {
+				if (s.length == 0) return;
+				MimeGroup mg = MimeGroup ();
+				mg.name = s;
+				_mime_type_groups += mg;
+				cb_group.append_text (mg.name);
+				cb_group.active = cb_group.model.iter_n_children (null) - 1;
+				is_changed = true;
+			}
 		});
 		hbox.pack_start (button, false, false, 0);
 
@@ -896,11 +901,11 @@ public class Preferences : Gtk.Window {
 		}
 	}
 
-	public void add_mimes (int group_index, string[] mimes) {
+	public void add_mimes (int group_index, string[] mimes, string group_name = "New Group") {
 		MimeGroup mg;
 		if (group_index == -1) {
 			mg = MimeGroup ();
-			mg.name = "New Group";
+			mg.name = group_name;
 		} else {
 			mg = _mime_type_groups[_mime_count + group_index];
 		}
