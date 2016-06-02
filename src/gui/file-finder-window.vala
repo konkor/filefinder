@@ -38,6 +38,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	private Gtk.Menu mmenu;
 	private Gtk.Paned paned;
 	private Gtk.ScrolledWindow scrolledwindow1;
+	private Gtk.ScrolledWindow scrolledwindow;
 	private Gtk.AccelGroup accel_group;
 	public Gtk.Spinner spinner;
 
@@ -150,14 +151,11 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 		empty_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 40);
 		empty_box.margin = 80;
-		vbox1.pack_start (empty_box, true, true, 0);
-
 		image = new Gtk.Image.from_icon_name ("folder-documents-symbolic", Gtk.IconSize.DIALOG);
 		empty_box.add (image);
 		empty_box.add (new Label("\t\t\t   No search results.\n"+Text.first_run));
 
 		paned = new Gtk.Paned (Filefinder.preferences.split_orientation);
-		paned.events |= Gdk.EventMask.VISIBILITY_NOTIFY_MASK;
 		paned.can_focus = true;
 		if (Filefinder.preferences.split_orientation == Gtk.Orientation.VERTICAL)
 			paned.position = 1;// paned.min_position;
@@ -176,10 +174,14 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		scrolledwindow1.add (editor);
 		editor.changed_rows.connect (()=>{check_paned_position ();});
 
-		Gtk.ScrolledWindow scrolledwindow = new Gtk.ScrolledWindow (null, null);
+		vbox1 = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
+		paned.pack2 (vbox1, true, false);
+		vbox1.pack_start (empty_box, true, true, 0);
+		scrolledwindow = new Gtk.ScrolledWindow (null, null);
 		scrolledwindow.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
 		scrolledwindow.shadow_type = Gtk.ShadowType.OUT;
-		paned.pack2 (scrolledwindow, true, false);
+		//paned.pack2 (scrolledwindow, true, false);
+		vbox1.pack_start (scrolledwindow, true, true, 0);
 
 		result_view = new ResultsView ();
 		scrolledwindow.add (result_view);
@@ -195,10 +197,6 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	private void initialize () {
 		button_go.clicked.connect (on_go_clicked);
-		paned.visibility_notify_event.connect (()=>{
-			empty_box.visible = !paned.visible;
-			return false;
-		});
 		result_view.changed_selection.connect (()=>{set_subtitle ();});
 		size_allocate.connect (()=>{
 			Filefinder.preferences.save_geometry ();
@@ -212,7 +210,20 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
 	public void post_init () {
-		paned.visible = false;
+		show_box = false;
+		show_box = true;
+		if (Filefinder.uris.length () == 0) add_filter ();
+	}
+
+	public bool show_box {
+		get {return empty_box.visible;}
+		set {
+			if (empty_box.visible != value) {
+				print ("empty_box visible\n");
+				empty_box.visible = value;
+				scrolledwindow.visible = !empty_box.visible;
+			}
+		}
 	}
 
 	private int _paned_pos = 0;
@@ -272,6 +283,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 				editor.add_file (s);
 			}
 		}
+		Filefinder.uris = new List<string>();
 	}
 
 	private void on_go_clicked () {
@@ -301,6 +313,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		}
 		int n = result_view.model.iter_n_children (null);
 		if (n > 0) {
+			show_box = false;
 			if (result_view.results_selection.position == 0)
 				hb.subtitle = "(%d items in %s)".printf (n,
 					result_view.get_bin_size (Filefinder.service.results_all.size));
@@ -310,6 +323,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 					result_view.get_bin_size (result_view.results_selection.size),
 					n, result_view.get_bin_size (Filefinder.service.results_all.size));
 		} else {
+			show_box = true;
 			hb.subtitle = "(No items found)";
 			if (Filefinder.preferences.check_autohide)
 				off_paned (false);

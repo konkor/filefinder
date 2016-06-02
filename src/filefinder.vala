@@ -27,7 +27,7 @@ public class Filefinder : Gtk.Application
 	public static Preferences preferences;
 	public static Service service;
 	public static Filefinder self;
-	private List<string> uris;
+	public static List<string> uris;
 
 	private const GLib.ActionEntry[] action_entries = {
 		{"preferences", preferences_cb},
