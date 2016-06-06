@@ -71,8 +71,8 @@ sudo make install
 ```
 
 ### Source and packages
-* [GitHub](https://github.com/konkor/filefinder.git)
-* [Latest Debian/Ubuntu x64](https://www.dropbox.com/s/kep294nky3kzfdi/filefinder_latest.deb?dl=0)
+* [GitHub](https://github.com/konkor/filefinder/archive/master.zip)
+* [Latest Debian/Ubuntu x64](https://www.dropbox.com/s/6z3uq7sqn8runtx/filefinder_latest.deb?dl=1)
 
 ## Screenshots
 
