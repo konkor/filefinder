@@ -72,7 +72,7 @@ public class Filefinder : Gtk.Application
 
 		set_accels_for_action ("app.quit", {"<Primary>q"});
 		set_accels_for_action ("app.add_location", {"Insert"});
-		set_accels_for_action ("app.toggle_paned", {"<Primary>n"});
+		set_accels_for_action ("app.toggle_paned", {"<Ctrl>n"});
 
 		Environment.set_application_name (Text.app_name);
 
@@ -105,6 +105,7 @@ public class Filefinder : Gtk.Application
 		//window.add_locations (uris);
 		open.connect (()=>{window.add_locations (uris);});
 		preferences.load_plugs ();
+		window.enable_toolbar ();
 	}
 
 	protected override void activate () {

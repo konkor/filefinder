@@ -43,6 +43,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	public Gtk.Spinner spinner;
 
 	private Gtk.Box empty_box;
+	private Gtk.Box toolbar_bottom;
 
 	private QueryEditor editor;
 	public ResultsView result_view;
@@ -62,7 +63,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		mmenu = new Gtk.Menu ();
 		MenuItemIndex mii = new MenuItemIndex (0, "Toggle Panel");
 		mii.tooltip_text = "Toggle Visiblity Of The Filter Panel";
-		mii.set_accel ("<Ctrl>N");
+		mii.set_accel ("<Ctrl>n");
 		mmenu.add (mii);
 		mii.activate.connect (()=>{
 			toggle_paned ();
@@ -152,8 +153,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		empty_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 40);
 		empty_box.margin = 80;
 		image = new Gtk.Image.from_icon_name ("folder-documents-symbolic", Gtk.IconSize.DIALOG);
-		empty_box.add (image);
-		empty_box.add (new Label("\t\t\t   No search results.\n"+Text.first_run));
+		empty_box.pack_start (image, true, true, 0);
+		//var label = new Label("<b>No search results.</b>");
+		//label.use_markup = true;
+		//empty_box.pack_start (label, true, true, 0);
 
 		paned = new Gtk.Paned (Filefinder.preferences.split_orientation);
 		paned.can_focus = true;
@@ -162,6 +165,9 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		else
 			paned.position = 480;
 		vbox1.add (paned);
+
+		toolbar_bottom = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
+		vbox1.add (toolbar_bottom);
 
 		scrolledwindow1 = new Gtk.ScrolledWindow (null, null);
 		scrolledwindow1.vscrollbar_policy = Gtk.PolicyType.AUTOMATIC;
@@ -219,7 +225,6 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		get {return empty_box.visible;}
 		set {
 			if (empty_box.visible != value) {
-				print ("empty_box visible\n");
 				empty_box.visible = value;
 				scrolledwindow.visible = !empty_box.visible;
 			}
@@ -415,5 +420,25 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		button_go.active = false;
 		while (Gtk.events_pending ())
 			Gtk.main_iteration ();
+	}
+
+	private Toolbar? toolbar = null;
+	public void enable_toolbar () {
+		if (!Filefinder.preferences.show_toolbar) return;
+		disable_toolbar ();
+		toolbar = new Toolbar ();
+		toolbar_bottom.pack_start (toolbar, true, false, 0);
+		refresh_toolbar ();
+	}
+
+	public void disable_toolbar () {
+		if (toolbar == null) return;
+		toolbar.destroy ();
+		toolbar = null;
+	}
+
+	public void refresh_toolbar () {
+		if (toolbar == null) return;
+		toolbar.rebuild ();
 	}
 }

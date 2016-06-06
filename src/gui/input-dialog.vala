@@ -25,8 +25,8 @@ public class InputDialog : Gtk.Dialog {
 	public InputDialog (Gtk.Window? w = null) {
 		set_transient_for (w);
 		title = Text.app_name;
-		add_buttons ("Cancel", Gtk.ResponseType.CANCEL,
-					"OK", Gtk.ResponseType.ACCEPT);
+		add_button ("_Cancel", Gtk.ResponseType.CANCEL);
+		add_button ("_OK", Gtk.ResponseType.ACCEPT);
 		set_default_size (512, 140);
 		Gtk.Box content = get_content_area () as Gtk.Box;
 		content.border_width = 8;
@@ -43,10 +43,15 @@ public class InputDialog : Gtk.Dialog {
 				entry.set_text ("");
 			}
 		});
+		entry.key_press_event.connect ((event) => {
+			if (event.keyval == Gdk.Key.Return) {
+				response (Gtk.ResponseType.ACCEPT);
+				return true;
+			}
+			return false;
+		});
 		content.add (entry);
 
 		show_all ();
 	}
-
 }
-

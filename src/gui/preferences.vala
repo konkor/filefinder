@@ -141,6 +141,12 @@ public class Preferences : Gtk.Window {
 												"geometry", 
 												"%d %d %d %d %s %d".printf(rect.x, rect.y, rect.width, rect.height,
 												is_maximized.to_string(), paned_pos)));
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+												"show_toolbar", show_toolbar.to_string ()));
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+												"toolbar_groups", toolbar_groups.to_string ()));
+			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
+												"toolbar_shotcuts", toolbar_shotcuts.to_string ()));
 			foreach (ViewColumn p in columns) {
 				dos.put_string ("%d %s %s\n".printf (PreferenceType.COLUMN,
 								p.name, p.get_value ()));
@@ -253,6 +259,15 @@ public class Preferences : Gtk.Window {
 						case "default_plugin":
 							default_plugin = val;
 							break;
+						case "show_toolbar":
+							show_toolbar = bool.parse (val);
+							break;
+						case "toolbar_groups":
+							toolbar_groups = bool.parse (val);
+							break;
+						case "toolbar_shotcuts":
+							toolbar_shotcuts = bool.parse (val);
+							break;
 						case "geometry":
 							strs = val.split(" ");
 							if (strs.length != 6) break;
@@ -297,7 +312,7 @@ public class Preferences : Gtk.Window {
 	}
 
 	public File? create_plug (string name = "compress") {
-		File file;
+		File file, template;
 		string path = Path.build_filename (Environment.get_user_data_dir (),
 											"filefinder", "extensions");
 		file = File.new_for_path (path);
@@ -308,7 +323,8 @@ public class Preferences : Gtk.Window {
 		if (file.query_exists ())
 			return file;
 		try {
-			FileUtils.set_contents (path, Text.extension);
+			template = File.new_for_path (Config.TEMPLATE_DIR + "/template");
+			template.copy (file, 0, null, null);
 			FileUtils.chmod (path, 0755);
 		} catch (Error e) {
 			Debug.error ("create_plugs", e.message);
@@ -327,6 +343,7 @@ public class Preferences : Gtk.Window {
 			save ();
 		}
 		read_plugs (dir);
+		plugins.sort (plugcmp);
 		return true;
 	}
 
@@ -371,44 +388,75 @@ public class Preferences : Gtk.Window {
 
 	private void parse_plug (File file) {
 		int i = 0, count = 0;
-		string name = file.get_basename(), desc = "", keys = "", line;
+		string name = file.get_basename(), desc = "", keys = "", line, command;
+		string icon = "", gr = "";
+		bool psync = false;
+		plug_args args = plug_args.FILES;
+		Plugin plugin;
 		try {
 			DataInputStream dis = new DataInputStream (file.read ());
 			while ((line = dis.read_line (null)) != null) {
 				i = line.index_of (" ");
 				if ((i > 0) && (line.length > i)) {
-					if (line.substring (0, i).up() == "#PLUGNAME") {
-						line = line.substring (i + 1).strip ();
-						if (line.length > 0) {
-							name = line;
-							count++;
-							if (count == 3) break;
-						}
-					} else if (line.substring (0, i).up() == "#PLUGDESC") {
-						line = line.substring (i + 1).strip ();
-						if (line.length > 0) {
-							desc = line;
-							count++;
-							if (count == 3) break;
-						}
-					} else if (line.substring (0, i).up() == "#PLUGKEYS") {
-						line = line.substring (i + 1).strip ();
-						if (line.length > 0) {
-							keys = line;
-							count++;
-							if (count == 3) break;
-						}
+					command = line.substring (0, i).up();
+					line = line.substring (i + 1).strip ();
+					if (line.length == 0) continue;
+					switch (command) {
+					case "#PLUGNAME":
+						name = line;
+						count++;
+						break;
+					case "#PLUGDESC":
+						desc = line;
+						count++;
+						break;
+					case "#PLUGKEYS":
+						keys = line;
+						count++;
+						break;
+					case "#PLUGICON":
+						icon = line;
+						count++;
+						break;
+					case "#PLUGGROUP":
+						gr = line;
+						count++;
+						break;
+					case "#PLUGSYNC":
+						psync = bool.parse(line);
+						count++;
+						break;
+					case "#PLUGARGS":
+						line = line.up ();
+						if (line == "FILEDIRS")
+							args = plug_args.FILEDIRS;
+						else if (line == "FILEPOS")
+							args = plug_args.FILEPOS;
+						count++;
+						break;
 					}
 				}
 			}
 			//we need at least one tag to identify pluging 
-			if (count > 0)
-				plugins.append (new Plugin (name, desc, file.get_path(), keys,
-											file.get_uri() == default_plugin));
+			if (count > 0) {
+				plugin = new Plugin (name, desc, file.get_path(), keys,
+									file.get_uri() == default_plugin);
+				plugin.group = gr;
+				plugin.icon = icon;
+				plugin.sync = psync;
+				plugin.arguments = args;
+				plugins.append (plugin);
+			}
 		} catch (Error err) {
 			Debug.error ("parse_plug", err.message);
 		}
 	}
+
+	CompareFunc<Plugin> plugcmp = (a, b) => {
+		if (a == null) return 1;
+		if (b == null) return -1;
+		return strcmp (a.uri, b.uri);
+	};
 
 	private void refresh_gui () {
 		refresh_general ();
@@ -893,6 +941,54 @@ public class Preferences : Gtk.Window {
 	public void set_autohide (bool enable) {
 		if (check_autohide != enable)
 			cb_autohide.active = enable;
+	}
+
+	private bool _show_toolbar = true;
+	public bool show_toolbar {
+		get {
+			return _show_toolbar;
+		}
+		set {
+			if (_show_toolbar == value) return;
+			_show_toolbar = value;
+			if (Filefinder.window == null) return;
+			if (_show_toolbar)
+				Filefinder.window.enable_toolbar ();
+			else
+				Filefinder.window.disable_toolbar ();
+		}
+	}
+
+	private bool _toolbar_groups = true;
+	public bool toolbar_groups {
+		get {
+			return _toolbar_groups;
+		}
+		set {
+			if (_toolbar_groups == value) return;
+			_toolbar_groups = value;
+			if (Filefinder.window == null) return;
+			if (_show_toolbar) {
+				Filefinder.window.disable_toolbar ();
+				Filefinder.window.enable_toolbar ();
+			}
+		}
+	}
+
+	private bool _toolbar_shotcuts = true;
+	public bool toolbar_shotcuts {
+		get {
+			return _toolbar_shotcuts;
+		}
+		set {
+			if (_toolbar_shotcuts == value) return;
+			_toolbar_shotcuts = value;
+			if (Filefinder.window == null) return;
+			if (_show_toolbar) {
+				Filefinder.window.disable_toolbar ();
+				Filefinder.window.enable_toolbar ();
+			}
+		}
 	}
 
 	public int filter_count {

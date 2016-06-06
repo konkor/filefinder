@@ -49,6 +49,12 @@ public class Plugin : GLib.Object {
 
 	public string hotkey {get;set;default="";}
 
+	public string icon {get;set;default="";}
+
+	public string group {get;set;default="";}
+
+	public plug_args arguments {get;set;default=plug_args.FILES;}
+
 	private void hotkey_cb (SimpleAction action, Variant? parameter) {
 		if (Filefinder.window == null) return;
 		try {
@@ -63,4 +69,10 @@ public class Plugin : GLib.Object {
 			Filefinder.self.remove_action (_uuid);
 		base.dispose ();
 	}
+}
+
+public enum plug_args {
+	FILES,
+	FILEDIRS,
+	FILEPOS
 }

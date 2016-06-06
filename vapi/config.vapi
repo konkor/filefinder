@@ -4,6 +4,7 @@ namespace Config {
         public const string SPRITE_DIR;
         public const string BACKGROUND_DIR;
         public const string PACKAGE_DATA_DIR;
+        public const string TEMPLATE_DIR;
         public const string PACKAGE_LOCALE_DIR;
         public const string PACKAGE_NAME;
         public const string PACKAGE_VERSION;

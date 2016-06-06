@@ -64,6 +64,7 @@ Makefile
 src/Makefile
 src/nautilus/Makefile
 data/icons/Makefile
+data/templates/Makefile
 data/Makefile
 man/Makefile
 ])

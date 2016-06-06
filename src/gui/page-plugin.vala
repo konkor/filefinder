@@ -19,19 +19,50 @@
 using Gtk;
 
 public class PagePlugin : Gtk.ScrolledWindow {
-	Gtk.TreeView view;
-	Gtk.ListStore store;
 
 	public PagePlugin () {
 		build ();
 	}
 
 	private int selection = -1;
+	private Gtk.TreeView view;
+	private Gtk.ListStore store;
+
+	private Gtk.CheckButton cb_toolbar;
+	private Gtk.CheckButton cb_tgroups;
+	private Gtk.CheckButton cb_thotkey;
+	private Gtk.Box tbox;
 
 	private void build () {
 		Gtk.Box box = new Gtk.Box (Gtk.Orientation.VERTICAL, 6);
 		box.border_width = 6;
 		add (box);
+
+		cb_toolbar = new Gtk.CheckButton.with_label ("Show plugin toolbar");
+		box.add (cb_toolbar);
+		tbox = new Gtk.Box (Gtk.Orientation.VERTICAL, 6);
+		tbox.set_margin_start (20);
+		box.add (tbox);
+		cb_tgroups = new Gtk.CheckButton.with_label ("Enable groups of the extensions");
+		tbox.add (cb_tgroups);
+		cb_thotkey = new Gtk.CheckButton.with_label ("Show keyboard shotcuts");
+		tbox.add (cb_thotkey);
+		cb_toolbar.toggled.connect (()=>{
+			if (Filefinder.preferences == null) return;
+			Filefinder.preferences.show_toolbar = cb_toolbar.active;
+			tbox.sensitive = cb_toolbar.active;
+			Filefinder.preferences.is_changed = true;
+		});
+		cb_tgroups.toggled.connect (()=>{
+			if (Filefinder.preferences == null) return;
+			Filefinder.preferences.toolbar_groups = cb_tgroups.active;
+			Filefinder.preferences.is_changed = true;
+		});
+		cb_thotkey.toggled.connect (()=>{
+			if (Filefinder.preferences == null) return;
+			Filefinder.preferences.toolbar_shotcuts = cb_thotkey.active;
+			Filefinder.preferences.is_changed = true;
+		});
 
 		Gtk.Label label = new Label ("<b>Extension Manager</b>");
 		label.use_markup = true;
@@ -192,6 +223,8 @@ public class PagePlugin : Gtk.ScrolledWindow {
 					   2, p.hotkey,
 					   3, p.description, -1);
 		}
+		cb_toolbar.active = Filefinder.preferences.show_toolbar;
+		cb_tgroups.active = Filefinder.preferences.toolbar_groups;
 	}
 
 	private void on_selection () {

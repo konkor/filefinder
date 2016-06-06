@@ -6,6 +6,7 @@ AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
 	-DPACKAGE_DATA_DIR=\""$(pkgdatadir)"\" \
+	-DTEMPLATE_DIR=\""$(pkgdatadir)/templates"\" \
 	$(FILEFINDER_CFLAGS)
 
 AM_CFLAGS =\
@@ -42,7 +43,9 @@ filefinder_SOURCES = \
 	gui/mime-button.vala \
 	base/plugin.vala \
 	gui/page-plugin.vala \
-	gui/input-dialog.vala
+	gui/input-dialog.vala \
+	gui/toolbar.vala \
+	gui/tool-button.vala
 
 #config.vapi 
 
@@ -51,8 +54,10 @@ filefinder_VALAFLAGS =  \
 	--pkg gtk+-3.0 \
 	--pkg gio-2.0 \
 	--pkg gio-unix-2.0 \
-	--pkg posix 
-#	-g --save-temps
+	--pkg posix \
+	--pkg config \
+	--vapidir=\$(top_srcdir)/vapi \
+	-g --save-temps
 
 filefinder_LDFLAGS = \
 	-Wl,--export-dynamic

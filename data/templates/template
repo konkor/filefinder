@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#PLUGNAME Compress
+#PLUGDESC Compress selected files
+#PLUGKEYS <Ctrl>F1
+
+## Plugin arguments [filename|path|position] default filenames
+##  * FILENAME - Pass full filenames as arguments (DEFAULT)
+##  * FILEDIRS - Pass unique directories as arguments
+##  * FILEPOS  - Pass full filenames and position as arguments
+##               if position is none it will pass '-1' second argument
+#PLUGARGS filenames
+
+#PLUGGROUP General
+#PLUGSYNC FALSE
+
+exec file-roller --notify --add "$@"

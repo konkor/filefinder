@@ -259,11 +259,31 @@ public class ResultsView : Gtk.TreeView {
 			sm.show_all ();
 
 			sm = new Gtk.Menu ();
+			List<Gtk.MenuItem> gm = new List<Gtk.MenuItem>();
+			gm.append ((Gtk.MenuItem) menu.get_children ().nth_data (13));
 			((Gtk.MenuItem) menu.get_children ().nth_data (13)).submenu = sm;
 
 			Filefinder.preferences.load_plugs ();
-			int i = 0;
+			int i = 0, gi = -1, j;
 			foreach (Plugin p in Filefinder.preferences.plugins) {
+				if (p.group.length == 0) {
+					sm = gm.nth_data (0).submenu;
+				} else {
+					j = 0; gi = -1;
+					foreach (Gtk.MenuItem m in gm) {
+						if (m.label == p.group) gi = j;
+						j++;
+					}
+					if (gi == -1) {
+						item = new Gtk.MenuItem.with_label (p.group);
+						gm.append (item);
+						sm.add (item);
+						sm = new Gtk.Menu ();
+						item.submenu = sm;
+					} else {
+						sm = gm.nth_data (gi).submenu;
+					}
+				}
 				var mii = new MenuItemIndex (i, p.label);
 				mii.tooltip_text = p.description;
 				if (p.default_action) mii.set_markup ("<b>" + p.label + "</b>");
@@ -278,6 +298,7 @@ public class ResultsView : Gtk.TreeView {
 				});
 				i++;
 			}
+			sm = gm.nth_data (0).submenu;
 			sm.show_all ();
 
 			sm = new Gtk.Menu ();
@@ -614,6 +635,35 @@ public class ResultsView : Gtk.TreeView {
 		return s;
 	}
 
+	private string get_filedirs () {
+		GLib.List<GLib.File>? files = get_selected_dirs ();
+		string s = "";
+		if (files == null) return s;
+		foreach (File p in files) {
+			s += "\"" + p.get_path () + "\" ";
+		}
+		if (s.length > 0) s = s.substring (0, s.length -1);
+		return s;
+	}
+
+	private string get_filepos () {
+		Gtk.TreeIter iter;
+		GLib.Value val;
+		string path, s = "";
+		foreach (TreePath p in get_selection ().get_selected_rows (null)) {
+			if (model.get_iter (out iter, p)) {
+				model.get_value (iter, Columns.PATH, out val);
+				path = (string) val;
+				model.get_value (iter, Columns.DISPLAY_NAME, out val);
+				path = Path.build_filename (path, (string) val);
+				model.get_value (iter, Columns.POSITION, out val);
+				s += "\"" + path + "\" " + val.get_int64().to_string() + " ";
+			}
+		}
+		if (s.length > 0) s = s.substring (0, s.length -1);
+		return s;
+	}
+
 	private void remove_selected_file (File file) {
 		Gtk.TreeIter iter;
 		GLib.Value val;
@@ -679,7 +729,13 @@ public class ResultsView : Gtk.TreeView {
 	public void launch (Plugin? plugin) throws Error {
 		if (plugin == null) throw new Error (Quark.from_string ("launch-plugin"),
 											 -1, "Null exception");
-		string path = get_filenames (true);
+		string path = "";
+		if (plugin.arguments == plug_args.FILEDIRS)
+			path = get_filedirs ();
+		else if (plugin.arguments == plug_args.FILEPOS)
+			path = get_filepos ();
+		else
+			path = get_filenames (true);
 		string plug_stdout;
 		string plug_stderr;
 		int plug_status;
