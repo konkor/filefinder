@@ -1,3 +1,9 @@
+filefinder (0.2-1) UNRELEASED; urgency=medium
+
+  * Various improvements and bug fixes. (Closes: #XXXXXX)
+
+ -- Kostiantyn Korienkov <kkorienkov@gmail.com>  Sun, 15 May 2016 13:45:25 +0300
+ 
 filefinder (0.1-1) UNRELEASED; urgency=medium
 
   * Initial release. (Closes: #XXXXXX)

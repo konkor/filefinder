@@ -56,8 +56,9 @@ filefinder_VALAFLAGS =  \
 	--pkg gio-unix-2.0 \
 	--pkg posix \
 	--pkg config \
-	--vapidir=\$(top_srcdir)/vapi \
-	-g --save-temps
+	--vapidir=\$(top_srcdir)/vapi 
+
+#	-g --save-temps
 
 filefinder_LDFLAGS = \
 	-Wl,--export-dynamic
