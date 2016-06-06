@@ -225,6 +225,7 @@ public class PagePlugin : Gtk.ScrolledWindow {
 		}
 		cb_toolbar.active = Filefinder.preferences.show_toolbar;
 		cb_tgroups.active = Filefinder.preferences.toolbar_groups;
+		cb_thotkey.active = Filefinder.preferences.toolbar_shotcuts;
 	}
 
 	private void on_selection () {

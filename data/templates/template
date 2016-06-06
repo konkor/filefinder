@@ -15,3 +15,4 @@
 #PLUGSYNC FALSE
 
 exec file-roller --notify --add "$@"
+

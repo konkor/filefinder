@@ -47,6 +47,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	private QueryEditor editor;
 	public ResultsView result_view;
+	public Gtk.CheckMenuItem cmi;
 
 	protected void build () {
 		set_position (Gtk.WindowPosition.CENTER);
@@ -68,7 +69,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		mii.activate.connect (()=>{
 			toggle_paned ();
 		});
-		Gtk.CheckMenuItem cmi = new Gtk.CheckMenuItem.with_label ("Autohide Panel");
+		cmi = new Gtk.CheckMenuItem.with_label ("Autohide Panel");
 		cmi.tooltip_text = "Autohide The Filter Panel On Results";
 		cmi.active = Filefinder.preferences.check_autohide;
 		mmenu.add (cmi);

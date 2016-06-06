@@ -694,6 +694,8 @@ public class Preferences : Gtk.Window {
 		box.add (cb_autohide);
 		cb_autohide.toggled.connect (()=>{
 			check_autohide = cb_autohide.active;
+			if (Filefinder.window != null)
+				Filefinder.window.cmi.active = cb_autohide.active;
 			is_changed = true;
 		});
 		cb_autohide.active = false;

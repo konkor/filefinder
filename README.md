@@ -41,9 +41,12 @@ folder or trashing selection.
 ### Advanced tools
 * Finding of duplicates in the results.
 * Copying to clipboard base or full file names.
-* ...
 
-### and more
+### Extensions in Shell-script format
+* Easy format of the Extensions. At least just add one of the defined words (#PLUGNAME, #PLUGDESC, #PLUGKEYS, #PLUGARGS, #PLUGGROUP, #PLUGSYNC) to identify any shell script like an extension.
+* Context menu for plugins.
+* Plugin Toolbar with ability to grouping extensions.
+* Template of an extension to compressing selection with file-roller.
 
 ## Install
 ### Dependencies
@@ -60,9 +63,11 @@ make
 sudo make install
 ```
 After `sudo make install` you should copy/move nautilus extension from _/usr/local/lib_ to _/usr/lib_
+
 ```
 sudo cp /usr/local/lib/nautilus/extensions-3.0/* /usr/lib/nautilus/extensions-3.0/
 ```
+
 To disable Nautilus extension pass `--without-nautilus-extension` to _autogen.sh_ or _configure_:
 ```
 ./configure --without-nautilus-extension
