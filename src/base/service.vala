@@ -57,7 +57,7 @@ public class Service : Gtk.ListStore {
 	private const int MAX_THREAD = 4;
 	private int thread_count;
 	private DateTime d;
-	
+
 	public Results results_all;
 
 	public Service () {
@@ -101,7 +101,7 @@ public class Service : Gtk.ListStore {
 		foreach (FilterLocation f in query.locations) {
 			excluded_locations.remove (File.new_for_path (f.folder));
 		}
-		
+
 		results_all = new Results ();
 		results_all.position = 0;
 	}
@@ -312,7 +312,7 @@ public class Service : Gtk.ListStore {
 			}
 		} catch (Error err) {
 			Debug.error ("get_file", err.message + " " + path);
-		} 
+		}
 	}
 
 	private void list_dir (FilterLocation loc, bool first = true) {
@@ -863,7 +863,11 @@ public class Service : Gtk.ListStore {
 				if (get_iter (out iter, new Gtk.TreePath.from_indices (ind - 1))) {
 					get (iter, Columns.SIZE, out fsize, -1);
 					results_all.size -= fsize;
+#if HAVE_VALA36
+					remove (ref iter);
+#else
 					remove (iter);
+#endif
 				}
 			}
 		}

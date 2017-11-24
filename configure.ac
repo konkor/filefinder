@@ -17,7 +17,9 @@ NAUTILUS_REQUIRED=3.0.0
 LT_INIT
 
 dnl Check for vala
-AM_PROG_VALAC([0.10.0])
+AM_PROG_VALAC([0.36.0],
+        enable_vala36="yes",
+		enable_vala36="no")
 
 
 PKG_CHECK_MODULES(FILEFINDER, [
@@ -28,6 +30,12 @@ PKG_CHECK_MODULES(FILEFINDER, [
 # Make dependency CFLAGS and LIBS available
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
+
+if test "x$enable_vala36" = "xyes" ; then
+	AC_DEFINE(HAVE_VALA36, 1, [Have VALA36])
+	AC_MSG_NOTICE([have vala >= 0.36...])
+fi
+AM_CONDITIONAL(HAVE_VALA36, test "x$enable_vala36" = "xyes")
 
 AC_ARG_WITH([nautilus-extension],
   [AS_HELP_STRING([--without-nautilus-extension],[Disable nautilus extension])],

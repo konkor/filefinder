@@ -35,7 +35,7 @@ public class ResultsView : Gtk.TreeView {
 		build_menus ();
 
 		button_press_event.connect (on_tree_button);
-		key_press_event.connect (on_tree_key); 
+		key_press_event.connect (on_tree_key);
 		get_selection ().changed.connect (on_selection_changed);
 	}
 
@@ -53,7 +53,7 @@ public class ResultsView : Gtk.TreeView {
 			col.resizable = true;
 			col.sizing = TreeViewColumnSizing.FIXED;
 			col.sort_column_id = i;
-			
+
 			//col.pack_start (colr, false);
 			col.set_cell_data_func (colr, render_text);
 			col.visible = p.visible;
@@ -504,7 +504,7 @@ public class ResultsView : Gtk.TreeView {
 					msg, null);
 		dlg.run ();
 		dlg.destroy ();
-		
+
 	}
 
 	public string get_bin_size (uint64 i) {
@@ -675,7 +675,11 @@ public class ResultsView : Gtk.TreeView {
 				model.get_value (iter, Columns.DISPLAY_NAME, out val);
 				path = Path.build_filename (path, (string) val);
 				if (path == file.get_path ()) {
+#if HAVE_VALA36
+					Filefinder.service.remove (ref iter);
+#else
 					Filefinder.service.remove (iter);
+#endif
 					break;
 				}
 			}
@@ -743,7 +747,7 @@ public class ResultsView : Gtk.TreeView {
 		path = plugin.uri + " " + path;
 		try {
 			if (plugin.sync)
-				Process.spawn_command_line_sync (path, 
+				Process.spawn_command_line_sync (path,
 												 out plug_stdout,
 												 out plug_stderr,
 												 out plug_status);
@@ -870,7 +874,7 @@ public class ResultsView : Gtk.TreeView {
 					}
 					Filefinder.window.spinner.stop ();
 				});
-			
+
 		}
 	}
 

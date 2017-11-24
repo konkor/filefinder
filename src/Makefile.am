@@ -60,6 +60,10 @@ filefinder_VALAFLAGS =  \
 
 #	-g --save-temps
 
+if HAVE_VALA36
+filefinder_VALAFLAGS += -D HAVE_VALA36
+endif
+
 filefinder_LDFLAGS = \
 	-Wl,--export-dynamic
 
