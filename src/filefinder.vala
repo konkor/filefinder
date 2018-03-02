@@ -52,7 +52,6 @@ public class Filefinder : Gtk.Application
 					break;
 				default:
 					// uris have to process in the open handler
-					//if (exist (args[i])) uris.append (args[i]);
 					break;
 			}
 		}
@@ -103,11 +102,11 @@ public class Filefinder : Gtk.Application
 			service.start (q);
 		});
 		//window.add_locations (uris);
-		open.connect ((files)=>{
+		open.connect ((files) => {
 			foreach (File f in files) {
-				uris.append (f.get_path());
+				if (f.query_exists ()) uris.append (f.get_path());
 			}
-			window.add_locations (uris);
+			if (uris.length() > 0) window.add_locations (uris);
 		});
 		preferences.load_plugs ();
 		window.enable_toolbar ();

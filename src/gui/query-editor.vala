@@ -64,6 +64,18 @@ public class QueryEditor : Gtk.FlowBox {
 		//row.parent.grab_focus ();
 	}
 
+	public void remove_rows (types filter_type = types.NONE) {
+		//remove all filters by default
+		uint i = 0;
+		while (i < rows.length ()) {
+			if (filter_type == types.NONE) {
+				on_row_close (rows.nth_data (i));
+			} else if (rows.nth_data (i).filter.filter_type == filter_type) {
+				on_row_close (rows.nth_data (i));
+			} else i++;
+		}
+	}
+
 	private void on_row_close (QueryRow row) {
 		rows.remove (row);
 		row.get_parent().dispose ();
