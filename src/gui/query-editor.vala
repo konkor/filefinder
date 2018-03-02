@@ -88,6 +88,16 @@ public class QueryEditor : Gtk.FlowBox {
 		}
 	}
 
+	public uint text_filters_count {
+		get {
+			uint i = 0;
+			foreach (QueryRow p in rows) {
+				if (p.filter.filter_type == types.TEXT) i++;
+			}
+			return i;
+		}
+	}
+
 	public void add_filter (types filter_type = types.LOCATION) {
 		QueryRow row = new QueryRow ();
 		row.row_type = filter_type;

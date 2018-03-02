@@ -51,8 +51,8 @@ public class Filefinder : Gtk.Application
 				case "--debug":
 					break;
 				default:
-					if (exist (args[i]))
-						uris.append (args[i]);
+					// uris have to process in the open handler
+					//if (exist (args[i])) uris.append (args[i]);
 					break;
 			}
 		}
@@ -103,7 +103,12 @@ public class Filefinder : Gtk.Application
 			service.start (q);
 		});
 		//window.add_locations (uris);
-		open.connect (()=>{window.add_locations (uris);});
+		open.connect ((files)=>{
+			foreach (File f in files) {
+				uris.append (f.get_path());
+			}
+			window.add_locations (uris);
+		});
 		preferences.load_plugs ();
 		window.enable_toolbar ();
 	}

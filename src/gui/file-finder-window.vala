@@ -219,7 +219,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	public void post_init () {
 		show_box = false;
 		show_box = true;
-		if (Filefinder.uris.length () == 0) add_filter ();
+		if (Filefinder.uris.length () == 0) {
+			add_filter (types.LOCATION);
+			add_filter (types.TEXT);
+		}
 	}
 
 	public bool show_box {
@@ -280,9 +283,11 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	public void add_locations (List<string> uris) {
 		File file;
+		Debug.info ("add_locations", "uris count: %u".printf (uris.length()));
 		foreach (string s in uris) {
 			file = File.new_for_path (s);
 			paned.visible = true;
+			Debug.info ("add_locations", s);
 			if (file.query_file_type (FileQueryInfoFlags.NONE) == FileType.DIRECTORY) {
 				editor.add_folder (s);
 			} else {
@@ -290,6 +295,11 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			}
 		}
 		Filefinder.uris = new List<string>();
+		if (editor.query == null) return;
+		Debug.info ("add_locations", "query texts: %u".printf (editor.text_filters_count));
+		if (editor.text_filters_count == 0) {
+			add_filter (types.TEXT);
+		}
 	}
 
 	private void on_go_clicked () {
