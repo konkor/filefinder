@@ -27,6 +27,8 @@ public class Service : Gtk.ListStore {
 		FileAttribute.UNIX_MODE + "," +
 		FileAttribute.UNIX_INODE + "," +
 		FileAttribute.UNIX_DEVICE + "," +
+		FileAttribute.ID_FILESYSTEM + "," +
+		FileAttribute.GVFS_BACKEND + "," +
 		FileAttribute.ACCESS_CAN_READ;
 
 	struct HardLink {
@@ -330,7 +332,7 @@ public class Service : Gtk.ListStore {
 			if (dir in excluded_locations) {
 				return;
 			}
-			if (!info.get_attribute_boolean (FileAttribute.ACCESS_CAN_READ)){
+			if (!is_remote (info) && !info.get_attribute_boolean (FileAttribute.ACCESS_CAN_READ)){
 				return;
 			}
 			if (info.get_file_type () == FileType.REGULAR) {
@@ -347,6 +349,9 @@ public class Service : Gtk.ListStore {
 											Filefinder.preferences.follow_links,
 											cancellable);
 			while ((info = e.next_file (cancellable)) != null) {
+				if (!is_remote (info) && !info.get_attribute_boolean (FileAttribute.ACCESS_CAN_READ)){
+					return;
+				}
 				if (Filefinder.preferences.check_hidden) {
 					if (info.get_name ().has_prefix ("."))
 						continue;
@@ -406,6 +411,15 @@ public class Service : Gtk.ListStore {
 		results_array.first = first;
 		results_queue.push ((owned) results_array);
 		return;
+	}
+
+	public bool is_remote (FileInfo info) {
+		var fs = info.get_attribute_string (FileAttribute.ID_FILESYSTEM);
+		//Debug.info ("is_remote", "%s".printf (fs.down ()));
+		foreach (string s in Text.remote_fs) {
+			if (fs.down ().index_of (s) > -1) return true;
+		}
+		return false;
 	}
 
 	private Results? apply_masks (FileInfo info, string path) {

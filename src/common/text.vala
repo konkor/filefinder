@@ -79,4 +79,8 @@ public const string[] encodings = {
 "WINDOWS-1257", "WINDOWS-1258"
 };
 
+public const string[] remote_fs = {
+"afp", "google-drive", "sftp", "webdav", "ftp", "nfs", "cifs"
+};
+
 }
