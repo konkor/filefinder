@@ -15,10 +15,12 @@
  * You should have received a copy of the GNU General Public License along
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+using Gtk;
 
 public class QueryRow : Gtk.Box {
 	public signal void closed (QueryRow row);
 	public signal void changed_type (QueryRow row);
+	public signal void search ();
 
 	private Gtk.ComboBoxText combo_type;
 	private Gtk.Box hbox;
@@ -186,6 +188,7 @@ public class QueryRow : Gtk.Box {
 				mask_entry.changed.connect (()=>{
 					mask.mask = mask_entry.text;
 				});
+				mask_entry.activate.connect (()=>{search ();});
 
 				mask_case = new Gtk.CheckButton ();
 				mask_case.tooltip_text = "Case sensitive";
@@ -228,6 +231,7 @@ public class QueryRow : Gtk.Box {
 					size.size = uint64.parse (size_btn.text) *
 										size.WEIGHT[w_combo.active];
 				});
+				size_btn.activate.connect (()=>{search ();});
 				break;
 			case types.MODIFIED:
 				modified = new FilterModified ();
@@ -270,6 +274,7 @@ public class QueryRow : Gtk.Box {
 				text_entry.changed.connect (()=>{
 					text.text = text_entry.text;
 				});
+				text_entry.activate.connect (()=>{search ();});
 
 				Gtk.ComboBoxText text_combo = new Gtk.ComboBoxText ();
 				i = 0;
@@ -320,6 +325,7 @@ public class QueryRow : Gtk.Box {
 						bin_entry.text = "0" + bin_entry.text;
 					return false;
 				});
+				bin_entry.activate.connect (()=>{search ();});
 				break;
 			default:
 				_filter.filter_type = types.NONE;

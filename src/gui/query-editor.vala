@@ -18,6 +18,7 @@
 
 public class QueryEditor : Gtk.FlowBox {
 	public signal void changed_rows ();
+	public signal void search ();
 
 	public GLib.List<QueryRow> rows;
 
@@ -54,6 +55,7 @@ public class QueryEditor : Gtk.FlowBox {
 	public void add_row (QueryRow row) {
 		add (row);
 		row.closed.connect (on_row_close);
+		row.search.connect (()=>{search ();});
 		row.changed_type.connect ((r)=>{
 			invalidate_sort ();
 			changed_rows ();

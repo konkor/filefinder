@@ -180,6 +180,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		editor.expand = true;
 		scrolledwindow1.add (editor);
 		editor.changed_rows.connect (()=>{check_paned_position ();});
+		editor.search.connect (()=>{button_go.clicked ();});
 
 		vbox1 = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
 		paned.pack2 (vbox1, true, false);
