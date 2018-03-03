@@ -61,9 +61,13 @@ cd filefinder
 make
 sudo make install
 ```
-After `sudo make install` you could copy/move nautilus extension from _/usr/local/lib_ to _/usr/lib_ (for older Nautilus versions)
+**Optionally**, after `sudo make install`, you could require to copy/move nautilus extension from _/usr/local/lib_ to _/usr/lib_ (old Autotools versions only) otherwise Nautilus couldn't see extensions in the _/usr/local/lib_ folder.
 ```
 sudo cp /usr/local/lib/nautilus/extensions-3.0/* /usr/lib/nautilus/extensions-3.0/
+```
+Now you can restart Nautilus to reload extensions.
+```
+nautilus -q
 ```
 
 To disable Nautilus extension pass `--without-nautilus-extension` to _autogen.sh_ or _configure_:
@@ -76,6 +80,11 @@ sudo make install
 ### Source and packages
 * [GitHub](https://github.com/konkor/filefinder/archive/master.zip)
 * [Latest Debian/Ubuntu x64](https://www.dropbox.com/s/6z3uq7sqn8runtx/filefinder_latest.deb?dl=1)
+
+After installation, you can restart Nautilus to reload extensions.
+```
+nautilus -q
+```
 
 ## Screenshots
 

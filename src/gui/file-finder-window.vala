@@ -17,6 +17,7 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 using Gtk;
+using Gdk;
 
 public class FileFinderWindow : Gtk.ApplicationWindow {
 	public signal void go_clicked (Query q);
@@ -215,6 +216,9 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			
 		});
 		paned.position = _paned_pos = Filefinder.preferences.paned_pos;
+
+		Gtk.drag_dest_set (this, DestDefaults.ALL, target_list, Gdk.DragAction.COPY);
+		this.drag_data_received.connect(this.on_drag_data_received);
 	}
 
 	public void post_init () {
@@ -299,6 +303,26 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		if (editor.text_filters_count == 0) {
 			add_filter (types.TEXT);
 		}
+	}
+
+
+	private void on_drag_data_received (Widget widget, DragContext context,
+										int x, int y,
+										SelectionData selection_data,
+										uint target_type, uint time) {
+		File file;
+		if (editor.query == null) return;
+		foreach (string uri in selection_data.get_uris ()){
+			file = File.new_for_uri (uri);
+			paned.visible = true;
+			Debug.info ("DnD", uri);
+			if (file.query_file_type (FileQueryInfoFlags.NONE) == FileType.DIRECTORY) {
+				if (!editor.location_exist (file)) editor.add_folder (file.get_path());
+			} else {
+				if (!editor.location_exist (file)) editor.add_file (file.get_path());
+			}
+		}
+		Gtk.drag_finish (context, true, false, time);
 	}
 
 	private void on_go_clicked () {
@@ -452,3 +476,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		toolbar.rebuild ();
 	}
 }
+
+const TargetEntry[] target_list = {
+	{"text/uri-list", 0, 0}
+};

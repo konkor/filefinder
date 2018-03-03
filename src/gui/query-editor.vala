@@ -126,6 +126,8 @@ public class QueryEditor : Gtk.FlowBox {
 	}
 
 	public void add_file (string path) {
+		int tt = 0;
+		string t = "";
 		QueryRow row = null;
 		foreach (QueryRow p in rows) {
 			if (p.row_type == types.FILES) {
@@ -145,7 +147,43 @@ public class QueryEditor : Gtk.FlowBox {
 			row.files_btn.label = path;
 		if (row.files.files.length () > 1)
 			row.files_btn.label += " ... (%u selected items)".printf (
-				row.files.files.length());	
+				row.files.files.length());
+		foreach (string s in row.files.files) {
+			if (tt < 20) t += s + "\n";
+			tt++;
+		}
+		t += " ...\n(%u selected items)".printf (row.files.files.length());
+		row.files_btn.tooltip_text = t;
 	}
+
+	public bool location_exist (File file) {
+		if (file.query_file_type (FileQueryInfoFlags.NONE) == FileType.DIRECTORY)
+			return folder_exist (file);
+		else
+			return file_exist (file);
+	}
+
+	public bool folder_exist (File file) {
+		foreach (QueryRow p in rows) {
+			if (p.filter.filter_type == types.LOCATION)
+				if (((FilterLocation) p.filter.filter_value).folder == file.get_path ()) return true;
+		}
+		return false;
+	}
+
+	public bool file_exist (File file) {
+		FilterFiles filter = null;
+		foreach (QueryRow p in rows) {
+			if (p.row_type == types.FILES) {
+				filter = (FilterFiles) p.filter.filter_value;
+				break;
+			}
+		}
+		foreach (string s in filter.files) {
+			if (s == file.get_path ()) return true;
+		}
+		return false;
+	}
+
 }
 
