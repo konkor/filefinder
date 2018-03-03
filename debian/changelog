@@ -1,20 +1,21 @@
-filefinder (0.3-1) UNRELEASED; urgency=medium
+filefinder (0.3-1) unstable; urgency=low
 
-  * Add search on Return pressing in filter's text entries. (Closes: #1)
-  * Add an empty text search filter on opening. (Closes: #2)
-  * Add searching in mounted remote filesystems (gvfs). (Closes: #5)
-  * Fix handling opening new URIs from CLI on running FF. (Closes: #6)
-  * Add replacing of location filters by new from CLI. (Closes: #7)
+  * Add search on Return pressing in filter's text entries.
+  * Add an empty text search filter on opening.
+  * Add searching in mounted remote filesystems (gvfs).
+  * Fix handling opening new URIs from CLI on running FF.
+  * Add replacing of location filters by new from CLI.
+  * Add Drag'N'Drop supporting to add files and folders.
   
  -- konkor <kapa76@gmail.com>  Fri, 02 Mar 2018 18:01:00 +0200
 
-filefinder (0.2-1) UNRELEASED; urgency=medium
+filefinder (0.2-1) UNRELEASED; urgency=low
 
   * Various improvements and bug fixes.
 
  -- konkor <kapa76@gmail.com>  Mon, 06 Jun 2016 13:45:25 +0200
  
-filefinder (0.1-1) UNRELEASED; urgency=medium
+filefinder (0.1-1) UNRELEASED; urgency=low
 
   * Initial release.
 

@@ -1,14 +1,14 @@
-.TH FILEFINDER 1
+.TH FileFinder "1" "filefinder"
 .SH NAME
-File Finder \- advanced search tool.
+filefinder \- advanced search tool.
 .SH SYNOPSIS
 .B filefinder
 .RI [\fBoptions\fR]
 [[\fILOCATION\fR] ...]
 .SH DESCRIPTION
 .B File Finder
-is the advanced search tool with gtk3 user interface and the integration with nautilus file explorer.
-There is multiple search location support with treading, file masking, MIME types, modified dates, file sizes, text and binary patterns.
+is an advanced file search tool and Nautilus extension.
+There is async threaded multiple location searching with file masking, MIME types, modified dates, file sizes, text and binary search patterns.
 The search results can be sorted by attributes and processed with common actions like opening with a default application, containing folder, copy/move to destination folder or trashing selection.
 .SH OPTIONS
 .TP
@@ -33,6 +33,5 @@ Multiple \fILOCATION\fR(s) could be separated by spacebar.
 * Open curent directory to search:
 filefider .
 .TP
-* Open home directory and 2 files to search: 
+* Open home directory and 2 files to search:
 filefinder ~ ~/file1.html ~/file2.html
-

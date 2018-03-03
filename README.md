@@ -48,10 +48,15 @@ Any shell script like bash, python, gjs can be converted to the File Finder Exte
 * Template of an extension to compressing selection with file-roller.
 
 ## Install
-### Dependencies
+### Run-time Dependencies
 * gtk+-3.0 >= 3.14
-* vala (build only)
-* autotools (build only)
+* libnautilus-extension
+
+### Build Dependencies
+* libgtk-3-dev, gir1.2-gtk-3.0
+* libnautilus-extension-dev (_--without-nautilus-extension to disable_)
+* valac
+* autotools
 
 ### From source
 ```

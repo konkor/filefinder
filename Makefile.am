@@ -13,7 +13,6 @@ dist_doc_DATA = \
 	COPYING \
 	AUTHORS \
 	ChangeLog \
-	INSTALL \
 	NEWS
 
 EXTRA_DIST = \
