@@ -102,6 +102,10 @@ public class QueryRow : Gtk.Box {
 
 	private void create_type_widgets () {
 		int i = 0;
+		string clipboard_text = "";
+		Gdk.Display display = Filefinder.window.get_display ();
+		Gtk.Clipboard clipboard = Gtk.Clipboard.get_for_display (display, Gdk.SELECTION_CLIPBOARD);
+
 		if (hbox != null) hbox.destroy ();
 		hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 4);
 		pack_start (hbox, true, true, 0);
@@ -187,8 +191,15 @@ public class QueryRow : Gtk.Box {
 				hbox.pack_start (mask_entry, true, true, 0);
 				mask_entry.changed.connect (()=>{
 					mask.mask = mask_entry.text;
+					mask_entry.tooltip_text = mask_entry.text;
 				});
 				mask_entry.activate.connect (()=>{search ();});
+				mask_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "edit-clear-symbolic");
+				mask_entry.icon_press.connect ((pos, event) => {
+					if (pos == Gtk.EntryIconPosition.SECONDARY) {
+						mask_entry.set_text ("");
+					}
+				});
 
 				mask_case = new Gtk.CheckButton ();
 				mask_case.tooltip_text = "Case sensitive";
@@ -210,11 +221,17 @@ public class QueryRow : Gtk.Box {
 				});
 				hbox.pack_start (size_combo, false, false, 0);
 
-				Gtk.Entry size_btn = new Gtk.Entry();
-				size_btn.text = "0";
-				size_btn.width_chars = 1;
-				size_btn.max_width_chars = 2;
-				hbox.pack_start (size_btn, true, true, 0);
+				Gtk.Entry size_entry = new Gtk.Entry();
+				size_entry.text = "0";
+				size_entry.width_chars = 1;
+				size_entry.max_width_chars = 2;
+				hbox.pack_start (size_entry, true, true, 0);
+				size_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "edit-clear-symbolic");
+				size_entry.icon_press.connect ((pos, event) => {
+					if (pos == Gtk.EntryIconPosition.SECONDARY) {
+						size_entry.set_text ("0");
+					}
+				});
 
 				Gtk.ComboBoxText w_combo = new Gtk.ComboBoxText ();
 				foreach (string s in new string[] {"B", "KiB", "MiB", "GiB"}) {
@@ -223,15 +240,16 @@ public class QueryRow : Gtk.Box {
 				w_combo.active = 2;
 				hbox.pack_start (w_combo, false, false, 0);
 				w_combo.changed.connect (() => {
-					size.size = uint64.parse (size_btn.text) *
+					size.size = uint64.parse (size_entry.text) *
 										size.WEIGHT[w_combo.active];
 				});
-				size_btn.changed.connect (()=>{
-					size_btn.text = check_dec (size_btn.text);
-					size.size = uint64.parse (size_btn.text) *
+				size_entry.changed.connect (()=>{
+					size_entry.text = check_dec (size_entry.text);
+					size.size = uint64.parse (size_entry.text) *
 										size.WEIGHT[w_combo.active];
+					size_entry.tooltip_text = size_entry.text;
 				});
-				size_btn.activate.connect (()=>{search ();});
+				size_entry.activate.connect (()=>{search ();});
 				break;
 			case types.MODIFIED:
 				modified = new FilterModified ();
@@ -269,10 +287,22 @@ public class QueryRow : Gtk.Box {
 			case types.TEXT:
 				text = new FilterText ();
 				_filter.filter_value = text;
+				clipboard_text = clipboard.wait_for_text ();
+				text.text = clipboard_text ?? "";
+
 				text_entry = new Gtk.Entry ();
+				text_entry.text = text.text;
+				text_entry.tooltip_text = text_entry.text;
+				text_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "edit-clear-symbolic");
+				text_entry.icon_press.connect ((pos, event) => {
+					if (pos == Gtk.EntryIconPosition.SECONDARY) {
+						text_entry.set_text ("");
+					}
+				});
 				hbox.pack_start (text_entry, true, true, 0);
 				text_entry.changed.connect (()=>{
 					text.text = text_entry.text;
+					text_entry.tooltip_text = text_entry.text;
 				});
 				text_entry.activate.connect (()=>{search ();});
 
@@ -319,6 +349,7 @@ public class QueryRow : Gtk.Box {
 				bin_entry.changed.connect (()=>{
 					bin_entry.text = check_hex (bin_entry.text);
 					bin.bin = bin_entry.text;
+					bin_entry.tooltip_text = bin_entry.text;
 				});
 				bin_entry.focus_out_event.connect (()=>{
 					if (bin_entry.text.length % 2 == 1)
@@ -326,6 +357,12 @@ public class QueryRow : Gtk.Box {
 					return false;
 				});
 				bin_entry.activate.connect (()=>{search ();});
+				bin_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "edit-clear-symbolic");
+				bin_entry.icon_press.connect ((pos, event) => {
+					if (pos == Gtk.EntryIconPosition.SECONDARY) {
+						bin_entry.set_text ("");
+					}
+				});
 				break;
 			default:
 				_filter.filter_type = types.NONE;
