@@ -63,7 +63,7 @@ public class QueryRow : Gtk.Box {
 		Gtk.Button btn  = new Gtk.Button.from_icon_name ("window-close-symbolic",
 														Gtk.IconSize.BUTTON);
 		btn.get_style_context ().add_class (Gtk.STYLE_CLASS_ACCELERATOR);
-		btn.tooltip_text = "Remove this criterion from the search";
+		btn.tooltip_text = "Remove it from the search query";
 		pack_end (btn, false, false, 0);
 		btn.clicked.connect ( () => {
 			closed (this);

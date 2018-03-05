@@ -8,5 +8,5 @@ Build-Depends: debhelper (>= 9)
 Package: filefinder
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: advanced file search tool with Nautilus extension
+Description: advanced file search tool with optional Nautilus integration
  File Finder is an advanced native file search tool with modern user interface and an integration with Nautilus file explorer. There is async threaded multiple location searching with file masking, MIME types, modified dates, file sizes, text and binary search patterns.

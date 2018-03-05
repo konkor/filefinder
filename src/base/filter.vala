@@ -131,7 +131,7 @@ public enum types {
 }
 
 public static const string[] type_names = {
-	"Location",
+	"Folder",
 	"Files",
 	"File Mask",
 	"Mimetype",

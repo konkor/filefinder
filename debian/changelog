@@ -1,3 +1,11 @@
+filefinder (0.3.1-1) unstable; urgency=low
+
+  * Update extensions grouping in the context menu.
+  * Update application text strings.
+  * Rename Location to Folder filter.
+  
+ -- konkor <kapa76@gmail.com>  Sun, 04 Mar 2018 10:01:00 +0200
+
 filefinder (0.3-1) unstable; urgency=low
 
   * Add search on Return pressing in filter's text entries.

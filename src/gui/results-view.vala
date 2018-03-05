@@ -277,7 +277,7 @@ public class ResultsView : Gtk.TreeView {
 					if (gi == -1) {
 						item = new Gtk.MenuItem.with_label (p.group);
 						gm.append (item);
-						sm.add (item);
+						((Gtk.MenuItem) menu.get_children ().nth_data (13)).submenu.add (item);
 						sm = new Gtk.Menu ();
 						item.submenu = sm;
 					} else {
