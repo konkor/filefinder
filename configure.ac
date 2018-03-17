@@ -37,6 +37,15 @@ if test "x$enable_vala36" = "xyes" ; then
 fi
 AM_CONDITIONAL(HAVE_VALA36, test "x$enable_vala36" = "xyes")
 
+PKG_CHECK_EXISTS([gtk+-3.0 >= 3.20.0],
+		enable_gtk320="yes",
+		enable_gtk320="no")
+
+if test "x$enable_gtk320" = "xyes" ; then
+	AC_DEFINE(HAVE_GTK320, 1, [Have GTK 3.20+])
+fi
+AM_CONDITIONAL(HAVE_GTK320, test "x$enable_gtk320" = "xyes")
+
 AC_ARG_WITH([nautilus-extension],
   [AS_HELP_STRING([--without-nautilus-extension],[Disable nautilus extension])],
   [],

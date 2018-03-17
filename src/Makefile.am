@@ -65,6 +65,10 @@ if HAVE_VALA36
 filefinder_VALAFLAGS += -D HAVE_VALA36
 endif
 
+if HAVE_GTK320
+filefinder_VALAFLAGS += -D HAVE_GTK320
+endif
+
 filefinder_LDFLAGS = \
 	-Wl,--export-dynamic
 

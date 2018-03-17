@@ -138,7 +138,12 @@ public class ToolButton : Gtk.MenuItem {
 			}
 		}
 		tooltip_text = description;
+
+#if HAVE_GTK320
+		base.queue_allocate ();
+#else
 		base.size_allocate (allocation);
+#endif
 	}
 
 	private Pango.Layout playout;
