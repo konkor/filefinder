@@ -21,6 +21,7 @@ public class QueryEditor : Gtk.FlowBox {
 	public signal void search ();
 
 	public GLib.List<QueryRow> rows;
+	//private FilterBar fbar;
 
 	public QueryEditor () {
 		//GLib.Object (orientation:Gtk.Orientation.VERTICAL, spacing:0);
@@ -31,7 +32,10 @@ public class QueryEditor : Gtk.FlowBox {
 		max_children_per_line = Filefinder.preferences.filter_count;
 		valign = Gtk.Align.START;
 		set_sort_func (sort_boxes);
-		
+
+		//fbar = new FilterBar ();
+		//add (fbar);
+
 		rows = new GLib.List<QueryRow> ();
 	}
 

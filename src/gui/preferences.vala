@@ -1,7 +1,7 @@
 /* -*- Mode: vala; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
  * preferences.vala
- * Copyright (C) 2016 Kostiantyn Korienkov <kkorienkov <at> gmail.com>
+ * Copyright (C) 2016-2018 Kostiantyn Korienkov <kkorienkov <at> gmail.com>
  *
  * filefinder is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the

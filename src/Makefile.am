@@ -45,7 +45,8 @@ filefinder_SOURCES = \
 	gui/page-plugin.vala \
 	gui/input-dialog.vala \
 	gui/toolbar.vala \
-	gui/tool-button.vala
+	gui/tool-button.vala \
+	filter-bar.vala
 
 #config.vapi 
 

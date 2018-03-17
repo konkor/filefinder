@@ -133,10 +133,21 @@ public enum types {
 public static const string[] type_names = {
 	"Folder",
 	"Files",
-	"File Mask",
-	"Mimetype",
+	"Mask",
+	"Type",
 	"Text",
 	"Binary",
 	"Size",
 	"Modified"
+};
+
+public static const string[] type_tooltips = {
+	"Folder Location",
+	"Files Location",
+	"File Mask Filter",
+	"MIME Type Filter",
+	"Text Pattern",
+	"Binary Pattern",
+	"File Size Filter",
+	"Modified Date Filter"
 };

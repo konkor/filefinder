@@ -45,6 +45,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	private Gtk.Box empty_box;
 	private Gtk.Box toolbar_bottom;
+	private FilterBar filterbar;
 
 	private QueryEditor editor;
 	public ResultsView result_view;
@@ -151,6 +152,8 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 		infoBox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
 		vbox1.pack_start (infoBox, false, true, 0);
+		filterbar = new FilterBar ();
+		vbox1.pack_start (filterbar, false, true, 0);
 
 		empty_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 40);
 		empty_box.margin = 80;
