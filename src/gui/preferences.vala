@@ -1041,6 +1041,8 @@ public class Preferences : Gtk.Window {
 	private MimeGroup[] _mime_type_groups = {
 	MimeGroup (){ name = "Text Files",
 	mimes = { "text/plain",
+		"application/javascript",
+		"text/x-vala",
 		"text/css",
 		"text/html",
 		"text/troff",
@@ -1062,8 +1064,7 @@ public class Preferences : Gtk.Window {
 		"text/x-markdown",
 		"text/x-matlab",
 		"text/x-microdvd",
-		"text/x-tex",
-		"text/x-vala"}
+		"text/x-tex"}
 	},
 	MimeGroup (){ name = "Archives",
 	mimes = {"application/x-7z-compressed",
@@ -1174,6 +1175,7 @@ public class Preferences : Gtk.Window {
 	MimeGroup (){ name = "Music",
 	mimes = { "application/ogg",
 		"audio/x-vorbis+ogg",
+		"audio/x-opus+ogg",
 		"audio/ac3",
 		"audio/basic",
 		"audio/midi",
