@@ -153,7 +153,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		infoBox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
 		vbox1.pack_start (infoBox, false, true, 0);
 		filterbar = new FilterBar ();
-		vbox1.pack_start (filterbar, false, true, 0);
+		//vbox1.pack_start (filterbar, false, true, 0);
 
 		empty_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 40);
 		empty_box.margin = 80;
@@ -183,7 +183,6 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		editor = new QueryEditor ();
 		editor.expand = true;
 		scrolledwindow1.add (editor);
-		editor.changed_rows.connect (()=>{check_paned_position ();});
 		editor.search.connect (()=>{button_go.clicked ();});
 
 		vbox1 = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
@@ -217,6 +216,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			Filefinder.preferences.save_geometry ();
 			return false;
 			
+		});
+		realize.connect (()=>{
+			editor.changed_rows.connect (()=>{check_paned_position ();});
+			check_paned_position ();
 		});
 		paned.position = _paned_pos = Filefinder.preferences.paned_pos;
 
