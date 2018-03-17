@@ -287,7 +287,7 @@ public class QueryRow : Gtk.Box {
 			case types.TEXT:
 				text = new FilterText ();
 				_filter.filter_value = text;
-				if (clipboard != null) clipboard_text = clipboard.wait_for_text ();
+				//if (clipboard != null) clipboard_text = clipboard.wait_for_text ();
 				text.text = clipboard_text ?? "";
 
 				text_entry = new Gtk.Entry ();
