@@ -102,9 +102,9 @@ public class QueryRow : Gtk.Box {
 
 	private void create_type_widgets () {
 		int i = 0;
-		string clipboard_text = "";
-		Gdk.Display display = Filefinder.window.get_display ();
-		Gtk.Clipboard clipboard = Gtk.Clipboard.get_for_display (display, Gdk.SELECTION_CLIPBOARD);
+		//Gdk.Display display = Filefinder.window.get_display ();
+		//Gtk.Clipboard clipboard = Gtk.Clipboard.get_for_display (display, Gdk.SELECTION_CLIPBOARD);
+		Gtk.Clipboard clipboard = Gtk.Clipboard.@get (Gdk.SELECTION_CLIPBOARD);
 
 		if (hbox != null) hbox.destroy ();
 		hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 4);
@@ -287,8 +287,9 @@ public class QueryRow : Gtk.Box {
 			case types.TEXT:
 				text = new FilterText ();
 				_filter.filter_value = text;
-				//if (clipboard != null) clipboard_text = clipboard.wait_for_text ();
-				text.text = clipboard_text ?? "";
+				var clipboard_text = clipboard.wait_for_text ();
+				if (clipboard_text != null) text.text = clipboard_text;
+				else  text.text = clipboard_text;
 
 				text_entry = new Gtk.Entry ();
 				text_entry.text = text.text;
