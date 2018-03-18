@@ -289,7 +289,8 @@ public class QueryRow : Gtk.Box {
 				_filter.filter_value = text;
 				var clipboard_text = clipboard.wait_for_text ();
 				if (clipboard_text != null) text.text = clipboard_text;
-				else  text.text = clipboard_text;
+				else  text.text = "";
+				Debug.info ("clipboard_text", clipboard_text);
 
 				text_entry = new Gtk.Entry ();
 				text_entry.text = text.text;
