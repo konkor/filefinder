@@ -106,7 +106,8 @@ public class Filefinder : Gtk.Application
 			foreach (File f in files) {
 				if (f.query_exists ()) uris.append (f.get_path());
 			}
-			if (uris.length() > 0) window.add_locations (uris);
+			if ((window.get_window () != null) && (uris.length() > 0))
+				window.add_locations (uris);
 		});
 		preferences.load_plugs ();
 		window.enable_toolbar ();

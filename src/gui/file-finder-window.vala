@@ -219,7 +219,13 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		});
 		realize.connect (()=>{
 			editor.changed_rows.connect (()=>{check_paned_position ();});
-			check_paned_position ();
+			//check_paned_position ();
+			if (Filefinder.uris.length() > 0) {
+				add_locations (Filefinder.uris);
+			} else {
+				add_filter (types.LOCATION);
+				add_filter (types.TEXT);
+			}
 		});
 		paned.position = _paned_pos = Filefinder.preferences.paned_pos;
 
@@ -230,10 +236,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	public void post_init () {
 		show_box = false;
 		show_box = true;
-		if (Filefinder.uris.length () == 0) {
+		/*if (Filefinder.uris.length () == 0) {
 			add_filter (types.LOCATION);
 			add_filter (types.TEXT);
-		}
+		}*/
 	}
 
 	public bool show_box {
@@ -296,6 +302,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		File file;
 		if (editor.query == null) return;
 		editor.remove_rows (types.LOCATION);
+		Debug.info ("add_locations","%u uri passed".printf (uris.length()));
 		foreach (string s in uris) {
 			file = File.new_for_path (s);
 			paned.visible = true;
