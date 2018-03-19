@@ -82,6 +82,7 @@ public class Filefinder : Gtk.Application
 		window.show_all ();
 		window.post_init ();
 		window.go_clicked.connect ((q)=>{
+			if (window.get_window () == null) return;
 			Debug.info ("loc count", "%u".printf (q.locations.length ()));
 			Debug.info ("file count", "%u".printf (q.files.length ()));
 			Debug.info ("mask count", "%u".printf (q.masks.length ()));
