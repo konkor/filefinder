@@ -59,8 +59,8 @@ if test "$with_nautilus_extension" = "yes"; then
   gio-2.0
   gio-unix-2.0])
 
-  AC_SUBST(NAUTILUS_CFLAGS)
-  AC_SUBST(NAUTILUS_LIBS)
+  AC_SUBST(NAUTILUS_EXTENSION_CFLAGS)
+  AC_SUBST(NAUTILUS_EXTENSION_LIBS)
 
   nautilusextensiondir=`$PKG_CONFIG --variable=extensiondir libnautilus-extension`
   AC_ARG_WITH([nautilus-dir],
@@ -85,3 +85,12 @@ data/templates/Makefile
 data/Makefile
 man/Makefile
 ])
+
+echo "
+	Version: ${VERSION}
+	Using GTK+ 3
+	Using GTK+ >= 3.20.0 : ${enable_gtk320}
+	Using Vala >= 0.36 : ${enable_vala36}
+	Build Nautilus extension : ${with_nautilus_extension}
+	
+"

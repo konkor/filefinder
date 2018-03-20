@@ -1,3 +1,14 @@
 #!/usr/bin/make -f
+
+override_dh_auto_test:
+
+override_dh_makeshlibs:
+	dh_makeshlibs -Xlibnautilus-filefinder
+
 %:
 	dh $@
+
+override_dh_auto_install:
+	dh_auto_install
+	find debian -name "*.a" -delete
+	find debian -name "*.la" -delete

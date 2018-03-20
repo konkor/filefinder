@@ -9,7 +9,8 @@ AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
 	-DPACKAGE_DATA_DIR=\""$(pkgdatadir)"\" \
-	$(FILEFINDER_CFLAGS)
+	$(FILEFINDER_CFLAGS) \
+	$(NAUTILUS_CFLAGS)
 
 AM_CFLAGS =\
 	 -Wall\
@@ -31,7 +32,7 @@ libnautilus_filefinder_la_CPPFLAGS = \
 	$(AM_CPPFLAGS)
 
 libnautilus_filefinder_la_CFLAGS = \
-	$(NAUTILUS_CFLAGS) \
+	$(NAUTILUS_EXTENSION_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(WARN_CFLAGS) \
 	$(AM_CFLAGS)
@@ -44,11 +45,10 @@ libnautilus_filefinder_la_CFLAGS = \
 
 libnautilus_filefinder_la_LDFLAGS = \
 	-module -avoid-version \
-	-export-symbols $(srcdir)/nautilus.symbols \
-	$(AM_LDFLAGS)
+	-export-symbols $(srcdir)/nautilus.symbols
 
 libnautilus_filefinder_la_LIBADD = \
-	$(NAUTILUS_LIBS) $(GLIB_LIBS)
+	$(NAUTILUS_EXTENSION_LIBS)
 
 CLEANFILES = \
 	$(libnautilus_filefinder_la_SOURCES:%.vala=%.c) \

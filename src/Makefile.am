@@ -15,8 +15,7 @@ AM_CFLAGS =\
 
 bin_PROGRAMS = filefinder
 
-filefinder_SOURCES = \
-	main.vala \
+filefinder_sources = \
 	filefinder.vala \
 	common/text.vala \
 	common/debug.vala \
@@ -50,6 +49,10 @@ filefinder_SOURCES = \
 
 #config.vapi 
 
+filefinder_SOURCES = \
+	main.vala \
+	$(filefinder_sources)
+
 filefinder_VALAFLAGS =  \
 	--target-glib=2.38 \
 	--pkg gtk+-3.0 \
@@ -57,8 +60,8 @@ filefinder_VALAFLAGS =  \
 	--pkg gio-unix-2.0 \
 	--pkg posix \
 	--pkg config \
-	--vapidir=\$(top_srcdir)/vapi \
-	-g --save-temps
+	--vapidir=\$(top_srcdir)/vapi
+#	-g --save-temps
 
 if HAVE_VALA36
 filefinder_VALAFLAGS += -D HAVE_VALA36
@@ -73,11 +76,41 @@ filefinder_LDFLAGS = \
 
 filefinder_LDADD = $(FILEFINDER_LIBS)
 
+## Unit tests for filefinder
+## to run $ make check
+check_PROGRAMS = tests_filefinder
+noinst_PROGRAMS = $(check_PROGRAMS)
+TESTS = $(check_PROGRAMS)
+
+# the entry point and test methods for the test program
+tests_filefinder_SOURCES =  \
+	$(filefinder_sources) \
+	tests.vala
+	
+tests_filefinder_VALAFLAGS = \
+	$(filefinder_VALAFLAGS) \
+	-g 
+
+tests_filefinder_LDFLAGS = \
+	$(filefinder_LDFLAGS)
+
+tests_filefinder_LDADD = \
+	$(filefinder_LDADD)
+	
+tests_filefinder_CPPFLAGS = \
+	$(AM_CPPFLAGS)
+	
+tests_filefinder_CFLAGS = \
+	$(AM_CFLAGS) \
+	-DTEST_DATA_DIR=\"$(abs_srcdir)/data\"
 
 CLEANFILES = \
 	$(filefinder_SOURCES:%.vala=%.c) \
 	*.stamp \
-	*~
+	*~ \
+	*.log \
+	*.trs \
+	tests.c
 
 dist-hook:
 	rm -f $(CLEANFILES)
