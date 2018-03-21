@@ -21,10 +21,13 @@ using Gtk;
 
 static int main (string[] args) {
 
-	Filefinder.debugging = false;
+	Filefinder.debugging = true;
 	string[] files = {};
 
+    Debug.info ("main", "Starting FileFinder...\n");
+
 	foreach (string s in args) {
+	    stdout.printf ("%s\n", s);
 		if ((s == "-h") || (s == "--help"))
 		{
 			stdout.printf ("%s\n", Text.app_help);
@@ -48,7 +51,9 @@ static int main (string[] args) {
 		}
 	}
 
+    Debug.info ("main", "Creating FileFinder application, files count: %u".printf (files.length));
 	var app = new Filefinder (files);
 
+    Debug.info ("main", "Running FileFinder application...\n");
 	return app.run (files);
 }

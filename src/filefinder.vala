@@ -40,6 +40,7 @@ public class Filefinder : Gtk.Application
 	public Filefinder (string[] args) {
 		Object (application_id: "org.konkor.filefinder",
 				flags: ApplicationFlags.HANDLES_OPEN);
+		Debug.info ("Filefinder", "Constructor");
 		uris = new List<string>();
 		int i, count = args.length;
 		for (i = 1; i < count; i++) {
@@ -59,6 +60,9 @@ public class Filefinder : Gtk.Application
 
 	protected override void startup () {
 		base.startup ();
+
+		Debug.info ("Filefinder", "startup");
+
 		add_action_entries (action_entries, this);
 		GLib.Menu section = new GLib.Menu ();
 		section.append_item (new GLib.MenuItem ("Preferences", "app.preferences"));
@@ -81,6 +85,7 @@ public class Filefinder : Gtk.Application
 		window.show_all ();
 		window.post_init ();
 		window.go_clicked.connect ((q)=>{
+			Debug.info ("Filefinder", "on window.go_clicked");
 			if (window.get_window () == null) return;
 			Debug.info ("loc count", "%u".printf (q.locations.length ()));
 			Debug.info ("file count", "%u".printf (q.files.length ()));
@@ -93,16 +98,19 @@ public class Filefinder : Gtk.Application
 			service = new Service ();
 			window.result_view.connect_model ();
 			service.finished_search.connect (()=>{
+				Debug.info ("Filefinder", "on service.finished_search");
 				window.show_results ();
 			});
 			service.row_changed.connect(()=>{window.set_subtitle ();});
 			window.canceled.connect (()=>{
+				Debug.info ("Filefinder", "on window.canceled");
 				service.cancel ();
 			});
 			service.start (q);
 		});
 		//window.add_locations (uris);
 		open.connect ((files) => {
+			Debug.info ("Filefinder", "on_open");
 			foreach (File f in files) {
 				if (f.query_exists ()) uris.append (f.get_path());
 			}
@@ -114,10 +122,12 @@ public class Filefinder : Gtk.Application
 	}
 
 	protected override void activate () {
+		Debug.info ("Filefinder", "activate");
 		window.present ();
 	}
 
 	private void quit_cb () {
+		Debug.info ("Filefinder", "quit");
 		exit ();
 	}
 
@@ -126,19 +136,23 @@ public class Filefinder : Gtk.Application
 	}
 
 	private void preferences_cb () {
+		Debug.info ("Filefinder", "preferences_cb");
 		preferences.show_window ();
 	}
 
 	private void add_location_cb () {
+		Debug.info ("Filefinder", "add_location_cb");
 		window.add_filter ();
 	}
 
 	private void toggle_paned_cb () {
+		Debug.info ("Filefinder", "toggle_paned_cb");
 		if (window == null) return;
 		window.toggle_paned ();
 	}
 
 	protected override void shutdown() {
+		Debug.info ("Filefinder", "shutdown");
 		preferences.save ();
 		base.shutdown();
 	}

@@ -101,6 +101,7 @@ public class QueryRow : Gtk.Box {
 	private FilterSize size;
 
 	private void create_type_widgets () {
+		Debug.info ("QueryRow", "create_type_widgets...");
 		int i = 0;
 		//Gdk.Display display = Filefinder.window.get_display ();
 		//Gtk.Clipboard clipboard = Gtk.Clipboard.get_for_display (display, Gdk.SELECTION_CLIPBOARD);

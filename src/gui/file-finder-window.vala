@@ -24,6 +24,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	public signal void canceled ();
 
 	public FileFinderWindow (Gtk.Application app) {
+		Debug.info ("FileFinderWindow", "constructor");
 		GLib.Object (application: app);
 		build ();
 		initialize ();
@@ -52,6 +53,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	public Gtk.CheckMenuItem cmi;
 
 	protected void build () {
+		Debug.info ("FileFinderWindow", "build");
 		set_position (Gtk.WindowPosition.CENTER);
 		//set_border_width (4);
 
@@ -69,6 +71,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		mii.set_accel ("<Ctrl>n");
 		mmenu.add (mii);
 		mii.activate.connect (()=>{
+			Debug.info ("Toggle MenuItem", "activate");
 			toggle_paned ();
 		});
 		cmi = new Gtk.CheckMenuItem.with_label ("Autohide Panel");
@@ -183,7 +186,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		editor = new QueryEditor ();
 		editor.expand = true;
 		scrolledwindow1.add (editor);
-		editor.search.connect (()=>{button_go.clicked ();});
+		editor.search.connect (()=>{
+			Debug.info ("FileFinderWindow", "on editor.search");
+			button_go.clicked ();
+		});
 
 		vbox1 = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
 		paned.pack2 (vbox1, true, false);
@@ -208,21 +214,33 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	private void initialize () {
 		button_go.clicked.connect (on_go_clicked);
-		result_view.changed_selection.connect (()=>{set_subtitle ();});
+		result_view.changed_selection.connect (()=>{
+			Debug.info ("FileFinderWindow", "on result_view.changed_selection");
+			set_subtitle ();
+		});
 		size_allocate.connect (()=>{
+			//TODO TIMEOUT ADD
+			//Debug.info ("FileFinderWindow", "on save_geometry");
 			Filefinder.preferences.save_geometry ();
 		});
 		window_state_event.connect (()=>{
+			Debug.info ("FileFinderWindow", "on window_state_event save_geometry");
 			Filefinder.preferences.save_geometry ();
 			return false;
 			
 		});
-		editor.realize.connect (()=>{
-			editor.changed_rows.connect (()=>{check_paned_position ();});
+		realize.connect (()=>{
+			Debug.info ("FileFinderWindow", "on realize");
+			editor.changed_rows.connect (()=>{
+				Debug.info ("FileFinderWindow", "on editor.changed_rows");
+				check_paned_position ();
+			});
 			//check_paned_position ();
 			if (Filefinder.uris.length() > 0) {
+				Debug.info ("FileFinderWindow", "add_locations: %u".printf(Filefinder.uris.length()));
 				add_locations (Filefinder.uris);
 			} else {
+				Debug.info ("FileFinderWindow", "add loc and text filters");
 				add_filter (types.LOCATION);
 				add_filter (types.TEXT);
 			}
@@ -234,6 +252,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
 	public void post_init () {
+		Debug.info ("FileFinderWindow", "post_init");
 		show_box = false;
 		show_box = true;
 		/*if (Filefinder.uris.length () == 0) {
@@ -254,6 +273,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	private int _paned_pos = 0;
 	public void toggle_paned () {
+		Debug.info ("FileFinderWindow", "toggle_paned");
 		if (paned.visible) {
 			if ((paned.position < 4) && (paned.position < _paned_pos)) {
 				paned.position = _paned_pos;
@@ -266,6 +286,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
 	public void off_paned (bool off = true) {
+		Debug.info ("FileFinderWindow", "off_paned");
 		if (off) {
 			if (paned.position > 0) {
 				_paned_pos = paned.position;
@@ -278,6 +299,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
 	private void check_paned_position () {
+		Debug.info ("FileFinderWindow", "check_paned_position");
 		int h1, h2;
 		if (Filefinder.preferences.split_orientation == Gtk.Orientation.VERTICAL) {
 			if (editor.rows.length () == 0) {
@@ -294,11 +316,13 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
 	public void add_filter (types filter_type = types.LOCATION) {
+		Debug.info ("FileFinderWindow", "add_filter (%s)".printf (filter_type.to_string()));
 		paned.visible = true;
 		editor.add_filter (filter_type);
 	}
 
 	public void add_locations (List<string> uris) {
+		Debug.info ("FileFinderWindow", "add_locations");
 		File file;
 		if (editor.query == null) return;
 		editor.remove_rows (types.LOCATION);
@@ -307,8 +331,10 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			file = File.new_for_path (s);
 			paned.visible = true;
 			if (file.query_file_type (FileQueryInfoFlags.NONE) == FileType.DIRECTORY) {
+				Debug.info ("FileFinderWindow", "editor.add_folder (%s)".printf (s));
 				editor.add_folder (s);
 			} else {
+				Debug.info ("FileFinderWindow", "editor.add_file (%s)".printf (s));
 				editor.add_file (s);
 			}
 		}
@@ -323,6 +349,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 										int x, int y,
 										SelectionData selection_data,
 										uint target_type, uint time) {
+		Debug.info ("FileFinderWindow", "on_drag_data_received");
 		File file;
 		if (editor.query == null) return;
 		foreach (string uri in selection_data.get_uris ()){
@@ -339,6 +366,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
 	private void on_go_clicked () {
+		Debug.info ("FileFinderWindow", "on_go_clicked func");
 		if (button_go.active) {
 			spinner.start ();
 			button_go.label = "Stop";
@@ -355,6 +383,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
 	public void set_subtitle () {
+		Debug.info ("FileFinderWindow", "set subtitle");
 		if (Filefinder.service == null) {
 			hb.subtitle = "";
 			return;
@@ -383,20 +412,24 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
 	public void split_orientation (Gtk.Orientation orientation) {
+		Debug.info ("FileFinderWindow", "split_orientation");
 		paned.orientation = orientation;
 		check_paned_position ();
 	}
 
 	public void set_column_visiblity (int column, bool visible) {
+		Debug.info ("FileFinderWindow", "set_column_vis");
 		result_view.get_column (column).visible = visible;
 	}
 
 	public void set_max_filters (int count) {
+		Debug.info ("FileFinderWindow", "set_max_filters");
 		editor.max_children_per_line = count;
 	}
 
 	private uint info_timeout_id = 0;
 	public int show_message (string text, MessageType type = MessageType.INFO) {
+		Debug.info ("FileFinderWindow", "show_message");
 		if (infoBar != null) infoBar.destroy ();
 		if (type == Gtk.MessageType.QUESTION) {
 			infoBar = new InfoBar.with_buttons ("gtk-yes", Gtk.ResponseType.YES,
@@ -436,6 +469,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
 	private bool on_info_timeout () {
+		Debug.info ("FileFinderWindow", "on_info_timeout");
 		if (infoBar != null)
 			infoBar.destroy ();
 		info_timeout_id = 0;
@@ -471,6 +505,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 
 	private Toolbar? toolbar = null;
 	public void enable_toolbar () {
+		Debug.info ("FileFinderWindow", "enable_toolbar");
 		if (!Filefinder.preferences.show_toolbar) return;
 		disable_toolbar ();
 		toolbar = new Toolbar ();
@@ -479,12 +514,14 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	}
 
 	public void disable_toolbar () {
+		Debug.info ("FileFinderWindow", "disable_toolbar");
 		if (toolbar == null) return;
 		toolbar.destroy ();
 		toolbar = null;
 	}
 
 	public void refresh_toolbar () {
+		Debug.info ("FileFinderWindow", "refresh tb");
 		if (toolbar == null) return;
 		toolbar.rebuild ();
 	}
