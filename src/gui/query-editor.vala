@@ -29,7 +29,9 @@ public class QueryEditor : Gtk.FlowBox {
 		this.get_style_context ().add_class ("search-bar");
 		this.margin = 0;
 		selection_mode = Gtk.SelectionMode.NONE;
-		max_children_per_line = Filefinder.preferences.filter_count;
+		max_children_per_line = 1;
+		if (Filefinder.preferences != null)
+			max_children_per_line = Filefinder.preferences.filter_count;
 		valign = Gtk.Align.START;
 		set_sort_func (sort_boxes);
 
@@ -37,6 +39,7 @@ public class QueryEditor : Gtk.FlowBox {
 		//add (fbar);
 
 		rows = new GLib.List<QueryRow> ();
+		show_all ();
 	}
 
 	private int sort_boxes (Gtk.FlowBoxChild child1, Gtk.FlowBoxChild child2) {

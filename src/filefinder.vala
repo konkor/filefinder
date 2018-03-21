@@ -23,7 +23,7 @@ using Gtk;
 public class Filefinder : Gtk.Application
 {
 	public static bool debugging;
-	public static FileFinderWindow window;
+	public static FileFinderWindow? window = null;
 	public static Preferences preferences;
 	public static Service service;
 	public static Filefinder self;
@@ -37,8 +37,7 @@ public class Filefinder : Gtk.Application
 		{"toggle_paned", toggle_paned_cb}
 	};
 
-	public Filefinder (string[] args)
-	{
+	public Filefinder (string[] args) {
 		Object (application_id: "org.konkor.filefinder",
 				flags: ApplicationFlags.HANDLES_OPEN);
 		uris = new List<string>();

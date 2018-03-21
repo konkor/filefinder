@@ -47,7 +47,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	private Gtk.Box toolbar_bottom;
 	private FilterBar filterbar;
 
-	private QueryEditor editor;
+	public QueryEditor editor;
 	public ResultsView result_view;
 	public Gtk.CheckMenuItem cmi;
 
@@ -217,7 +217,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			return false;
 			
 		});
-		realize.connect (()=>{
+		editor.realize.connect (()=>{
 			editor.changed_rows.connect (()=>{check_paned_position ();});
 			//check_paned_position ();
 			if (Filefinder.uris.length() > 0) {
