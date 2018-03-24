@@ -217,7 +217,7 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 			return false;
 			
 		});
-		editor.realize.connect (()=>{
+		realize.connect (()=>{
 			editor.changed_rows.connect (()=>{check_paned_position ();});
 			//check_paned_position ();
 			if (Filefinder.uris.length() > 0) {
