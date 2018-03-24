@@ -112,6 +112,7 @@ public class Preferences : Gtk.Window {
 		} catch (Error e) {
 			Debug.info ("preferences", e.message);
 		}
+		//save_geometry ();
 		try {
 			dos = new DataOutputStream (file.create (FileCreateFlags.REPLACE_DESTINATION));
 			dos.put_string ("%d %s %s\n".printf (PreferenceType.GENERAL,
@@ -172,15 +173,14 @@ public class Preferences : Gtk.Window {
 	public int paned_pos;
 
 	public void save_geometry () {
+		Debug.info ("save_geometry", "");
 		if (Filefinder.window == null) return;
 		Gdk.Window gdk_window = Filefinder.window.get_window ();
 		if (gdk_window == null) return;
 		Gdk.WindowState ws = gdk_window.get_state();
-		int x, y;
+		int x =0, y = 0;
 
-		if ((Gdk.WindowState.WITHDRAWN in ws) ||
-			(Gdk.WindowState.ICONIFIED in ws) ||
-			(Gdk.WindowState.MAXIMIZED in ws) ||
+		if ((Gdk.WindowState.MAXIMIZED in ws) ||
 			(Gdk.WindowState.TILED in ws)) {
 			if (Gdk.WindowState.MAXIMIZED in ws) is_maximized = true;
 			else is_maximized = false;
@@ -192,6 +192,7 @@ public class Preferences : Gtk.Window {
 			rect.width = x; rect.height = y;
 		}
 		is_changed = true;
+		//Debug.info ("save_geometry", "%d:%d %d".printf (x,y,ws));
 	}
 
 	public bool load () {

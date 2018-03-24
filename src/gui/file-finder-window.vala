@@ -209,14 +209,6 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 	private void initialize () {
 		button_go.clicked.connect (on_go_clicked);
 		result_view.changed_selection.connect (()=>{set_subtitle ();});
-		size_allocate.connect (()=>{
-			Filefinder.preferences.save_geometry ();
-		});
-		window_state_event.connect (()=>{
-			Filefinder.preferences.save_geometry ();
-			return false;
-			
-		});
 		realize.connect (()=>{
 			editor.changed_rows.connect (()=>{check_paned_position ();});
 			//check_paned_position ();
@@ -226,11 +218,41 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 				add_filter (types.LOCATION);
 				add_filter (types.TEXT);
 			}
+			size_allocate.connect (()=>{
+				Debug.info ("size_allocate", "");
+				update_geometry ();
+			});
+			window_state_event.connect (()=>{
+				Debug.info ("window_state_event", "");
+				//Filefinder.preferences.save_geometry ();
+				return update_geometry ();
+				//return false;
+			});
+			unmap.connect (()=>{
+				Debug.info ("window unmap", "");
+				Filefinder.preferences.save_geometry ();
+				//return update_geometry ();
+			});
 		});
 		paned.position = _paned_pos = Filefinder.preferences.paned_pos;
 
 		Gtk.drag_dest_set (this, DestDefaults.ALL, target_list, Gdk.DragAction.COPY);
 		this.drag_data_received.connect(this.on_drag_data_received);
+	}
+
+	private uint update_geometry_id = 0;
+	private bool update_geometry () {
+		if (update_geometry_id > 0)
+			GLib.Source.remove (update_geometry_id);
+		update_geometry_id = GLib.Timeout.add_seconds (2, ()=>{
+			Debug.info ("update_geometry", "begin");
+			if (Filefinder.preferences == null) return false;
+			Filefinder.preferences.save_geometry ();
+			Debug.info ("update_geometry", "end");
+			update_geometry_id = 0;
+			return false;
+		});
+		return false;
 	}
 
 	public void post_init () {
