@@ -120,8 +120,7 @@ public class QueryEditor : Gtk.FlowBox {
 	}
 
 	public void add_filter (types filter_type = types.LOCATION) {
-		QueryRow row = new QueryRow ();
-		row.row_type = filter_type;
+		QueryRow row = new QueryRow (filter_type);
 		add_row (row);
 	}
 
@@ -143,8 +142,7 @@ public class QueryEditor : Gtk.FlowBox {
 			}
 		}
 		if (row == null) {
-			row = new QueryRow ();
-			row.row_type = types.FILES;
+			row = new QueryRow (types.FILES);
 			add_row (row);
 		}
 		row.files.add (path);

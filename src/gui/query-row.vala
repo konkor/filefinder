@@ -41,7 +41,7 @@ public class QueryRow : Gtk.Box {
 		}
 	}
 
-	public QueryRow () {
+	public QueryRow (types filter_type = types.LOCATION) {
 		GLib.Object (orientation:Gtk.Orientation.HORIZONTAL, spacing:6);
 		this.margin = 2;
 		_filter = new Filter ();
@@ -51,7 +51,7 @@ public class QueryRow : Gtk.Box {
 		foreach (string s in type_names) {
 			combo_type.append_text (s.up ());
 		}
-		combo_type.active = 0;
+		combo_type.active = filter_type;
 		add (combo_type);
 		combo_type.changed.connect (() => {
 			create_type_widgets ();
