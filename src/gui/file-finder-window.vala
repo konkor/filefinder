@@ -218,41 +218,15 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 				add_filter (types.LOCATION);
 				add_filter (types.TEXT);
 			}
-			size_allocate.connect (()=>{
-				Debug.info ("size_allocate", "");
-				update_geometry ();
-			});
-			window_state_event.connect (()=>{
-				Debug.info ("window_state_event", "");
-				//Filefinder.preferences.save_geometry ();
-				return update_geometry ();
-				//return false;
-			});
 			unmap.connect (()=>{
-				Debug.info ("window unmap", "");
+				Debug.info ("window unmap", "save_geometry");
 				Filefinder.preferences.save_geometry ();
-				//return update_geometry ();
 			});
 		});
 		paned.position = _paned_pos = Filefinder.preferences.paned_pos;
 
 		Gtk.drag_dest_set (this, DestDefaults.ALL, target_list, Gdk.DragAction.COPY);
-		this.drag_data_received.connect(this.on_drag_data_received);
-	}
-
-	private uint update_geometry_id = 0;
-	private bool update_geometry () {
-		if (update_geometry_id > 0)
-			GLib.Source.remove (update_geometry_id);
-		update_geometry_id = GLib.Timeout.add_seconds (2, ()=>{
-			Debug.info ("update_geometry", "begin");
-			if (Filefinder.preferences == null) return false;
-			Filefinder.preferences.save_geometry ();
-			Debug.info ("update_geometry", "end");
-			update_geometry_id = 0;
-			return false;
-		});
-		return false;
+		this.drag_data_received.connect (this.on_drag_data_received);
 	}
 
 	public void post_init () {
