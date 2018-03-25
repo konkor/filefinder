@@ -89,6 +89,7 @@ public class MimeButton : Gtk.MenuButton {
 			mime_type_store.clear ();
 			mime_type_store.append (out it);
 			mime_type_store.set (it, 0, "Any", -1);
+			if (p.get_indices ()[0] >= Filefinder.preferences.mime_type_groups.length) return;
 			mime.name = Filefinder.preferences.mime_type_groups[p.get_indices ()[0]].name;
 			foreach (string s in Filefinder.preferences.mime_type_groups[p.get_indices ()[0]].mimes) {
 				mime_type_store.append (out it);
@@ -106,6 +107,7 @@ public class MimeButton : Gtk.MenuButton {
 			p0 = mime_group.get_selection ().get_selected_rows (null).nth_data (0);
 			if (p0 == null) return;
 			foreach (Gtk.TreePath p in mime_type.get_selection ().get_selected_rows (null)) {
+				if (p.get_indices ()[0] >= Filefinder.preferences.mime_type_groups.length) return;
 				if (p.get_indices()[0] == 0) {
 					foreach (string s in Filefinder.preferences.mime_type_groups[p0.get_indices ()[0]].mimes) {
 						mime.add (s);
