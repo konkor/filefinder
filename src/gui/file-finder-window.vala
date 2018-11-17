@@ -67,10 +67,8 @@ public class FileFinderWindow : Gtk.ApplicationWindow {
 		MenuItemIndex mii = new MenuItemIndex (0, "Toggle Panel");
 		mii.tooltip_text = "Toggle Visiblity Of The Filter Panel";
 		mii.set_accel ("<Ctrl>n");
+		mii.set_action_name ("app.toggle_paned");
 		mmenu.add (mii);
-		mii.activate.connect (()=>{
-			toggle_paned ();
-		});
 		cmi = new Gtk.CheckMenuItem.with_label ("Autohide Panel");
 		cmi.tooltip_text = "Autohide The Filter Panel On Results";
 		cmi.active = Filefinder.preferences.check_autohide;
