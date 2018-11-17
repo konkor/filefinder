@@ -6,6 +6,10 @@
 *.stamp
 *.dirstamp
 *.tar.gz
+*.log
+test-driver
+things
+extensions
 .deps/
 autom4te.cache/
 Debug/
@@ -40,8 +44,10 @@ src/.libs/
 src/nautilus/.libs/
 src/Makefile
 src/filefinder
+src/tests_filefinder
 src/*.c
 src/*.o
+src/*.trs
 src/*.stamp*
 src/*.la
 src/*lo
